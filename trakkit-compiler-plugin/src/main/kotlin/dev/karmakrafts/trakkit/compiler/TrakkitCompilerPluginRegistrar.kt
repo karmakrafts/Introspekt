@@ -17,6 +17,7 @@
 package dev.karmakrafts.trakkit.compiler
 
 import com.google.auto.service.AutoService
+import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.jetbrains.kotlin.config.CompilerConfiguration
@@ -27,7 +28,7 @@ class TrakkitCompilerPluginRegistrar : CompilerPluginRegistrar() {
     override fun ExtensionStorage.registerExtensions(
         configuration: CompilerConfiguration
     ) {
-
+        IrGenerationExtension.registerExtension(TrakkitIrGenerationExtension())
     }
 
     /**

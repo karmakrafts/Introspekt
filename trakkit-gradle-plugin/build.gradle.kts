@@ -61,8 +61,8 @@ gradlePlugin {
         create("gradlePlugin") {
             id = "$group.${rootProject.name}-gradle-plugin"
             implementationClass = "$group.gradle.TrakkitGradlePlugin"
-            displayName = "RAkII Gradle Plugin"
-            description = "Gradle plugin for applying the RAkII Kotlin compiler plugin"
+            displayName = "Trakkit Gradle Plugin"
+            description = "Gradle plugin for applying the Trakkit Kotlin compiler plugin"
             tags.addAll("kotlin", "native", "interop", "codegen")
         }
     }

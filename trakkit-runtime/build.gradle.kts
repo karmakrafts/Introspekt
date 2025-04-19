@@ -28,24 +28,24 @@ kotlin {
     mingwX64()
     linuxX64()
     linuxArm64()
-    macosX64()
-    macosArm64()
+    //macosX64()
+    //macosArm64()
     androidTarget {
         publishLibraryVariants("release")
     }
     androidNativeArm32()
     androidNativeArm64()
     androidNativeX64()
-    iosX64()
-    iosArm64()
-    iosSimulatorArm64()
-    tvosArm64()
-    tvosX64()
-    tvosSimulatorArm64()
-    watchosArm32()
-    watchosArm64()
-    watchosX64()
-    watchosSimulatorArm64()
+    //iosX64()
+    //iosArm64()
+    //iosSimulatorArm64()
+    //tvosArm64()
+    //tvosX64()
+    //tvosSimulatorArm64()
+    //watchosArm32()
+    //watchosArm64()
+    //watchosX64()
+    //watchosSimulatorArm64()
     jvm()
     js {
         browser()
@@ -54,12 +54,6 @@ kotlin {
     applyDefaultHierarchyTemplate()
     withSourcesJar(true)
     sourceSets {
-        commonMain {
-            dependencies {
-                implementation(libs.stately.common)
-                implementation(libs.stately.collections)
-            }
-        }
         commonTest {
             dependencies {
                 implementation(libs.kotlin.test)
