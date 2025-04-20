@@ -120,7 +120,7 @@ internal data class TrakkitPluginContext(
                 is IrVararg -> value.elements.map { element ->
                     check(element is IrConst) { "Annotation vararg value must be an IrConst" }
                     element.value
-                }.toTypedArray()
+                }.toList()
 
                 else -> error("Unsupported annotation parameter type $value")
             }
@@ -206,21 +206,17 @@ internal data class TrakkitPluginContext(
         is Char -> irBuiltIns.charType
         is Boolean -> irBuiltIns.booleanType
         is IrType -> irBuiltIns.kClassClass.starProjectedType
-        is Array<*> -> irBuiltIns.arrayClass.starProjectedType
+        is Array<*>, is List<*> -> irBuiltIns.arrayClass.starProjectedType
         null -> irBuiltIns.anyType
         else -> error("Unsupported IrConst type ${this@getConstType::class}")
     }
 
-    fun Any?.toIrConstOrType(): IrExpression = when (val type = this@toIrConstOrType.getConstType()) {
-        irBuiltIns.kClassClass.starProjectedType -> (this@toIrConstOrType as IrType).toClassReference()
-        irBuiltIns.arrayClass.starProjectedType -> IrVarargImpl( // @formatter:off
-            startOffset = SYNTHETIC_OFFSET,
-            endOffset = SYNTHETIC_OFFSET,
-            type = irBuiltIns.arrayClass.typeWith(irBuiltIns.anyType),
-            varargElementType = irBuiltIns.anyType,
-            elements = (this@toIrConstOrType as Array<*>).map { it.toIrConstOrType() }
-        ) // @formatter:on
-        else -> toIrConst(type)
+    fun Any?.toIrValueOrType(): IrExpression = when (this@toIrValueOrType) {
+        is IrType -> this@toIrValueOrType.toClassReference()
+        is List<*> -> createListOf(irBuiltIns.anyType, this@toIrValueOrType.map { it.toIrValueOrType() })
+        // TODO: create actual arrays here?
+        is Array<*> -> createListOf(irBuiltIns.anyType, this@toIrValueOrType.map { it.toIrValueOrType() })
+        else -> toIrConst(this@toIrValueOrType.getConstType())
     }
 
     fun AnnotationInfo.instantiate(): IrConstructorCallImpl {
@@ -238,7 +234,7 @@ internal data class TrakkitPluginContext(
                 keyType = irBuiltIns.stringType,
                 valueType = irBuiltIns.anyType,
                 values = values.map { (key, value) ->
-                    key.toIrConst(irBuiltIns.stringType) to value.toIrConstOrType()
+                    key.toIrConst(irBuiltIns.stringType) to value.toIrValueOrType()
                 }
             ))
             // @formatter:on
@@ -312,14 +308,14 @@ internal data class TrakkitPluginContext(
             // typeParameterNames
             putValueArgument(1, createListOf(
                 type = irBuiltIns.stringType,
-                values = typeParameterNames.map { it.toIrConstOrType() }
+                values = typeParameterNames.map { it.toIrConst(irBuiltIns.stringType) }
             ))
             // returnType
             putValueArgument(2, returnType.toClassReference())
             // parameterTypes
             putValueArgument(3, createListOf(
                 type = irBuiltIns.kClassClass.starProjectedType,
-                values = parameterTypes.map { it.type.toIrConstOrType() }
+                values = parameterTypes.map { it.type.toIrValueOrType() }
             ))
             // parameterNames
             putValueArgument(4, createListOf(
@@ -331,7 +327,7 @@ internal data class TrakkitPluginContext(
                 keyType = irBuiltIns.kClassClass.typeWith(annotationType.defaultType),
                 valueType = annotationInfoType.defaultType,
                 values = annotations.map { (type, info) ->
-                    type.toIrConstOrType() to info.instantiate()
+                    type.toIrValueOrType() to info.instantiate()
                 }
             ))
         } // @formatter:on
