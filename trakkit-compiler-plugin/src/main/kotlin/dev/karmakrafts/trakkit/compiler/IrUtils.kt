@@ -16,8 +16,20 @@
 
 package dev.karmakrafts.trakkit.compiler
 
-import org.jetbrains.kotlin.ir.declarations.*
+import org.jetbrains.kotlin.ir.declarations.IrClass
+import org.jetbrains.kotlin.ir.declarations.IrFile
+import org.jetbrains.kotlin.ir.declarations.IrFunction
+import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
+import org.jetbrains.kotlin.ir.declarations.path
 import org.jetbrains.kotlin.ir.expressions.IrFunctionAccessExpression
+import org.jetbrains.kotlin.ir.util.getAnnotationArgumentValue
+import org.jetbrains.kotlin.ir.util.hasAnnotation
+
+internal fun IrFunction.getIntrinsicType(): TrakkitIntrinsic? {
+    if (!hasAnnotation(TrakkitNames.TrakkitIntrinsic.id)) return null
+    val intrinsicName = getAnnotationArgumentValue<String>(TrakkitNames.TrakkitIntrinsic.fqName, "value") ?: return null
+    return TrakkitIntrinsic.byName(intrinsicName)
+}
 
 internal fun getLineNumber(source: List<String>, startOffset: Int): Int {
     var currentOffset = 0
@@ -44,7 +56,7 @@ internal fun getCallLocation(
     file: IrFile,
     source: List<String>,
     expression: IrFunctionAccessExpression,
-    function: IrSimpleFunction?
+    function: IrFunction?
 ): SourceLocation = SourceLocation(
     module = module.name.asString(),
     file = file.path,
@@ -53,12 +65,12 @@ internal fun getCallLocation(
     column = getColumnNumber(source, expression.startOffset)
 )
 
-internal fun getFunctionLocation(
+internal fun getFunctionLocation( // @formatter:off
     module: IrModuleFragment,
     file: IrFile,
     source: List<String>,
-    function: IrSimpleFunction
-): SourceLocation = SourceLocation(
+    function: IrFunction
+): SourceLocation = SourceLocation( // @formatter:on
     module = module.name.asString(),
     file = file.path,
     function = function.name.asString(),
@@ -66,12 +78,12 @@ internal fun getFunctionLocation(
     column = getColumnNumber(source, function.startOffset)
 )
 
-internal fun getClassLocation(
+internal fun getClassLocation( // @formatter:off
     module: IrModuleFragment,
     file: IrFile,
     source: List<String>,
     clazz: IrClass
-): SourceLocation = SourceLocation(
+): SourceLocation = SourceLocation( // @formatter:on
     module = module.name.asString(),
     file = file.path,
     function = "",

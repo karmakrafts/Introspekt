@@ -20,7 +20,7 @@ import kotlin.reflect.KClass
 
 data class ClassInfo(
     val location: SourceLocation,
-    val typeParameters: List<KClass<*>>,
+    val typeParameterNames: List<String>,
     val annotations: Map<KClass<out Annotation>, AnnotationInfo>,
     val functions: List<FunctionInfo>
 ) {

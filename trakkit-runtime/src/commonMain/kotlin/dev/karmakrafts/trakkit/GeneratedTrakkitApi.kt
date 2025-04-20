@@ -14,18 +14,9 @@
  * limitations under the License.
  */
 
-package dev.karmakrafts.trakkit.compiler
+package dev.karmakrafts.trakkit
 
-import org.jetbrains.kotlin.ir.declarations.IrClass
-import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
-import java.util.*
-
-internal data class IntrinsicContext(
-    val clazzStack: Stack<IrClass> = Stack(), val functionStack: Stack<IrSimpleFunction> = Stack()
-) {
-    inline val clazz: IrClass?
-        get() = clazzStack.firstOrNull()
-
-    inline val function: IrSimpleFunction?
-        get() = functionStack.firstOrNull()
-}
+@RequiresOptIn("The API you are trying to use is used internally by the Trakkit compiler, it shouldn't be used directly")
+@Target(AnnotationTarget.CLASS)
+@Retention(AnnotationRetention.BINARY)
+annotation class GeneratedTrakkitApi

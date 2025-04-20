@@ -1,0 +1,62 @@
+/*
+ * Copyright 2025 Karma Krafts & associates
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package dev.karmakrafts.trakkit.compiler
+
+import org.jetbrains.kotlin.ir.IrElement
+import org.jetbrains.kotlin.ir.backend.js.utils.valueArguments
+import org.jetbrains.kotlin.ir.expressions.IrCall
+import org.jetbrains.kotlin.ir.util.getAnnotation
+import org.jetbrains.kotlin.ir.util.hasAnnotation
+import org.jetbrains.kotlin.ir.util.target
+import org.jetbrains.kotlin.ir.visitors.IrVisitorVoid
+import org.jetbrains.kotlin.ir.visitors.acceptChildrenVoid
+
+/**
+ * Invoked before the main intrinsic passes but after the de-defaulting pass
+ * to adjust all callsites of functions with an injected @CaptureCaller annotation.
+ */
+internal class IntrinsicCallerParameterTransformer(
+    val pluginContext: TrakkitPluginContext
+) : IrVisitorVoid() {
+    override fun visitElement(element: IrElement) {
+        element.acceptChildrenVoid(this)
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    override fun visitCall(expression: IrCall) {
+        super.visitCall(expression)
+        val function = expression.target
+        if (!function.hasAnnotation(TrakkitNames.CaptureCaller.id)) return
+        with(pluginContext) {
+            val annotationValues = function.getAnnotation(TrakkitNames.CaptureCaller.fqName)!!.getAnnotationValues()
+            val intrinsicStrings = annotationValues["intrinsics"] as? List<String> ?: return@with
+            val valueArguments = expression.valueArguments
+            intrinsicStrings.map { stringValue ->
+                val (index, name) = stringValue.split(":")
+                Pair(index.toInt(), TrakkitIntrinsic.byName(name)!!)
+            }.forEach { (index, type) ->
+                if (index < valueArguments.size && valueArguments[index] != null) return@forEach
+                expression.putValueArgument(
+                    index, type.createCall(
+                        startOffset = expression.startOffset,
+                        endOffset = expression.endOffset,
+                    )
+                )
+            }
+        }
+    }
+}

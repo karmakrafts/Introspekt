@@ -27,6 +27,13 @@ internal object TrakkitNames {
     object Functions {
         val listOf: Name = Name.identifier("listOf")
         val mapOf: Name = Name.identifier("mapOf")
+        val here: Name = Name.identifier("here")
+        val hereHash: Name = Name.identifier("hereHash")
+        val current: Name = Name.identifier("current")
+        val currentFunction: Name = Name.identifier("currentFunction")
+        val currentFunctionHash: Name = Name.identifier("currentFunctionHash")
+        val currentClass: Name = Name.identifier("currentClass")
+        val currentClassHash: Name = Name.identifier("currentClassHash")
     }
 
     object Kotlin {
@@ -64,18 +71,41 @@ internal object TrakkitNames {
         val name: Name = Name.identifier("SourceLocation")
         val id: ClassId = ClassId(packageName, name)
         val fqName: FqName = id.asSingleFqName()
+
+        object Companion {
+            val fqName: FqName = FqName("SourceLocation.Companion")
+
+            val here: CallableId = CallableId(packageName, fqName, Functions.here)
+            val hereHash: CallableId = CallableId(packageName, fqName, Functions.hereHash)
+            val currentFunction: CallableId = CallableId(packageName, fqName, Functions.currentFunction)
+            val currentFunctionHash: CallableId = CallableId(packageName, fqName, Functions.currentFunctionHash)
+            val currentClass: CallableId = CallableId(packageName, fqName, Functions.currentClass)
+            val currentClassHash: CallableId = CallableId(packageName, fqName, Functions.currentClassHash)
+        }
     }
 
     object FunctionInfo {
         val name: Name = Name.identifier("FunctionInfo")
         val id: ClassId = ClassId(packageName, name)
         val fqName: FqName = id.asSingleFqName()
+
+        object Companion {
+            val fqName: FqName = FqName("FunctionInfo.Companion")
+
+            val current: CallableId = CallableId(packageName, fqName, Functions.current)
+        }
     }
 
     object ClassInfo {
         val name: Name = Name.identifier("ClassInfo")
         val id: ClassId = ClassId(packageName, name)
         val fqName: FqName = id.asSingleFqName()
+
+        object Companion {
+            val fqName: FqName = FqName("ClassInfo.Companion")
+
+            val current: CallableId = CallableId(packageName, fqName, Functions.current)
+        }
     }
 
     object AnnotationInfo {
@@ -86,6 +116,12 @@ internal object TrakkitNames {
 
     object TrakkitIntrinsic {
         val name: Name = Name.identifier("TrakkitIntrinsic")
+        val id: ClassId = ClassId(packageName, name)
+        val fqName: FqName = id.asSingleFqName()
+    }
+
+    object CaptureCaller {
+        val name: Name = Name.identifier("CaptureCaller")
         val id: ClassId = ClassId(packageName, name)
         val fqName: FqName = id.asSingleFqName()
     }

@@ -18,11 +18,10 @@ package dev.karmakrafts.trakkit.compiler
 
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.ir.backend.js.utils.valueArguments
-import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrFile
+import org.jetbrains.kotlin.ir.declarations.IrFunction
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.declarations.IrParameterKind
-import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.expressions.IrConst
 import org.jetbrains.kotlin.ir.expressions.IrConstructorCall
 import org.jetbrains.kotlin.ir.expressions.IrExpression
@@ -31,6 +30,7 @@ import org.jetbrains.kotlin.ir.expressions.impl.IrCallImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrCallImplWithShape
 import org.jetbrains.kotlin.ir.expressions.impl.IrClassReferenceImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrConstructorCallImpl
+import org.jetbrains.kotlin.ir.expressions.impl.IrGetObjectValueImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrVarargImpl
 import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
 import org.jetbrains.kotlin.ir.symbols.IrConstructorSymbol
@@ -89,6 +89,61 @@ internal data class TrakkitPluginContext(
     val classInfoConstructor: IrConstructorSymbol =
         pluginContext.referenceConstructors(TrakkitNames.ClassInfo.id).first()
 
+    val captureCallerType: IrClassSymbol = pluginContext.referenceClass(TrakkitNames.CaptureCaller.id)!!
+    val captureCallerConstructor: IrConstructorSymbol =
+        pluginContext.referenceConstructors(TrakkitNames.CaptureCaller.id).first()
+
+    // intrinsics
+
+    fun TrakkitIntrinsic.getType(): IrType = when (this) {
+        TrakkitIntrinsic.SL_HERE, TrakkitIntrinsic.SL_CURRENT_FUNCTION, TrakkitIntrinsic.SL_CURRENT_CLASS -> sourceLocationType.defaultType
+        TrakkitIntrinsic.FI_CURRENT -> functionInfoType.defaultType
+        TrakkitIntrinsic.CI_CURRENT -> classInfoType.defaultType
+        else -> irBuiltIns.intType // Hashsums
+    }
+
+    fun TrakkitIntrinsic.getSymbol(): IrSimpleFunctionSymbol {
+        return pluginContext.referenceFunctions(functionId).first()
+    }
+
+    @OptIn(UnsafeDuringIrConstructionAPI::class)
+    fun TrakkitIntrinsic.createCall(
+        startOffset: Int = SYNTHETIC_OFFSET, endOffset: Int = SYNTHETIC_OFFSET
+    ): IrCallImpl = IrCallImpl( // @formatter:off
+        startOffset = startOffset,
+        endOffset = endOffset,
+        type = getType(),
+        symbol = getSymbol()
+    ).apply {
+        functionId.classId?.let(pluginContext::referenceClass)?.let { classSymbol ->
+            check(classSymbol.owner.isCompanion) { "Intrinsic parent must be a companion object or the top level scope" }
+            dispatchReceiver = IrGetObjectValueImpl(
+                startOffset = SYNTHETIC_OFFSET,
+                endOffset = SYNTHETIC_OFFSET,
+                type = classSymbol.defaultType,
+                symbol = classSymbol
+            )  // @formatter:on
+        }
+    }
+
+    fun createCaptureCaller(intrinsics: List<String>): IrConstructorCallImpl = IrConstructorCallImpl(
+        startOffset = SYNTHETIC_OFFSET,
+        endOffset = SYNTHETIC_OFFSET,
+        type = captureCallerType.defaultType,
+        symbol = captureCallerConstructor,
+        typeArgumentsCount = 0,
+        constructorTypeArgumentsCount = 0
+    ).apply {
+        putValueArgument(
+            0, IrVarargImpl(
+                startOffset = SYNTHETIC_OFFSET,
+                endOffset = SYNTHETIC_OFFSET,
+                type = irBuiltIns.arrayClass.typeWith(irBuiltIns.stringType),
+                varargElementType = irBuiltIns.stringType,
+                elements = intrinsics.map { it.toIrValueOrType() })
+        )
+    }
+
     fun Pair<IrExpression?, IrExpression?>.instantiate(firstType: IrType, secondType: IrType): IrConstructorCallImpl {
         return IrConstructorCallImpl(
             startOffset = SYNTHETIC_OFFSET,
@@ -106,9 +161,10 @@ internal data class TrakkitPluginContext(
     }
 
     @OptIn(UnsafeDuringIrConstructionAPI::class)
-    fun IrConstructorCall.getAnnotationValues(): HashMap<String, Any?> {
+    fun IrConstructorCall.getAnnotationValues(): Map<String, Any?> {
         val constructor = symbol.owner
         val parameters = constructor.parameters.filter { it.kind == IrParameterKind.Regular }
+        if (parameters.isEmpty()) return emptyMap()
         val parameterNames = parameters.map { it.name.asString() }
         check(parameterNames.size == valueArguments.size) { "Missing annotation parameter info" }
         val values = HashMap<String, Any?>()
@@ -133,7 +189,7 @@ internal data class TrakkitPluginContext(
         module: IrModuleFragment,
         file: IrFile,
         source: List<String>,
-        function: IrSimpleFunction?
+        function: IrFunction?
     ): AnnotationInfo = AnnotationInfo( // @formatter:on
         location = getCallLocation(module, file, source, this@getAnnotationInfo, function),
         values = getAnnotationValues()
@@ -277,7 +333,7 @@ internal data class TrakkitPluginContext(
         module: IrModuleFragment,
         file: IrFile,
         source: List<String>,
-        function: IrSimpleFunction?
+        function: IrFunction?
     ): HashMap<IrType, AnnotationInfo> { // @formatter:on
         val annotations = HashMap<IrType, AnnotationInfo>()
         for (call in this) {
@@ -286,7 +342,7 @@ internal data class TrakkitPluginContext(
         return annotations
     }
 
-    fun IrSimpleFunction.getFunctionInfo( // @formatter:off
+    fun IrFunction.getFunctionInfo( // @formatter:off
         module: IrModuleFragment,
         file: IrFile,
         source: List<String>,

@@ -16,16 +16,20 @@
 
 package dev.karmakrafts.trakkit.compiler
 
-internal enum class TrakkitIntrinsic {
+import org.jetbrains.kotlin.name.CallableId
+
+internal enum class TrakkitIntrinsic(
+    val functionId: CallableId
+) {
     // @formatter:off
-    SL_HERE,
-    SL_HERE_HASH,
-    SL_CURRENT_FUNCTION,
-    SL_CURRENT_FUNCTION_HASH,
-    SL_CURRENT_CLASS,
-    SL_CURRENT_CLASS_HASH,
-    FI_CURRENT,
-    CI_CURRENT;
+    SL_HERE                 (TrakkitNames.SourceLocation.Companion.here),
+    SL_HERE_HASH            (TrakkitNames.SourceLocation.Companion.hereHash),
+    SL_CURRENT_FUNCTION     (TrakkitNames.SourceLocation.Companion.currentFunction),
+    SL_CURRENT_FUNCTION_HASH(TrakkitNames.SourceLocation.Companion.currentFunctionHash),
+    SL_CURRENT_CLASS        (TrakkitNames.SourceLocation.Companion.currentClass),
+    SL_CURRENT_CLASS_HASH   (TrakkitNames.SourceLocation.Companion.currentClassHash),
+    FI_CURRENT              (TrakkitNames.FunctionInfo.Companion.current),
+    CI_CURRENT              (TrakkitNames.ClassInfo.Companion.current);
     // @formatter:on
 
     companion object {
