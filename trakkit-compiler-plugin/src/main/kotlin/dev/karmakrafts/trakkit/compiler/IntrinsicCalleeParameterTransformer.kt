@@ -17,7 +17,7 @@
 package dev.karmakrafts.trakkit.compiler
 
 import org.jetbrains.kotlin.ir.IrElement
-import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
+import org.jetbrains.kotlin.ir.declarations.IrFunction
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.util.statements
 import org.jetbrains.kotlin.ir.util.target
@@ -36,8 +36,8 @@ internal class IntrinsicCalleeParameterTransformer(
         element.acceptChildrenVoid(this)
     }
 
-    override fun visitSimpleFunction(declaration: IrSimpleFunction) {
-        super.visitSimpleFunction(declaration)
+    override fun visitFunction(declaration: IrFunction) {
+        super.visitFunction(declaration)
         val callsiteIntrinsics = ArrayList<Pair<Int, String>>()
         for (parameter in declaration.valueParameters) {
             val defaultBody = parameter.defaultValue ?: continue

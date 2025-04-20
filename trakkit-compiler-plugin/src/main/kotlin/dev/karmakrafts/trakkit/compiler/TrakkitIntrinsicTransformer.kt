@@ -19,7 +19,7 @@ package dev.karmakrafts.trakkit.compiler
 import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.IrStatement
 import org.jetbrains.kotlin.ir.declarations.IrClass
-import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
+import org.jetbrains.kotlin.ir.declarations.IrFunction
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.util.target
 import org.jetbrains.kotlin.ir.visitors.IrTransformer
@@ -41,11 +41,11 @@ internal abstract class TrakkitIntrinsicTransformer(
         return result
     }
 
-    override fun visitSimpleFunction(
-        declaration: IrSimpleFunction, data: IntrinsicContext
+    override fun visitFunction(
+        declaration: IrFunction, data: IntrinsicContext
     ): IrStatement {
         data.functionStack.push(declaration)
-        val result = super.visitSimpleFunction(declaration, data) // Pass down the parent function
+        val result = super.visitFunction(declaration, data) // Pass down the parent function
         data.functionStack.pop()
         return result
     }

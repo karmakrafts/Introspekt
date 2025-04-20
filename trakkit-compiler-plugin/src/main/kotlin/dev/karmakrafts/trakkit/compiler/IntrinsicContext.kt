@@ -17,15 +17,15 @@
 package dev.karmakrafts.trakkit.compiler
 
 import org.jetbrains.kotlin.ir.declarations.IrClass
-import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
+import org.jetbrains.kotlin.ir.declarations.IrFunction
 import java.util.*
 
 internal data class IntrinsicContext(
-    val clazzStack: Stack<IrClass> = Stack(), val functionStack: Stack<IrSimpleFunction> = Stack()
+    val clazzStack: Stack<IrClass> = Stack(), val functionStack: Stack<IrFunction> = Stack()
 ) {
     inline val clazz: IrClass?
         get() = clazzStack.firstOrNull()
 
-    inline val function: IrSimpleFunction?
+    inline val function: IrFunction?
         get() = functionStack.firstOrNull()
 }
