@@ -105,6 +105,12 @@ data class SourceLocation(
          */
         @TrakkitIntrinsic(TrakkitIntrinsic.SL_CURRENT_FUNCTION_HASH)
         fun currentFunctionHash(): Int = throw TrakkitPluginNotAppliedException()
+
+        @TrakkitIntrinsic(TrakkitIntrinsic.SL_CURRENT_CLASS)
+        fun currentClass(): SourceLocation = throw TrakkitPluginNotAppliedException()
+
+        @TrakkitIntrinsic(TrakkitIntrinsic.SL_CURRENT_CLASS_HASH)
+        fun currentClassHash(): Int = throw TrakkitPluginNotAppliedException()
     }
 
     /**

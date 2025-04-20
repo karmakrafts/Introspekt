@@ -18,6 +18,7 @@ package dev.karmakrafts.trakkit.compiler
 
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.ir.backend.js.utils.valueArguments
+import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrFile
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.declarations.IrParameterKind
@@ -258,6 +259,10 @@ internal data class TrakkitPluginContext(
         }
     }
 
+    fun SourceLocation.createHashSum(): IrConst {
+        return hashCode().toIrConst(irBuiltIns.intType)
+    }
+
     fun IrType.toClassReference(): IrClassReferenceImpl {
         return IrClassReferenceImpl(
             startOffset = SYNTHETIC_OFFSET,
@@ -331,9 +336,5 @@ internal data class TrakkitPluginContext(
                 }
             ))
         } // @formatter:on
-    }
-
-    fun SourceLocation.createHashSum(): IrConst {
-        return hashCode().toIrConst(irBuiltIns.intType)
     }
 }

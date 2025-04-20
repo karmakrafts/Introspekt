@@ -17,21 +17,42 @@
 package dev.karmakrafts.trakkit.compiler
 
 import org.jetbrains.kotlin.ir.IrElement
+import org.jetbrains.kotlin.ir.IrStatement
+import org.jetbrains.kotlin.ir.declarations.IrClass
+import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.util.getAnnotationArgumentValue
 import org.jetbrains.kotlin.ir.util.hasAnnotation
 import org.jetbrains.kotlin.ir.util.target
 import org.jetbrains.kotlin.ir.visitors.IrElementTransformer
 
-internal abstract class TrakkitIntrinsicTransformer<D>(
+internal abstract class TrakkitIntrinsicTransformer(
     val intrinsics: Set<TrakkitIntrinsics>
-) : IrElementTransformer<D> {
-    override fun visitElement(element: IrElement, data: D): IrElement {
+) : IrElementTransformer<IntrinsicContext> {
+    override fun visitElement(element: IrElement, data: IntrinsicContext): IrElement {
         element.transformChildren(this, data)
         return element
     }
 
-    override fun visitCall(expression: IrCall, data: D): IrElement {
+    override fun visitClass(
+        declaration: IrClass, data: IntrinsicContext
+    ): IrStatement {
+        data.clazzStack.push(declaration)
+        val result = super.visitClass(declaration, data)
+        data.clazzStack.pop()
+        return result
+    }
+
+    override fun visitSimpleFunction(
+        declaration: IrSimpleFunction, data: IntrinsicContext
+    ): IrStatement {
+        data.functionStack.push(declaration)
+        val result = super.visitSimpleFunction(declaration, data) // Pass down the parent function
+        data.functionStack.pop()
+        return result
+    }
+
+    override fun visitCall(expression: IrCall, data: IntrinsicContext): IrElement {
         val function = expression.target
 
         if (!function.hasAnnotation(TrakkitNames.TrakkitIntrinsic.id)) return super.visitCall(expression, data)
@@ -43,5 +64,5 @@ internal abstract class TrakkitIntrinsicTransformer<D>(
         return visitIntrinsic(intrinsicType, expression, data)
     }
 
-    abstract fun visitIntrinsic(type: TrakkitIntrinsics, expression: IrCall, data: D): IrElement
+    abstract fun visitIntrinsic(type: TrakkitIntrinsics, expression: IrCall, context: IntrinsicContext): IrElement
 }

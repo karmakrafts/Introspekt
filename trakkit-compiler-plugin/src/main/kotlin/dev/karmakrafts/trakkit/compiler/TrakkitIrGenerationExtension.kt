@@ -30,9 +30,10 @@ internal class TrakkitIrGenerationExtension : IrGenerationExtension {
         val trakkitContext = TrakkitPluginContext(pluginContext)
         for (file in moduleFragment.files) {
             val source = runCatching { Path(file.path).readLines() }.getOrNull() ?: continue
-            file.transform(SourceLocationTransformer(trakkitContext, moduleFragment, file, source), null)
-            file.transform(FunctionInfoTransformer(trakkitContext, moduleFragment, file, source), null)
-            file.transform(ClassInfoTransformer(trakkitContext, moduleFragment, file, source), null)
+            val context = IntrinsicContext()
+            file.transform(SourceLocationTransformer(trakkitContext, moduleFragment, file, source), context)
+            file.transform(FunctionInfoTransformer(trakkitContext, moduleFragment, file, source), context)
+            file.transform(ClassInfoTransformer(trakkitContext, moduleFragment, file, source), context)
         }
     }
 }

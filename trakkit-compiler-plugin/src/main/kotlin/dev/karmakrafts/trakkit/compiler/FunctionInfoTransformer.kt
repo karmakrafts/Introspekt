@@ -17,10 +17,8 @@
 package dev.karmakrafts.trakkit.compiler
 
 import org.jetbrains.kotlin.ir.IrElement
-import org.jetbrains.kotlin.ir.IrStatement
 import org.jetbrains.kotlin.ir.declarations.IrFile
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
-import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.expressions.IrCall
 
 internal class FunctionInfoTransformer(
@@ -28,24 +26,19 @@ internal class FunctionInfoTransformer(
     val moduleFragment: IrModuleFragment,
     val file: IrFile,
     val source: List<String>
-) : TrakkitIntrinsicTransformer<IrSimpleFunction?>(
+) : TrakkitIntrinsicTransformer(
     setOf(
         TrakkitIntrinsics.FI_CURRENT
     )
 ) {
-    override fun visitSimpleFunction(
-        declaration: IrSimpleFunction, data: IrSimpleFunction?
-    ): IrStatement {
-        return super.visitSimpleFunction(declaration, declaration) // Pass down the parent function
-    }
-
     override fun visitIntrinsic(
-        type: TrakkitIntrinsics, expression: IrCall, data: IrSimpleFunction?
+        type: TrakkitIntrinsics, expression: IrCall, context: IntrinsicContext
     ): IrElement {
-        if (data == null) return expression
+        val function = context.function
+        if (function == null) return expression
         return with(pluginContext) {
             when (type) {
-                TrakkitIntrinsics.FI_CURRENT -> data.getFunctionInfo(moduleFragment, file, source).instantiate()
+                TrakkitIntrinsics.FI_CURRENT -> function.getFunctionInfo(moduleFragment, file, source).instantiate()
                 else -> error("Unsupported intrinsic for FunctionInfoTransformer")
             }
         }

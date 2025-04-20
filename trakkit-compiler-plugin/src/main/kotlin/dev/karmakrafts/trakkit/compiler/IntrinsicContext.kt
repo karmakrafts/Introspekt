@@ -16,19 +16,17 @@
 
 package dev.karmakrafts.trakkit.compiler
 
-internal enum class TrakkitIntrinsics {
-    // @formatter:off
-    SL_HERE,
-    SL_HERE_HASH,
-    SL_CURRENT_FUNCTION,
-    SL_CURRENT_FUNCTION_HASH,
-    SL_CURRENT_CLASS,
-    SL_CURRENT_CLASS_HASH,
-    FI_CURRENT,
-    CI_CURRENT;
-    // @formatter:on
+import org.jetbrains.kotlin.ir.declarations.IrClass
+import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
+import java.util.Stack
 
-    companion object {
-        fun byName(name: String): TrakkitIntrinsics? = entries.find { it.name.equals(name, true) }
-    }
+internal data class IntrinsicContext(
+    val clazzStack: Stack<IrClass> = Stack(),
+    val functionStack: Stack<IrSimpleFunction> = Stack()
+) {
+    inline val clazz: IrClass?
+        get() = clazzStack.firstOrNull()
+
+    inline val function: IrSimpleFunction?
+        get() = functionStack.firstOrNull()
 }

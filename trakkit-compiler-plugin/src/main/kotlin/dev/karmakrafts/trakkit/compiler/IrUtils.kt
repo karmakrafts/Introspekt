@@ -16,10 +16,7 @@
 
 package dev.karmakrafts.trakkit.compiler
 
-import org.jetbrains.kotlin.ir.declarations.IrFile
-import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
-import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
-import org.jetbrains.kotlin.ir.declarations.path
+import org.jetbrains.kotlin.ir.declarations.*
 import org.jetbrains.kotlin.ir.expressions.IrFunctionAccessExpression
 
 internal fun getLineNumber(source: List<String>, startOffset: Int): Int {
@@ -42,32 +39,42 @@ internal fun getColumnNumber(source: List<String>, startOffset: Int): Int {
     return 0
 }
 
-internal fun getCallLocation( // @formatter:off
+internal fun getCallLocation(
     module: IrModuleFragment,
     file: IrFile,
     source: List<String>,
     expression: IrFunctionAccessExpression,
     function: IrSimpleFunction?
-): SourceLocation { // @formatter:on
-    return SourceLocation(
-        module.name.asString(),
-        file.path,
-        function?.name?.asString() ?: "unknown",
-        getLineNumber(source, expression.startOffset),
-        getColumnNumber(source, expression.startOffset)
-    )
-}
+): SourceLocation = SourceLocation(
+    module = module.name.asString(),
+    file = file.path,
+    function = function?.name?.asString() ?: "unknown",
+    line = getLineNumber(source, expression.startOffset),
+    column = getColumnNumber(source, expression.startOffset)
+)
 
-internal fun getFunctionLocation( // @formatter:off
+internal fun getFunctionLocation(
     module: IrModuleFragment,
     file: IrFile,
     source: List<String>,
-    function: IrSimpleFunction?
-): SourceLocation { // @formatter:on
-    return SourceLocation(
-        module.name.asString(),
-        file.path,
-        function?.name?.asString() ?: "unknown",
-        function?.let { getLineNumber(source, it.startOffset) } ?: 0,
-        function?.let { getColumnNumber(source, it.startOffset) } ?: 0)
-}
+    function: IrSimpleFunction
+): SourceLocation = SourceLocation(
+    module = module.name.asString(),
+    file = file.path,
+    function = function.name.asString(),
+    line = getLineNumber(source, function.startOffset),
+    column = getColumnNumber(source, function.startOffset)
+)
+
+internal fun getClassLocation(
+    module: IrModuleFragment,
+    file: IrFile,
+    source: List<String>,
+    clazz: IrClass
+): SourceLocation = SourceLocation(
+    module = module.name.asString(),
+    file = file.path,
+    function = "",
+    line = getLineNumber(source, clazz.startOffset),
+    column = getColumnNumber(source, clazz.startOffset)
+)
