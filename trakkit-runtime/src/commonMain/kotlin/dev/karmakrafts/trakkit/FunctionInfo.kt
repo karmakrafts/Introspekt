@@ -14,28 +14,20 @@
  * limitations under the License.
  */
 
-rootProject.name = "trakkit"
+package dev.karmakrafts.trakkit
 
-pluginManagement {
-    repositories {
-        google()
-        mavenCentral()
-        mavenLocal()
-        gradlePluginPortal()
-        maven("https://central.sonatype.com/repository/maven-snapshots")
+import kotlin.reflect.KClass
+
+data class FunctionInfo(
+    val location: SourceLocation,
+    val typeParameterNames: List<String>,
+    val returnType: KClass<*>,
+    val parameterTypes: List<KClass<*>>,
+    val parameterNames: List<String>,
+    val annotations: Map<KClass<out Annotation>, AnnotationInfo>,
+) {
+    companion object {
+        @TrakkitIntrinsic(TrakkitIntrinsic.FI_CURRENT)
+        fun current(): FunctionInfo = throw TrakkitPluginNotAppliedException()
     }
 }
-
-@Suppress("UnstableApiUsage")
-dependencyResolutionManagement {
-    repositories {
-        google()
-        mavenCentral()
-        mavenLocal()
-        maven("https://central.sonatype.com/repository/maven-snapshots")
-    }
-}
-
-include("trakkit-runtime")
-include("trakkit-gradle-plugin")
-include("trakkit-compiler-plugin")

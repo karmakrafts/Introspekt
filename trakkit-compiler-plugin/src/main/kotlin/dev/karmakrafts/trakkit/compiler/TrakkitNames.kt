@@ -16,6 +16,7 @@
 
 package dev.karmakrafts.trakkit.compiler
 
+import org.jetbrains.kotlin.name.CallableId
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
@@ -24,11 +25,61 @@ internal object TrakkitNames {
     val packageName: FqName = FqName("dev.karmakrafts.trakkit")
 
     object Functions {
-        val here: Name = Name.identifier("here")
+        val listOf: Name = Name.identifier("listOf")
+        val mapOf: Name = Name.identifier("mapOf")
+    }
+
+    object Kotlin {
+        val rootPackageName: FqName = FqName("kotlin")
+        val collectionsPackageName: FqName = FqName("kotlin.collections")
+        val listOf: CallableId = CallableId(collectionsPackageName, Functions.listOf)
+        val mapOf: CallableId = CallableId(collectionsPackageName, Functions.mapOf)
+
+        object List {
+            val name: Name = Name.identifier("List")
+            val id: ClassId = ClassId(collectionsPackageName, name)
+            val fqName: FqName = id.asSingleFqName()
+        }
+
+        object Map {
+            val name: Name = Name.identifier("Map")
+            val id: ClassId = ClassId(collectionsPackageName, name)
+            val fqName: FqName = id.asSingleFqName()
+        }
+
+        object Pair {
+            val name: Name = Name.identifier("Pair")
+            val id: ClassId = ClassId(rootPackageName, name)
+            val fqName: FqName = id.asSingleFqName()
+        }
+
+        object Annotation {
+            val name: Name = Name.identifier("Annotation")
+            val id: ClassId = ClassId(rootPackageName, name)
+            val fqName: FqName = id.asSingleFqName()
+        }
     }
 
     object SourceLocation {
         val name: Name = Name.identifier("SourceLocation")
+        val id: ClassId = ClassId(packageName, name)
+        val fqName: FqName = id.asSingleFqName()
+    }
+
+    object FunctionInfo {
+        val name: Name = Name.identifier("FunctionInfo")
+        val id: ClassId = ClassId(packageName, name)
+        val fqName: FqName = id.asSingleFqName()
+    }
+
+    object ClassInfo {
+        val name: Name = Name.identifier("ClassInfo")
+        val id: ClassId = ClassId(packageName, name)
+        val fqName: FqName = id.asSingleFqName()
+    }
+
+    object AnnotationInfo {
+        val name: Name = Name.identifier("AnnotationInfo")
         val id: ClassId = ClassId(packageName, name)
         val fqName: FqName = id.asSingleFqName()
     }

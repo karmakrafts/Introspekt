@@ -14,28 +14,15 @@
  * limitations under the License.
  */
 
-rootProject.name = "trakkit"
+package dev.karmakrafts.trakkit.compiler
 
-pluginManagement {
-    repositories {
-        google()
-        mavenCentral()
-        mavenLocal()
-        gradlePluginPortal()
-        maven("https://central.sonatype.com/repository/maven-snapshots")
-    }
-}
+import org.jetbrains.kotlin.ir.types.IrType
 
-@Suppress("UnstableApiUsage")
-dependencyResolutionManagement {
-    repositories {
-        google()
-        mavenCentral()
-        mavenLocal()
-        maven("https://central.sonatype.com/repository/maven-snapshots")
-    }
-}
-
-include("trakkit-runtime")
-include("trakkit-gradle-plugin")
-include("trakkit-compiler-plugin")
+internal data class FunctionInfo(
+    val location: SourceLocation,
+    val typeParameterNames: List<String>,
+    val returnType: IrType,
+    val parameterTypes: List<IrType>,
+    val parameterNames: List<String>,
+    val annotations: Map<IrType, AnnotationInfo>,
+)

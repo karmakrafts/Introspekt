@@ -17,10 +17,7 @@
 package dev.karmakrafts.trakkit.compiler
 
 internal enum class TrakkitIntrinsics {
-    HERE,
-    HERE_HASH,
-    CURRENT_FUNCTION,
-    CURRENT_FUNCTION_HASH;
+    SL_HERE, SL_HERE_HASH, SL_CURRENT_FUNCTION, SL_CURRENT_FUNCTION_HASH, FI_CURRENT, CI_CURRENT;
 
     companion object {
         fun byName(name: String): TrakkitIntrinsics? = entries.find { it.name.equals(name, true) }

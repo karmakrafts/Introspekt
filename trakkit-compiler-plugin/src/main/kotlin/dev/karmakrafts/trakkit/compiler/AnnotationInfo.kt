@@ -14,28 +14,8 @@
  * limitations under the License.
  */
 
-rootProject.name = "trakkit"
+package dev.karmakrafts.trakkit.compiler
 
-pluginManagement {
-    repositories {
-        google()
-        mavenCentral()
-        mavenLocal()
-        gradlePluginPortal()
-        maven("https://central.sonatype.com/repository/maven-snapshots")
-    }
-}
-
-@Suppress("UnstableApiUsage")
-dependencyResolutionManagement {
-    repositories {
-        google()
-        mavenCentral()
-        mavenLocal()
-        maven("https://central.sonatype.com/repository/maven-snapshots")
-    }
-}
-
-include("trakkit-runtime")
-include("trakkit-gradle-plugin")
-include("trakkit-compiler-plugin")
+internal data class AnnotationInfo(
+    val location: SourceLocation, val values: Map<String, Any?>
+)

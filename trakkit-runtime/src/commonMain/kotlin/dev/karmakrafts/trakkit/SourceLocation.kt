@@ -66,7 +66,7 @@ data class SourceLocation(
          * @return A [SourceLocation] object representing the current location in the source code.
          * @throws TrakkitPluginNotAppliedException if the Trakkit compiler plugin is not applied.
          */
-        @TrakkitIntrinsic(TrakkitIntrinsic.HERE)
+        @TrakkitIntrinsic(TrakkitIntrinsic.SL_HERE)
         fun here(): SourceLocation = throw TrakkitPluginNotAppliedException()
 
         /**
@@ -76,7 +76,7 @@ data class SourceLocation(
          * @return The hash of the [SourceLocation] obtained at this point in the code.
          * @throws TrakkitPluginNotAppliedException if the Trakkit compiler plugin is not applied.
          */
-        @TrakkitIntrinsic(TrakkitIntrinsic.HERE_HASH)
+        @TrakkitIntrinsic(TrakkitIntrinsic.SL_HERE_HASH)
         fun hereHash(): Int = throw TrakkitPluginNotAppliedException()
 
         /**
@@ -89,7 +89,7 @@ data class SourceLocation(
          * @return A [SourceLocation] object representing the current function in the source code.
          * @throws TrakkitPluginNotAppliedException if the Trakkit compiler plugin is not applied.
          */
-        @TrakkitIntrinsic(TrakkitIntrinsic.CURRENT_FUNCTION)
+        @TrakkitIntrinsic(TrakkitIntrinsic.SL_CURRENT_FUNCTION)
         fun currentFunction(): SourceLocation = throw TrakkitPluginNotAppliedException()
 
         /**
@@ -103,7 +103,7 @@ data class SourceLocation(
          * @return The hash of the current function's [SourceLocation].
          * @throws TrakkitPluginNotAppliedException if the Trakkit compiler plugin is not applied.
          */
-        @TrakkitIntrinsic(TrakkitIntrinsic.CURRENT_FUNCTION_HASH)
+        @TrakkitIntrinsic(TrakkitIntrinsic.SL_CURRENT_FUNCTION_HASH)
         fun currentFunctionHash(): Int = throw TrakkitPluginNotAppliedException()
     }
 

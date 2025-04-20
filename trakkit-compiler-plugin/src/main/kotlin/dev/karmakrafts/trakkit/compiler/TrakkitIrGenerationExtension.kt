@@ -19,14 +19,20 @@ package dev.karmakrafts.trakkit.compiler
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
+import org.jetbrains.kotlin.ir.declarations.path
+import kotlin.io.path.Path
+import kotlin.io.path.readLines
 
 internal class TrakkitIrGenerationExtension : IrGenerationExtension {
     override fun generate(
-        moduleFragment: IrModuleFragment,
-        pluginContext: IrPluginContext
+        moduleFragment: IrModuleFragment, pluginContext: IrPluginContext
     ) {
+        val trakkitContext = TrakkitPluginContext(pluginContext)
         for (file in moduleFragment.files) {
-            file.transform(TrakkitIntrinsicTransformer(pluginContext, moduleFragment, file), null)
+            val source = runCatching { Path(file.path).readLines() }.getOrNull() ?: continue
+            file.transform(SourceLocationTransformer(trakkitContext, moduleFragment, file, source), null)
+            file.transform(FunctionInfoTransformer(trakkitContext, moduleFragment, file, source), null)
+            file.transform(ClassInfoTransformer(trakkitContext, moduleFragment, file, source), null)
         }
     }
 }
