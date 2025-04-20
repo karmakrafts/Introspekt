@@ -28,17 +28,17 @@ internal class FunctionInfoTransformer(
     val source: List<String>
 ) : TrakkitIntrinsicTransformer(
     setOf(
-        TrakkitIntrinsics.FI_CURRENT
+        TrakkitIntrinsic.FI_CURRENT
     )
 ) {
     override fun visitIntrinsic(
-        type: TrakkitIntrinsics, expression: IrCall, context: IntrinsicContext
+        type: TrakkitIntrinsic, expression: IrCall, context: IntrinsicContext
     ): IrElement {
         val function = context.function
         if (function == null) return expression
         return with(pluginContext) {
             when (type) {
-                TrakkitIntrinsics.FI_CURRENT -> function.getFunctionInfo(moduleFragment, file, source).instantiate()
+                TrakkitIntrinsic.FI_CURRENT -> function.getFunctionInfo(moduleFragment, file, source).instantiate()
                 else -> error("Unsupported intrinsic for FunctionInfoTransformer")
             }
         }

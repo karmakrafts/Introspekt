@@ -16,7 +16,7 @@
 
 package dev.karmakrafts.trakkit.compiler
 
-internal enum class TrakkitIntrinsics {
+internal enum class TrakkitIntrinsic {
     // @formatter:off
     SL_HERE,
     SL_HERE_HASH,
@@ -29,6 +29,6 @@ internal enum class TrakkitIntrinsics {
     // @formatter:on
 
     companion object {
-        fun byName(name: String): TrakkitIntrinsics? = entries.find { it.name.equals(name, true) }
+        fun byName(name: String): TrakkitIntrinsic? = entries.find { it.name.equals(name, true) }
     }
 }

@@ -28,29 +28,29 @@ internal class SourceLocationTransformer( // @formatter:off
     val source: List<String>
 ) : TrakkitIntrinsicTransformer( // @formatter:on
     setOf(
-        TrakkitIntrinsics.SL_HERE,
-        TrakkitIntrinsics.SL_HERE_HASH,
-        TrakkitIntrinsics.SL_CURRENT_FUNCTION,
-        TrakkitIntrinsics.SL_CURRENT_FUNCTION_HASH,
-        TrakkitIntrinsics.SL_CURRENT_CLASS,
-        TrakkitIntrinsics.SL_CURRENT_CLASS_HASH
+        TrakkitIntrinsic.SL_HERE,
+        TrakkitIntrinsic.SL_HERE_HASH,
+        TrakkitIntrinsic.SL_CURRENT_FUNCTION,
+        TrakkitIntrinsic.SL_CURRENT_FUNCTION_HASH,
+        TrakkitIntrinsic.SL_CURRENT_CLASS,
+        TrakkitIntrinsic.SL_CURRENT_CLASS_HASH
     )
 ) {
     override fun visitIntrinsic(
-        type: TrakkitIntrinsics, expression: IrCall, context: IntrinsicContext
+        type: TrakkitIntrinsic, expression: IrCall, context: IntrinsicContext
     ): IrElement = with(pluginContext) {
         when (type) { // @formatter:off
-            TrakkitIntrinsics.SL_HERE ->
+            TrakkitIntrinsic.SL_HERE ->
                 getCallLocation(moduleFragment, file, source, expression, context.function).instantiate()
-            TrakkitIntrinsics.SL_HERE_HASH ->
+            TrakkitIntrinsic.SL_HERE_HASH ->
                 getCallLocation(moduleFragment, file, source, expression, context.function).createHashSum()
-            TrakkitIntrinsics.SL_CURRENT_FUNCTION ->
+            TrakkitIntrinsic.SL_CURRENT_FUNCTION ->
                 getFunctionLocation(moduleFragment, file, source, requireNotNull(context.function) { "Not inside any function" }).instantiate()
-            TrakkitIntrinsics.SL_CURRENT_FUNCTION_HASH ->
+            TrakkitIntrinsic.SL_CURRENT_FUNCTION_HASH ->
                 getFunctionLocation(moduleFragment, file, source, requireNotNull(context.function) { "Not inside any function" }).createHashSum()
-            TrakkitIntrinsics.SL_CURRENT_CLASS ->
+            TrakkitIntrinsic.SL_CURRENT_CLASS ->
                 getClassLocation(moduleFragment, file, source, requireNotNull(context.clazz) { "Not inside any class" }).instantiate()
-            TrakkitIntrinsics.SL_CURRENT_CLASS_HASH ->
+            TrakkitIntrinsic.SL_CURRENT_CLASS_HASH ->
                 getClassLocation(moduleFragment, file, source, requireNotNull(context.clazz) { "Not inside any class" }).createHashSum()
             else -> error("Unsupported intrinsic for SourceLocationTransformer")
         } // @formatter:on

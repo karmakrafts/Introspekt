@@ -27,7 +27,7 @@ import org.jetbrains.kotlin.ir.util.target
 import org.jetbrains.kotlin.ir.visitors.IrElementTransformer
 
 internal abstract class TrakkitIntrinsicTransformer(
-    val intrinsics: Set<TrakkitIntrinsics>
+    val intrinsics: Set<TrakkitIntrinsic>
 ) : IrElementTransformer<IntrinsicContext> {
     override fun visitElement(element: IrElement, data: IntrinsicContext): IrElement {
         element.transformChildren(this, data)
@@ -58,11 +58,11 @@ internal abstract class TrakkitIntrinsicTransformer(
         if (!function.hasAnnotation(TrakkitNames.TrakkitIntrinsic.id)) return super.visitCall(expression, data)
         val intrinsicName = function.getAnnotationArgumentValue<String>(TrakkitNames.TrakkitIntrinsic.fqName, "value")
             ?: return super.visitCall(expression, data)
-        val intrinsicType = TrakkitIntrinsics.byName(intrinsicName) ?: return super.visitCall(expression, data)
+        val intrinsicType = TrakkitIntrinsic.byName(intrinsicName) ?: return super.visitCall(expression, data)
         if (intrinsicType !in intrinsics) return super.visitCall(expression, data)
 
         return visitIntrinsic(intrinsicType, expression, data)
     }
 
-    abstract fun visitIntrinsic(type: TrakkitIntrinsics, expression: IrCall, context: IntrinsicContext): IrElement
+    abstract fun visitIntrinsic(type: TrakkitIntrinsic, expression: IrCall, context: IntrinsicContext): IrElement
 }

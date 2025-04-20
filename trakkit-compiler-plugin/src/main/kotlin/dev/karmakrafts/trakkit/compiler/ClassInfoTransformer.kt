@@ -28,11 +28,11 @@ internal class ClassInfoTransformer(
     val source: List<String>
 ) : TrakkitIntrinsicTransformer(
     setOf(
-        TrakkitIntrinsics.CI_CURRENT
+        TrakkitIntrinsic.CI_CURRENT
     )
 ) {
     override fun visitIntrinsic(
-        type: TrakkitIntrinsics, expression: IrCall, context: IntrinsicContext
+        type: TrakkitIntrinsic, expression: IrCall, context: IntrinsicContext
     ): IrElement = with(pluginContext) {
         when (type) {
             else -> error("Unsupported intrinsic for ClassInfoTransformer")
