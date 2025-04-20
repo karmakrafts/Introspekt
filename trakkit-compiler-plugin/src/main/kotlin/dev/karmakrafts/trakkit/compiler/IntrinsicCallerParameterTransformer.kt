@@ -19,6 +19,8 @@ package dev.karmakrafts.trakkit.compiler
 import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.backend.js.utils.valueArguments
 import org.jetbrains.kotlin.ir.expressions.IrCall
+import org.jetbrains.kotlin.ir.expressions.IrConstructorCall
+import org.jetbrains.kotlin.ir.expressions.IrFunctionAccessExpression
 import org.jetbrains.kotlin.ir.util.getAnnotation
 import org.jetbrains.kotlin.ir.util.hasAnnotation
 import org.jetbrains.kotlin.ir.util.target
@@ -37,8 +39,7 @@ internal class IntrinsicCallerParameterTransformer(
     }
 
     @Suppress("UNCHECKED_CAST")
-    override fun visitCall(expression: IrCall) {
-        super.visitCall(expression)
+    private fun transformCall(expression: IrFunctionAccessExpression) {
         val function = expression.target
         if (!function.hasAnnotation(TrakkitNames.CaptureCaller.id)) return
         with(pluginContext) {
@@ -58,5 +59,15 @@ internal class IntrinsicCallerParameterTransformer(
                 )
             }
         }
+    }
+
+    override fun visitConstructorCall(expression: IrConstructorCall) {
+        super.visitConstructorCall(expression)
+        transformCall(expression)
+    }
+
+    override fun visitCall(expression: IrCall) {
+        super.visitCall(expression)
+        transformCall(expression)
     }
 }
