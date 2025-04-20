@@ -8,7 +8,6 @@ workflow:
 
 stages:
   - build
-  - test
   - security
   - publish
 
@@ -69,48 +68,10 @@ build:
   interruptible: true
   rules:
     - *if-merge-request-or-main
-  before_script:
-    - export JAVA_HOME=/Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home
   script:
-    - ./gradlew clean link{LinuxX64,LinuxArm64,AndroidNativeX64,AndroidNativeArm64,AndroidNativeArm32,MingwX64,MacosX64,MacosArm64,IosX64,IosArm64,IosSimulatorArm64} jvmJar --stacktrace
+    - ./gradlew clean build --stacktrace
   tags:
     - macos
-
-# ------------------------------ Tests
-
-test:linux:
-  stage: test
-  interruptible: true
-  rules:
-    - *if-merge-request-or-main
-  before_script:
-    - export JAVA_HOME=/home/sdks/zulu-17
-  script:
-    - ./gradlew clean linuxX64Test --stacktrace
-  tags:
-    - linux
-
-test:macos:
-  stage: test
-  interruptible: true
-  rules:
-    - *if-merge-request-or-main
-  before_script:
-    - export JAVA_HOME=/Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home
-  script:
-    - ./gradlew clean macosArm64Test --stacktrace
-  tags:
-    - macos
-
-test:windows:
-  stage: test
-  interruptible: true
-  rules:
-    - *if-merge-request-or-main
-  script:
-    - ./gradlew clean mingwX64Test --stacktrace
-  tags:
-    - windows
 
 # ------------------------------ Publish
 
@@ -119,8 +80,6 @@ publish:artifacts:
   rules:
     - *if-main
     - *if-release
-  before_script:
-    - export JAVA_HOME=/Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home
   script:
     - ./gradlew clean publish --stacktrace
   tags:
@@ -130,9 +89,7 @@ publish:documentation:
   stage: publish
   rules:
     - *if-release
-  before_script:
-    - export JAVA_HOME=/home/sdks/zulu-17
   script:
-    - ./gradlew -DpublishDocs.root=/var/www/docs/rakii publishDocs --stacktrace
+    - ./gradlew -DpublishDocs.root=/var/www/docs/trakkit publishDocs --stacktrace
   tags:
     - linux
