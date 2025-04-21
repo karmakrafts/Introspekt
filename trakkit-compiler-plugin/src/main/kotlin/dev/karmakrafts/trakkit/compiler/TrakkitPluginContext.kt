@@ -18,6 +18,7 @@ package dev.karmakrafts.trakkit.compiler
 
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.ir.backend.js.utils.valueArguments
+import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrFile
 import org.jetbrains.kotlin.ir.declarations.IrFunction
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
@@ -42,6 +43,8 @@ import org.jetbrains.kotlin.ir.types.defaultType
 import org.jetbrains.kotlin.ir.types.starProjectedType
 import org.jetbrains.kotlin.ir.types.typeWith
 import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
+import org.jetbrains.kotlin.ir.util.constructedClassType
+import org.jetbrains.kotlin.ir.util.functions
 import org.jetbrains.kotlin.ir.util.isVararg
 import org.jetbrains.kotlin.ir.util.toIrConst
 
@@ -185,6 +188,7 @@ internal data class TrakkitPluginContext(
         return values
     }
 
+    @OptIn(UnsafeDuringIrConstructionAPI::class)
     fun IrConstructorCall.getAnnotationInfo( // @formatter:off
         module: IrModuleFragment,
         file: IrFile,
@@ -192,6 +196,7 @@ internal data class TrakkitPluginContext(
         function: IrFunction?
     ): AnnotationInfo = AnnotationInfo( // @formatter:on
         location = getCallLocation(module, file, source, this@getAnnotationInfo, function),
+        type = symbol.owner.constructedClassType,
         values = getAnnotationValues()
     )
 
@@ -286,8 +291,9 @@ internal data class TrakkitPluginContext(
             constructorTypeArgumentsCount = 0
         ).apply {
             putValueArgument(0, location.instantiate())
+            putValueArgument(1, this@instantiate.type.toClassReference())
             // @formatter:off
-            putValueArgument(1, createMapOf(
+            putValueArgument(2, createMapOf(
                 keyType = irBuiltIns.stringType,
                 valueType = irBuiltIns.anyType,
                 values = values.map { (key, value) ->
@@ -392,5 +398,51 @@ internal data class TrakkitPluginContext(
                 }
             ))
         } // @formatter:on
+    }
+
+    @OptIn(UnsafeDuringIrConstructionAPI::class)
+    fun IrClass.getClassInfo( // @formatter:off
+        module: IrModuleFragment,
+        file: IrFile,
+        source: List<String>
+    ): ClassInfo = ClassInfo( // @formatter:on
+        location = getClassLocation(module, file, source, this),
+        type = symbol.defaultType,
+        typeParameterNames = typeParameters.map { it.name.asString() },
+        annotations = annotations.toAnnotationMap(module, file, source, null),
+        functions = functions.map { it.getFunctionInfo(module, file, source) }.toList()
+    )
+
+    fun ClassInfo.instantiate(): IrConstructorCallImpl {
+        return IrConstructorCallImpl(
+            startOffset = SYNTHETIC_OFFSET,
+            endOffset = SYNTHETIC_OFFSET,
+            type = classInfoType.defaultType,
+            symbol = classInfoConstructor,
+            typeArgumentsCount = 0,
+            constructorTypeArgumentsCount = 0
+        ).apply {
+            // location
+            putValueArgument(0, location.instantiate())
+            // type
+            putValueArgument(1, this@instantiate.type.toClassReference())
+            // typeParameterNames
+            putValueArgument(
+                2, createListOf(
+                type = irBuiltIns.stringType,
+                values = typeParameterNames.map { it.toIrConst(irBuiltIns.stringType) }))
+            // annotations
+            putValueArgument(
+                3, createMapOf(
+                keyType = irBuiltIns.kClassClass.typeWith(annotationType.defaultType),
+                valueType = annotationInfoType.defaultType,
+                values = annotations.map { (type, info) ->
+                    type.toIrValueOrType() to info.instantiate()
+                }))
+            // functions
+            putValueArgument(
+                4, createListOf(
+                type = functionInfoType.defaultType, values = functions.map { it.instantiate() }))
+        }
     }
 }

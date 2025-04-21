@@ -59,6 +59,11 @@ kotlin {
                 implementation(libs.kotlin.test)
             }
         }
+        val commonMain by getting
+        val nonWebMain by creating { dependsOn(commonMain) }
+        val nativeMain by getting { dependsOn(nonWebMain) }
+        val jvmMain by getting { dependsOn(nonWebMain) }
+        val androidMain by getting { dependsOn(nonWebMain) }
     }
 }
 

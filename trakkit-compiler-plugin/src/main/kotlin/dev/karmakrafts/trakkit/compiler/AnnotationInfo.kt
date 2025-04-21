@@ -16,6 +16,10 @@
 
 package dev.karmakrafts.trakkit.compiler
 
+import org.jetbrains.kotlin.ir.types.IrType
+
 internal data class AnnotationInfo(
-    val location: SourceLocation, val values: Map<String, Any?>
+    val location: SourceLocation,
+    val type: IrType,
+    val values: Map<String, Any?>
 )

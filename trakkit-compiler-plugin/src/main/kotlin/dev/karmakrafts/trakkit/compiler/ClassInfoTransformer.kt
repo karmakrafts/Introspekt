@@ -35,6 +35,10 @@ internal class ClassInfoTransformer(
         type: TrakkitIntrinsic, expression: IrCall, context: IntrinsicContext
     ): IrElement = with(pluginContext) {
         when (type) {
+            TrakkitIntrinsic.CI_CURRENT -> requireNotNull(context.clazz) {
+                "Not inside any class"
+            }.getClassInfo(moduleFragment, file, source).instantiate()
+
             else -> error("Unsupported intrinsic for ClassInfoTransformer")
         }
     }

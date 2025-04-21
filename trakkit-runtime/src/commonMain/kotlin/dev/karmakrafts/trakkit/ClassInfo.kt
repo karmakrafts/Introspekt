@@ -20,6 +20,7 @@ import kotlin.reflect.KClass
 
 data class ClassInfo(
     val location: SourceLocation,
+    val type: KClass<*>,
     val typeParameterNames: List<String>,
     val annotations: Map<KClass<out Annotation>, AnnotationInfo>,
     val functions: List<FunctionInfo>
@@ -27,5 +28,16 @@ data class ClassInfo(
     companion object {
         @TrakkitIntrinsic(TrakkitIntrinsic.CI_CURRENT)
         fun current(): ClassInfo = throw TrakkitPluginNotAppliedException()
+    }
+
+    fun toFormattedString(): String {
+        var result =
+            if (annotations.isEmpty()) "" else "${annotations.values.joinToString("\n") { it.toFormattedString() }}\n"
+        result += "class $type${if (typeParameterNames.isEmpty()) "" else "<${typeParameterNames.joinToString(", ")}>"}\n"
+        result += "\tat $location"
+        if (functions.isNotEmpty()) {
+            result += "\n${functions.joinToString("\n") { "\t${it.toFormattedString()}" }}"
+        }
+        return result
     }
 }

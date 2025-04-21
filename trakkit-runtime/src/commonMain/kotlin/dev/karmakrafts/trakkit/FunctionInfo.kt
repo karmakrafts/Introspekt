@@ -30,4 +30,23 @@ data class FunctionInfo(
         @TrakkitIntrinsic(TrakkitIntrinsic.FI_CURRENT)
         fun current(): FunctionInfo = throw TrakkitPluginNotAppliedException()
     }
+
+    inline val name: String
+        get() = location.function
+
+    fun toFormattedString(): String {
+        var result =
+            if (annotations.isEmpty()) "" else "${annotations.values.joinToString("\n") { it.toFormattedString() }}\n"
+        result += "fun "
+        if (typeParameterNames.isNotEmpty()) {
+            result += "<${typeParameterNames.joinToString(", ")}> "
+        }
+        val parameters = if (parameterNames.isEmpty()) ""
+        else parameterNames.mapIndexed { index, name ->
+            "$name: ${parameterTypes[index].getQualifiedName()}"
+        }.joinToString(", ")
+        result += "${location.function}($parameters): ${returnType.getQualifiedName()}\n"
+        result += "\tat $location"
+        return result
+    }
 }

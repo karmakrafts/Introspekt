@@ -16,7 +16,19 @@
 
 package dev.karmakrafts.trakkit
 
-data class AnnotationInfo(
+import kotlin.reflect.KClass
+
+data class AnnotationInfo( // @formatter:off
     val location: SourceLocation,
+    val type: KClass<out Annotation>,
     val values: Map<String, Any>
-)
+) { // @formatter:on
+    fun toFormattedString(): String {
+        var result = "@${type.getQualifiedName()}\n"
+        result += "\tat $location"
+        if (values.isNotEmpty()) {
+            result += "\n\t$values"
+        }
+        return result
+    }
+}

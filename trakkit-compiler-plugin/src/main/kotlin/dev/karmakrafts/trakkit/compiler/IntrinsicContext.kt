@@ -20,9 +20,10 @@ import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrFunction
 import java.util.*
 
-internal data class IntrinsicContext(
-    val clazzStack: Stack<IrClass> = Stack(), val functionStack: Stack<IrFunction> = Stack()
-) {
+internal data class IntrinsicContext( // @formatter:off
+    val clazzStack: Stack<IrClass> = Stack(),
+    val functionStack: Stack<IrFunction> = Stack()
+) { // @formatter:on
     inline val clazz: IrClass?
         get() = clazzStack.firstOrNull()
 

@@ -14,14 +14,10 @@
  * limitations under the License.
  */
 
-package dev.karmakrafts.trakkit.compiler
+package dev.karmakrafts.trakkit
 
-import org.jetbrains.kotlin.ir.types.IrType
+import kotlin.reflect.KClass
 
-internal data class ClassInfo(
-    val location: SourceLocation,
-    val type: IrType,
-    val typeParameterNames: List<String>,
-    val annotations: Map<IrType, AnnotationInfo>,
-    val functions: List<FunctionInfo>
-)
+expect fun KClass<*>.getQualifiedName(): String
+
+expect fun KClass<*>.getSimpleName(): String
