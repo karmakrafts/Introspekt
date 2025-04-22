@@ -17,6 +17,7 @@
 package dev.karmakrafts.trakkit
 
 import kotlin.reflect.KClass
+import kotlin.reflect.KFunction
 
 data class FunctionInfo(
     val location: SourceLocation,
@@ -30,6 +31,9 @@ data class FunctionInfo(
     companion object {
         @TrakkitIntrinsic(TrakkitIntrinsic.FI_CURRENT)
         fun current(): FunctionInfo = throw TrakkitPluginNotAppliedException()
+
+        @TrakkitIntrinsic(TrakkitIntrinsic.FI_OF)
+        fun of(function: KFunction<*>): FunctionInfo = throw TrakkitPluginNotAppliedException()
     }
 
     fun toFormattedString(): String {

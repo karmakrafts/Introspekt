@@ -21,9 +21,15 @@ import kotlin.reflect.KClass
 data class PropertyInfo(
     val location: SourceLocation,
     val name: String,
-    val type: KClass<*>
+    val type: KClass<*>,
+    val isMutable: Boolean,
+    val visibility: VisibilityModifier,
+    val modality: ModalityModifier
 ) {
     fun toFormattedString(): String {
-        return ""
+        var result = "$visibility $modality "
+        result += if (isMutable) "var " else "val "
+        result += "$name: ${type.getQualifiedName()}"
+        return result
     }
 }

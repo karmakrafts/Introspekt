@@ -97,6 +97,13 @@ internal data class TrakkitPluginContext(
     private val functionInfoConstructor: IrConstructorSymbol =
         pluginContext.referenceConstructors(TrakkitNames.FunctionInfo.id).first()
 
+    private val propertyInfoType: IrClassSymbol =
+        requireNotNull(pluginContext.referenceClass(TrakkitNames.PropertyInfo.id)) {
+            "Cannot find PropertyInfo type, Trakkit runtime library is most likely missing"
+        }
+    private val propertyInfoConstructor: IrConstructorSymbol =
+        pluginContext.referenceConstructors(TrakkitNames.PropertyInfo.id).first()
+
     private val classInfoType: IrClassSymbol = requireNotNull(pluginContext.referenceClass(TrakkitNames.ClassInfo.id)) {
         "Cannot find ClassInfo type, Trakkit runtime library is most likely missing"
     }
@@ -187,7 +194,7 @@ internal data class TrakkitPluginContext(
         val parameterNames = parameters.map { it.name.asString() }
         check(parameterNames.size == valueArguments.size) { "Missing annotation parameter info" }
         val values = HashMap<String, Any?>()
-        val firstParamIndex = parameters.first().indexInParameters
+        val firstParamIndex = parameters.first().indexInOldValueParameters
         val lastParamIndex = firstParamIndex + parameters.size
         for (index in firstParamIndex..<lastParamIndex) {
             val value = valueArguments[index]
@@ -210,7 +217,7 @@ internal data class TrakkitPluginContext(
         file: IrFile,
         source: List<String>
     ): AnnotationInfo = AnnotationInfo( // @formatter:on
-        location = getCallLocation(module, file, source, this@getAnnotationInfo),
+        location = getLocation(module, file, source),
         type = symbol.owner.constructedClassType,
         values = getAnnotationValues()
     )
@@ -361,7 +368,7 @@ internal data class TrakkitPluginContext(
         file: IrFile,
         source: List<String>,
     ): FunctionInfo = FunctionInfo( // @formatter:on
-        location = getFunctionLocation(module, file, source, this@getFunctionInfo),
+        location = getFunctionLocation(module, file, source),
         name = name.asString(),
         typeParameterNames = typeParameters.map { it.name.asString() },
         returnType = returnType,
@@ -442,6 +449,29 @@ internal data class TrakkitPluginContext(
         else -> "FINAL"
     }
 
+    private fun PropertyInfo.instantiate(): IrConstructorCallImpl = IrConstructorCallImpl(
+        startOffset = SYNTHETIC_OFFSET,
+        endOffset = SYNTHETIC_OFFSET,
+        type = propertyInfoType.defaultType,
+        symbol = propertyInfoConstructor,
+        typeArgumentsCount = 0,
+        constructorTypeArgumentsCount = 0
+    ).apply { // @formatter:off
+        var index = 0
+        // location
+        putValueArgument(index++, location.instantiate())
+        // name
+        putValueArgument(index++, name.toIrConst(irBuiltIns.stringType))
+        // type
+        putValueArgument(index++, type.toClassReference())
+        // isMutable
+        putValueArgument(index++, isMutable.toIrConst(irBuiltIns.booleanType))
+        // visibility
+        putValueArgument(index++, visibility.getEnumValue(visibilityModifierType) { getVisibilityName() })
+        // modality
+        putValueArgument(index, modality.getEnumValue(modalityModifierType) { getModalityName() })
+    } // @formatter:on
+
     private fun IrClass.getClassModifier(): ClassModifier? = when {
         isData -> ClassModifier.DATA
         isValue -> ClassModifier.VALUE
@@ -464,7 +494,7 @@ internal data class TrakkitPluginContext(
         file: IrFile,
         source: List<String>
     ): ClassInfo = ClassInfo(
-        location = getClassLocation(module, file, source, this),
+        location = getLocation(module, file, source),
         type = symbol.defaultType,
         typeParameterNames = typeParameters.map { it.name.asString() },
         annotations = annotations.toAnnotationMap(module, file, source),
@@ -509,6 +539,11 @@ internal data class TrakkitPluginContext(
             type = functionInfoType.defaultType,
             values = functions.map { it.instantiate() })
         )
+        // properties
+        putValueArgument(index++, createListOf(
+            type = propertyInfoType.defaultType,
+            values = emptyList() // TODO: implement this
+        ))
         // companionObjects
         putValueArgument(index++, createListOf(
             type = classInfoType.defaultType,

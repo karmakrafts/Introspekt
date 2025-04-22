@@ -30,7 +30,7 @@ import org.jetbrains.kotlin.ir.visitors.acceptChildrenVoid
  * registered intrinsics to allow caller-tracing (like with std::source_location in C++).
  */
 internal class IntrinsicCalleeParameterTransformer(
-    val pluginContext: TrakkitPluginContext
+    private val pluginContext: TrakkitPluginContext
 ) : IrVisitorVoid() {
     override fun visitElement(element: IrElement) {
         element.acceptChildrenVoid(this)
@@ -46,7 +46,7 @@ internal class IntrinsicCalleeParameterTransformer(
                 if (statement !is IrCall) continue
                 val function = statement.target
                 val intrinsicType = function.getIntrinsicType() ?: continue
-                if(!intrinsicType.supportsInlining) continue // Skip any intrinsics that don't support inlining
+                if (!intrinsicType.supportsInlining) continue // Skip any intrinsics that don't support inlining
                 shouldRemoveDefault = true
                 callsiteIntrinsics += Pair(parameter.indexInParameters, intrinsicType.name.lowercase())
             }

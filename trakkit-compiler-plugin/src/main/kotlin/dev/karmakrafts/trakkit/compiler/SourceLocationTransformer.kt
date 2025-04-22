@@ -17,41 +17,61 @@
 package dev.karmakrafts.trakkit.compiler
 
 import org.jetbrains.kotlin.ir.IrElement
+import org.jetbrains.kotlin.ir.backend.js.utils.valueArguments
 import org.jetbrains.kotlin.ir.declarations.IrFile
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
+import org.jetbrains.kotlin.ir.declarations.IrParameterKind
 import org.jetbrains.kotlin.ir.expressions.IrCall
+import org.jetbrains.kotlin.ir.expressions.IrFunctionReference
+import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
+import org.jetbrains.kotlin.ir.types.getClass
+import org.jetbrains.kotlin.ir.util.target
 
 internal class SourceLocationTransformer( // @formatter:off
-    val pluginContext: TrakkitPluginContext,
-    val moduleFragment: IrModuleFragment,
-    val file: IrFile,
-    val source: List<String>
+    private val pluginContext: TrakkitPluginContext,
+    private val moduleFragment: IrModuleFragment,
+    private val file: IrFile,
+    private val source: List<String>
 ) : TrakkitIntrinsicTransformer( // @formatter:on
-    setOf(
+    setOf( // @formatter:off
         TrakkitIntrinsic.SL_HERE,
         TrakkitIntrinsic.SL_HERE_HASH,
         TrakkitIntrinsic.SL_CURRENT_FUNCTION,
         TrakkitIntrinsic.SL_CURRENT_FUNCTION_HASH,
         TrakkitIntrinsic.SL_CURRENT_CLASS,
-        TrakkitIntrinsic.SL_CURRENT_CLASS_HASH
-    )
+        TrakkitIntrinsic.SL_CURRENT_CLASS_HASH,
+        TrakkitIntrinsic.SL_OF_CLASS,
+        TrakkitIntrinsic.SL_OF_FUNCTION
+    ) // @formatter:on
 ) {
+    private fun TrakkitPluginContext.emitOfClass(expression: IrCall): IrElement {
+        return requireNotNull(expression.typeArguments.first()?.getClass()) {
+            "Missing class type parameter"
+        }.getLocation(moduleFragment, file, source).instantiate()
+    }
+
+    @OptIn(UnsafeDuringIrConstructionAPI::class)
+    private fun TrakkitPluginContext.emitOfFunction(expression: IrCall): IrElement {
+        val parameter = expression.target.parameters.first { it.kind == IrParameterKind.Regular }
+        val argument = expression.valueArguments[parameter.indexInOldValueParameters]
+        check(argument is IrFunctionReference) { "Parameter must be a function reference" }
+        return requireNotNull(argument.reflectionTarget) {
+            "Parameter reference must have a reflection target"
+        }.owner.getFunctionLocation(moduleFragment, file, source).instantiate()
+    }
+
     override fun visitIntrinsic(
         type: TrakkitIntrinsic, expression: IrCall, context: IntrinsicContext
     ): IrElement = with(pluginContext) {
         when (type) { // @formatter:off
-            TrakkitIntrinsic.SL_HERE ->
-                getCallLocation(moduleFragment, file, source, expression).instantiate()
-            TrakkitIntrinsic.SL_HERE_HASH ->
-                getCallLocation(moduleFragment, file, source, expression).createHashSum()
-            TrakkitIntrinsic.SL_CURRENT_FUNCTION ->
-                getFunctionLocation(moduleFragment, file, source, requireNotNull(context.function) { "Not inside any function" }).instantiate()
-            TrakkitIntrinsic.SL_CURRENT_FUNCTION_HASH ->
-                getFunctionLocation(moduleFragment, file, source, requireNotNull(context.function) { "Not inside any function" }).createHashSum()
-            TrakkitIntrinsic.SL_CURRENT_CLASS ->
-                getClassLocation(moduleFragment, file, source, requireNotNull(context.clazz) { "Not inside any class" }).instantiate()
-            TrakkitIntrinsic.SL_CURRENT_CLASS_HASH ->
-                getClassLocation(moduleFragment, file, source, requireNotNull(context.clazz) { "Not inside any class" }).createHashSum()
+            TrakkitIntrinsic.SL_HERE -> expression.getLocation(moduleFragment, file, source).instantiate()
+            TrakkitIntrinsic.SL_HERE_HASH -> expression.getLocation(moduleFragment, file, source).createHashSum()
+            TrakkitIntrinsic.SL_CURRENT_FUNCTION -> context.function.getFunctionLocation(moduleFragment, file, source).instantiate()
+            TrakkitIntrinsic.SL_CURRENT_FUNCTION_HASH -> context.function.getFunctionLocation(moduleFragment, file, source).createHashSum()
+            TrakkitIntrinsic.SL_CURRENT_CLASS -> context.clazz.getLocation(moduleFragment, file, source).instantiate()
+            TrakkitIntrinsic.SL_CURRENT_CLASS_HASH -> context.clazz.getLocation(moduleFragment, file, source).createHashSum()
+            TrakkitIntrinsic.SL_OF_CLASS -> emitOfClass(expression)
+            TrakkitIntrinsic.SL_OF_FUNCTION -> emitOfFunction(expression)
             else -> error("Unsupported intrinsic for SourceLocationTransformer")
         } // @formatter:on
     }

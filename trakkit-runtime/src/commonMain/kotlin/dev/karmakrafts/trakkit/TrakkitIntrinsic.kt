@@ -26,7 +26,10 @@ annotation class TrakkitIntrinsic(val value: String) {
         internal const val SL_CURRENT_FUNCTION_HASH: String = "sl_current_function_hash"
         internal const val SL_CURRENT_CLASS: String = "sl_current_class"
         internal const val SL_CURRENT_CLASS_HASH: String = "sl_current_class_hash"
+        internal const val SL_OF_CLASS: String = "sl_of_class"
+        internal const val SL_OF_FUNCTION: String = "sl_of_function"
         internal const val FI_CURRENT: String = "fi_current"
+        internal const val FI_OF: String = "fi_of"
         internal const val CI_CURRENT: String = "ci_current"
         internal const val CI_OF: String = "ci_of"
     }

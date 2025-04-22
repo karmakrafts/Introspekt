@@ -25,7 +25,7 @@ import org.jetbrains.kotlin.ir.util.target
 import org.jetbrains.kotlin.ir.visitors.IrTransformer
 
 internal abstract class TrakkitIntrinsicTransformer(
-    val intrinsics: Set<TrakkitIntrinsic>
+    private val intrinsics: Set<TrakkitIntrinsic>
 ) : IrTransformer<IntrinsicContext>() {
     override fun visitElement(element: IrElement, data: IntrinsicContext): IrElement {
         element.transformChildren(this, data)

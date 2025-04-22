@@ -32,7 +32,7 @@ import org.jetbrains.kotlin.ir.visitors.acceptChildrenVoid
  * to adjust all callsites of functions with an injected @CaptureCaller annotation.
  */
 internal class IntrinsicCallerParameterTransformer(
-    val pluginContext: TrakkitPluginContext
+    private val pluginContext: TrakkitPluginContext
 ) : IrVisitorVoid() {
     override fun visitElement(element: IrElement) {
         element.acceptChildrenVoid(this)

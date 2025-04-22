@@ -16,10 +16,15 @@
 
 package dev.karmakrafts.trakkit.compiler
 
+import org.jetbrains.kotlin.descriptors.Modality
+import org.jetbrains.kotlin.descriptors.Visibility
 import org.jetbrains.kotlin.ir.types.IrType
 
 internal data class PropertyInfo(
     val location: SourceLocation,
     val name: String,
-    val type: IrType
+    val type: IrType,
+    val isMutable: Boolean,
+    val visibility: Visibility,
+    val modality: Modality
 )

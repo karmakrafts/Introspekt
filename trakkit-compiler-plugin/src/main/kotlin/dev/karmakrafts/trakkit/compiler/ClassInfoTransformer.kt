@@ -23,28 +23,28 @@ import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.types.getClass
 
 internal class ClassInfoTransformer(
-    val pluginContext: TrakkitPluginContext,
-    val moduleFragment: IrModuleFragment,
-    val file: IrFile,
-    val source: List<String>
+    private val pluginContext: TrakkitPluginContext,
+    private val moduleFragment: IrModuleFragment,
+    private val file: IrFile,
+    private val source: List<String>
 ) : TrakkitIntrinsicTransformer(
     setOf( // @formatter:off
         TrakkitIntrinsic.CI_CURRENT,
         TrakkitIntrinsic.CI_OF
     ) // @formatter:on
 ) {
+    private fun TrakkitPluginContext.emitOf(expression: IrCall): IrElement {
+        return requireNotNull(expression.typeArguments.first()?.getClass()) {
+            "Missing class type parameter"
+        }.getClassInfo(moduleFragment, file, source).instantiate()
+    }
+
     override fun visitIntrinsic(
         type: TrakkitIntrinsic, expression: IrCall, context: IntrinsicContext
     ): IrElement = with(pluginContext) {
         when (type) {
-            TrakkitIntrinsic.CI_CURRENT -> requireNotNull(context.clazz) {
-                "Not inside any class"
-            }.getClassInfo(moduleFragment, file, source).instantiate()
-
-            TrakkitIntrinsic.CI_OF -> requireNotNull(expression.typeArguments.first()?.getClass()) {
-                "Missing class type parameter"
-            }.getClassInfo(moduleFragment, file, source).instantiate()
-
+            TrakkitIntrinsic.CI_CURRENT -> context.clazz.getClassInfo(moduleFragment, file, source).instantiate()
+            TrakkitIntrinsic.CI_OF -> emitOf(expression)
             else -> error("Unsupported intrinsic for ClassInfoTransformer")
         }
     }

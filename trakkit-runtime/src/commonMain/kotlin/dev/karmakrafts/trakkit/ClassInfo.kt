@@ -24,6 +24,7 @@ data class ClassInfo(
     val typeParameterNames: List<String>,
     val annotations: Map<KClass<out Annotation>, AnnotationInfo>,
     val functions: List<FunctionInfo>,
+    val properties: List<PropertyInfo>,
     val companionObjects: List<ClassInfo>,
     val isInterface: Boolean,
     val isObject: Boolean,

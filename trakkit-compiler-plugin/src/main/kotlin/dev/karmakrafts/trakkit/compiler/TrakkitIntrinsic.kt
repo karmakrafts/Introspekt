@@ -29,7 +29,10 @@ internal enum class TrakkitIntrinsic(
     SL_CURRENT_FUNCTION_HASH(true,  TrakkitNames.SourceLocation.Companion.currentFunctionHash),
     SL_CURRENT_CLASS        (true,  TrakkitNames.SourceLocation.Companion.currentClass),
     SL_CURRENT_CLASS_HASH   (true,  TrakkitNames.SourceLocation.Companion.currentClassHash),
+    SL_OF_CLASS             (false, TrakkitNames.SourceLocation.Companion.ofClass),
+    SL_OF_FUNCTION          (false, TrakkitNames.SourceLocation.Companion.ofFunction),
     FI_CURRENT              (true,  TrakkitNames.FunctionInfo.Companion.current),
+    FI_OF                   (false, TrakkitNames.FunctionInfo.Companion.of),
     CI_CURRENT              (true,  TrakkitNames.ClassInfo.Companion.current),
     CI_OF                   (false, TrakkitNames.ClassInfo.Companion.of);
     // @formatter:on

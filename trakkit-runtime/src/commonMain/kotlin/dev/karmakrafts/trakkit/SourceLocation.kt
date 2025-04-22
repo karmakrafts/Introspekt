@@ -16,25 +16,14 @@
 
 package dev.karmakrafts.trakkit
 
-import dev.karmakrafts.trakkit.SourceLocation.Companion.here
+import kotlin.reflect.KFunction
 
-
-/**
- * Represents a location in source code.
- *
- * This class is used to track the exact position in the source code where a specific
- * operation or function call occurs. It contains information about the module, file,
- * function, line, and column of the source location.
- *
- * The [here] function in the companion object is an intrinsic that gets replaced by
- * the Trakkit compiler plugin with the actual source location information at compile time.
- */
-data class SourceLocation(
+data class SourceLocation( // @formatter:off
     val module: String,
     val file: String,
     val line: Int,
     val column: Int
-) {
+) { // @formatter:on
     companion object {
         /**
          * A value used for either [SourceLocation.line] or [SourceLocation.column]
@@ -56,82 +45,29 @@ data class SourceLocation(
          */
         const val UNDEFINED_OFFSET: Int = -3
 
-        /**
-         * Returns a [SourceLocation] object representing the current location in the source code.
-         *
-         * This function is an intrinsic that gets replaced by the Trakkit compiler plugin
-         * with the actual source location information at compile time. If the plugin is not
-         * applied, this function will throw a [TrakkitPluginNotAppliedException].
-         *
-         * @return A [SourceLocation] object representing the current location in the source code.
-         * @throws TrakkitPluginNotAppliedException if the Trakkit compiler plugin is not applied.
-         */
         @TrakkitIntrinsic(TrakkitIntrinsic.SL_HERE)
         fun here(): SourceLocation = throw TrakkitPluginNotAppliedException()
 
-        /**
-         * Returns an int representing the compile-time calculated hash of the [SourceLocation]
-         * obtained at this point in the code.
-         *
-         * @return The hash of the [SourceLocation] obtained at this point in the code.
-         * @throws TrakkitPluginNotAppliedException if the Trakkit compiler plugin is not applied.
-         */
         @TrakkitIntrinsic(TrakkitIntrinsic.SL_HERE_HASH)
         fun hereHash(): Int = throw TrakkitPluginNotAppliedException()
 
-        /**
-         * Returns a [SourceLocation] object representing the current function in the source code.
-         *
-         * This function is an intrinsic that gets replaced by the Trakkit compiler plugin
-         * with the actual function location information at compile time. If the plugin is not
-         * applied, this function will throw a [TrakkitPluginNotAppliedException].
-         *
-         * @return A [SourceLocation] object representing the current function in the source code.
-         * @throws TrakkitPluginNotAppliedException if the Trakkit compiler plugin is not applied.
-         */
         @TrakkitIntrinsic(TrakkitIntrinsic.SL_CURRENT_FUNCTION)
         fun currentFunction(): SourceLocation = throw TrakkitPluginNotAppliedException()
 
-        /**
-         * Returns an int representing the compile-time calculated hash of the current function's
-         * [SourceLocation].
-         *
-         * This function is an intrinsic that gets replaced by the Trakkit compiler plugin
-         * with the actual function location hash at compile time. If the plugin is not
-         * applied, this function will throw a [TrakkitPluginNotAppliedException].
-         *
-         * @return The hash of the current function's [SourceLocation].
-         * @throws TrakkitPluginNotAppliedException if the Trakkit compiler plugin is not applied.
-         */
         @TrakkitIntrinsic(TrakkitIntrinsic.SL_CURRENT_FUNCTION_HASH)
         fun currentFunctionHash(): Int = throw TrakkitPluginNotAppliedException()
 
-        /**
-         * Returns a [SourceLocation] object representing the current class in the source code.
-         *
-         * This function is an intrinsic that gets replaced by the Trakkit compiler plugin
-         * with the actual class location information at compile time. If the plugin is not
-         * applied, this function will throw a [TrakkitPluginNotAppliedException].
-         *
-         * @return A [SourceLocation] object representing the current class in the source code.
-         * @throws TrakkitPluginNotAppliedException if the Trakkit compiler plugin is not applied.
-         */
         @TrakkitIntrinsic(TrakkitIntrinsic.SL_CURRENT_CLASS)
         fun currentClass(): SourceLocation = throw TrakkitPluginNotAppliedException()
 
-        /**
-         * Returns an int representing the compile-time calculated hash of the current class's
-         * [SourceLocation].
-         *
-         * This function is an intrinsic that gets replaced by the Trakkit compiler plugin
-         * with the actual class location hash at compile time. If the plugin is not
-         * applied, this function will throw a [TrakkitPluginNotAppliedException].
-         *
-         * @return The hash of the current class's [SourceLocation].
-         * @throws TrakkitPluginNotAppliedException if the Trakkit compiler plugin is not applied.
-         */
         @TrakkitIntrinsic(TrakkitIntrinsic.SL_CURRENT_CLASS_HASH)
         fun currentClassHash(): Int = throw TrakkitPluginNotAppliedException()
+
+        @TrakkitIntrinsic(TrakkitIntrinsic.SL_OF_CLASS)
+        fun <T : Any> ofClass(): SourceLocation = throw TrakkitPluginNotAppliedException()
+
+        @TrakkitIntrinsic(TrakkitIntrinsic.SL_OF_FUNCTION)
+        fun ofFunction(function: KFunction<*>): SourceLocation = throw TrakkitPluginNotAppliedException()
     }
 
     inline val isFakeOverride: Boolean
@@ -143,17 +79,10 @@ data class SourceLocation(
     inline val isUndefined: Boolean
         get() = line == UNDEFINED_OFFSET || column == UNDEFINED_OFFSET
 
-    /**
-     * Returns a string representation of this [SourceLocation].
-     *
-     * The format of the string is: "file in module: function:line:column".
-     *
-     * @return A string representation of this [SourceLocation].
-     */
     override fun toString(): String = when {
         isFakeOverride -> "$file (FAKE OVERRIDE)"
         isSynthetic -> "$file (GENERATED)"
-        isUndefined -> "(UNDEFINED)"
+        isUndefined -> "(UNDEFINED/EXTERNAL)"
         else -> "$file:$line:$column"
     }
 }

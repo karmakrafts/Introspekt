@@ -28,6 +28,8 @@ internal object TrakkitNames {
         val listOf: Name = Name.identifier("listOf")
         val mapOf: Name = Name.identifier("mapOf")
         val of: Name = Name.identifier("of")
+        val ofClass: Name = Name.identifier("ofClass")
+        val ofFunction: Name = Name.identifier("ofFunction")
         val here: Name = Name.identifier("here")
         val hereHash: Name = Name.identifier("hereHash")
         val current: Name = Name.identifier("current")
@@ -100,6 +102,8 @@ internal object TrakkitNames {
             val currentFunctionHash: CallableId = CallableId(packageName, fqName, Functions.currentFunctionHash)
             val currentClass: CallableId = CallableId(packageName, fqName, Functions.currentClass)
             val currentClassHash: CallableId = CallableId(packageName, fqName, Functions.currentClassHash)
+            val ofClass: CallableId = CallableId(packageName, fqName, Functions.ofClass)
+            val ofFunction: CallableId = CallableId(packageName, fqName, Functions.ofFunction)
         }
     }
 

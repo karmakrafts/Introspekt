@@ -16,12 +16,11 @@
 
 package dev.karmakrafts.trakkit.compiler
 
-import org.jetbrains.kotlin.ir.declarations.IrClass
+import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.declarations.IrFile
 import org.jetbrains.kotlin.ir.declarations.IrFunction
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.declarations.path
-import org.jetbrains.kotlin.ir.expressions.IrFunctionAccessExpression
 import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
 import org.jetbrains.kotlin.ir.util.getAnnotationArgumentValue
 import org.jetbrains.kotlin.ir.util.hasAnnotation
@@ -63,47 +62,29 @@ internal fun getColumnNumber(source: List<String>, startOffset: Int, endOffset: 
     return 0
 }
 
-internal fun getCallLocation(
+internal fun IrFunction.getFunctionLocation( // @formatter:off
     module: IrModuleFragment,
     file: IrFile,
-    source: List<String>,
-    expression: IrFunctionAccessExpression
-): SourceLocation = SourceLocation(
-    module = module.name.asString(),
-    file = file.path,
-    line = getLineNumber(source, expression.startOffset, expression.endOffset),
-    column = getColumnNumber(source, expression.startOffset, expression.endOffset)
-)
-
-internal fun getFunctionLocation( // @formatter:off
-    module: IrModuleFragment,
-    file: IrFile,
-    source: List<String>,
-    function: IrFunction
+    source: List<String>
 ): SourceLocation {
-    val isFakeOverride = function.isFakeOverride
+    val isFakeOverride = isFakeOverride
     return SourceLocation( // @formatter:on
         module = module.name.asString(),
         file = file.path,
         line = if (isFakeOverride) SourceLocation.FAKE_OVERRIDE_OFFSET
-        else getLineNumber(
-            source, function.startOffset, function.endOffset
-        ),
+        else getLineNumber(source, startOffset, endOffset),
         column = if (isFakeOverride) SourceLocation.FAKE_OVERRIDE_OFFSET
-        else getColumnNumber(
-            source, function.startOffset, function.endOffset
-        )
+        else getColumnNumber(source, startOffset, endOffset)
     )
 }
 
-internal fun getClassLocation( // @formatter:off
+internal fun IrElement.getLocation( // @formatter:off
     module: IrModuleFragment,
     file: IrFile,
     source: List<String>,
-    clazz: IrClass
 ): SourceLocation = SourceLocation( // @formatter:on
     module = module.name.asString(),
     file = file.path,
-    line = getLineNumber(source, clazz.startOffset, clazz.endOffset),
-    column = getColumnNumber(source, clazz.startOffset, clazz.endOffset)
+    line = getLineNumber(source, startOffset, endOffset),
+    column = getColumnNumber(source, startOffset, endOffset)
 )

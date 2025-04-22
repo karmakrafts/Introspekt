@@ -17,30 +17,43 @@
 package dev.karmakrafts.trakkit.compiler
 
 import org.jetbrains.kotlin.ir.IrElement
+import org.jetbrains.kotlin.ir.backend.js.utils.valueArguments
 import org.jetbrains.kotlin.ir.declarations.IrFile
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
+import org.jetbrains.kotlin.ir.declarations.IrParameterKind
 import org.jetbrains.kotlin.ir.expressions.IrCall
+import org.jetbrains.kotlin.ir.expressions.IrFunctionReference
+import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
+import org.jetbrains.kotlin.ir.util.target
 
 internal class FunctionInfoTransformer(
-    val pluginContext: TrakkitPluginContext,
-    val moduleFragment: IrModuleFragment,
-    val file: IrFile,
-    val source: List<String>
+    private val pluginContext: TrakkitPluginContext,
+    private val moduleFragment: IrModuleFragment,
+    private val file: IrFile,
+    private val source: List<String>
 ) : TrakkitIntrinsicTransformer(
-    setOf(
-        TrakkitIntrinsic.FI_CURRENT
-    )
+    setOf( // @formatter:off
+        TrakkitIntrinsic.FI_CURRENT,
+        TrakkitIntrinsic.FI_OF
+    ) // @formatter:on
 ) {
+    @OptIn(UnsafeDuringIrConstructionAPI::class)
+    private fun TrakkitPluginContext.emitOf(expression: IrCall): IrElement {
+        val parameter = expression.target.parameters.first { it.kind == IrParameterKind.Regular }
+        val argument = expression.valueArguments[parameter.indexInOldValueParameters]
+        check(argument is IrFunctionReference) { "Parameter must be a function reference" }
+        return requireNotNull(argument.reflectionTarget) {
+            "Parameter reference must have a reflection target"
+        }.owner.getFunctionInfo(moduleFragment, file, source).instantiate()
+    }
+
     override fun visitIntrinsic(
         type: TrakkitIntrinsic, expression: IrCall, context: IntrinsicContext
-    ): IrElement {
-        val function = context.function
-        if (function == null) return expression
-        return with(pluginContext) {
-            when (type) {
-                TrakkitIntrinsic.FI_CURRENT -> function.getFunctionInfo(moduleFragment, file, source).instantiate()
-                else -> error("Unsupported intrinsic for FunctionInfoTransformer")
-            }
-        }
+    ): IrElement = with(pluginContext) {
+        when (type) { // @formatter:off
+            TrakkitIntrinsic.FI_CURRENT -> context.function.getFunctionInfo(moduleFragment, file, source).instantiate()
+            TrakkitIntrinsic.FI_OF -> emitOf(expression)
+            else -> error("Unsupported intrinsic for FunctionInfoTransformer")
+        } // @formatter:on
     }
 }

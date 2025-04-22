@@ -24,9 +24,9 @@ internal data class IntrinsicContext( // @formatter:off
     val clazzStack: Stack<IrClass> = Stack(),
     val functionStack: Stack<IrFunction> = Stack()
 ) { // @formatter:on
-    inline val clazz: IrClass?
-        get() = clazzStack.firstOrNull()
+    inline val clazz: IrClass
+        get() = requireNotNull(clazzStack.firstOrNull()) { "Not inside any class" }
 
-    inline val function: IrFunction?
-        get() = functionStack.firstOrNull()
+    inline val function: IrFunction
+        get() = requireNotNull(functionStack.firstOrNull()) { "Not inside any function" }
 }
