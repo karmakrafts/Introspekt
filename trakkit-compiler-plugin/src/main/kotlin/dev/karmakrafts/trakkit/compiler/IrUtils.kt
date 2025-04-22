@@ -22,8 +22,12 @@ import org.jetbrains.kotlin.ir.declarations.IrFunction
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.declarations.path
 import org.jetbrains.kotlin.ir.expressions.IrFunctionAccessExpression
+import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
 import org.jetbrains.kotlin.ir.util.getAnnotationArgumentValue
 import org.jetbrains.kotlin.ir.util.hasAnnotation
+import org.jetbrains.kotlin.ir.util.isFakeOverride
+
+private const val UNDEFINED_OFFSET: Int = -1
 
 internal fun IrFunction.getIntrinsicType(): TrakkitIntrinsic? {
     if (!hasAnnotation(TrakkitNames.TrakkitIntrinsic.id)) return null
@@ -31,7 +35,11 @@ internal fun IrFunction.getIntrinsicType(): TrakkitIntrinsic? {
     return TrakkitIntrinsic.byName(intrinsicName)
 }
 
-internal fun getLineNumber(source: List<String>, startOffset: Int): Int {
+internal fun getLineNumber(source: List<String>, startOffset: Int, endOffset: Int): Int {
+    when {
+        startOffset == UNDEFINED_OFFSET || endOffset == UNDEFINED_OFFSET -> return SourceLocation.UNDEFINED_OFFSET
+        startOffset == SYNTHETIC_OFFSET || endOffset == SYNTHETIC_OFFSET -> return SourceLocation.SYNTHETIC_OFFSET
+    }
     var currentOffset = 0
     for ((index, line) in source.withIndex()) {
         val lineLength = line.length
@@ -41,7 +49,11 @@ internal fun getLineNumber(source: List<String>, startOffset: Int): Int {
     return 0
 }
 
-internal fun getColumnNumber(source: List<String>, startOffset: Int): Int {
+internal fun getColumnNumber(source: List<String>, startOffset: Int, endOffset: Int): Int {
+    when {
+        startOffset == UNDEFINED_OFFSET || endOffset == UNDEFINED_OFFSET -> return SourceLocation.UNDEFINED_OFFSET
+        startOffset == SYNTHETIC_OFFSET || endOffset == SYNTHETIC_OFFSET -> return SourceLocation.SYNTHETIC_OFFSET
+    }
     var currentOffset = 0
     for (line in source) {
         val lineLength = line.length
@@ -61,8 +73,8 @@ internal fun getCallLocation(
     module = module.name.asString(),
     file = file.path,
     function = function?.name?.asString() ?: "unknown",
-    line = getLineNumber(source, expression.startOffset),
-    column = getColumnNumber(source, expression.startOffset)
+    line = getLineNumber(source, expression.startOffset, expression.endOffset),
+    column = getColumnNumber(source, expression.startOffset, expression.endOffset)
 )
 
 internal fun getFunctionLocation( // @formatter:off
@@ -70,13 +82,22 @@ internal fun getFunctionLocation( // @formatter:off
     file: IrFile,
     source: List<String>,
     function: IrFunction
-): SourceLocation = SourceLocation( // @formatter:on
-    module = module.name.asString(),
-    file = file.path,
-    function = function.name.asString(),
-    line = getLineNumber(source, function.startOffset),
-    column = getColumnNumber(source, function.startOffset)
-)
+): SourceLocation {
+    val isFakeOverride = function.isFakeOverride
+    return SourceLocation( // @formatter:on
+        module = module.name.asString(),
+        file = file.path,
+        function = function.name.asString(),
+        line = if (isFakeOverride) SourceLocation.FAKE_OVERRIDE_OFFSET
+        else getLineNumber(
+            source, function.startOffset, function.endOffset
+        ),
+        column = if (isFakeOverride) SourceLocation.FAKE_OVERRIDE_OFFSET
+        else getColumnNumber(
+            source, function.startOffset, function.endOffset
+        )
+    )
+}
 
 internal fun getClassLocation( // @formatter:off
     module: IrModuleFragment,
@@ -87,6 +108,6 @@ internal fun getClassLocation( // @formatter:off
     module = module.name.asString(),
     file = file.path,
     function = "",
-    line = getLineNumber(source, clazz.startOffset),
-    column = getColumnNumber(source, clazz.startOffset)
+    line = getLineNumber(source, clazz.startOffset, clazz.endOffset),
+    column = getColumnNumber(source, clazz.startOffset, clazz.endOffset)
 )

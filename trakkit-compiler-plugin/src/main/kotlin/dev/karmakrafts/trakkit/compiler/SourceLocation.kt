@@ -22,4 +22,10 @@ internal data class SourceLocation( // @formatter:off
     val function: String,
     val line: Int,
     val column: Int
-) // @formatter:on
+) { // @formatter:on
+    companion object {
+        const val FAKE_OVERRIDE_OFFSET = -1
+        const val SYNTHETIC_OFFSET = -2
+        const val UNDEFINED_OFFSET = -3
+    }
+}

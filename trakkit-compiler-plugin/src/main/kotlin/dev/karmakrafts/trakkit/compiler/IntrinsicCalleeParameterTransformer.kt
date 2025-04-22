@@ -46,6 +46,7 @@ internal class IntrinsicCalleeParameterTransformer(
                 if (statement !is IrCall) continue
                 val function = statement.target
                 val intrinsicType = function.getIntrinsicType() ?: continue
+                if(!intrinsicType.supportsInlining) continue // Skip any intrinsics that don't support inlining
                 shouldRemoveDefault = true
                 callsiteIntrinsics += Pair(parameter.indexInParameters, intrinsicType.name.lowercase())
             }

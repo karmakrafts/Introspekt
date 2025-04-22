@@ -20,6 +20,7 @@ import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.declarations.IrFile
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.expressions.IrCall
+import org.jetbrains.kotlin.ir.types.getClass
 
 internal class ClassInfoTransformer(
     val pluginContext: TrakkitPluginContext,
@@ -27,9 +28,10 @@ internal class ClassInfoTransformer(
     val file: IrFile,
     val source: List<String>
 ) : TrakkitIntrinsicTransformer(
-    setOf(
-        TrakkitIntrinsic.CI_CURRENT
-    )
+    setOf( // @formatter:off
+        TrakkitIntrinsic.CI_CURRENT,
+        TrakkitIntrinsic.CI_OF
+    ) // @formatter:on
 ) {
     override fun visitIntrinsic(
         type: TrakkitIntrinsic, expression: IrCall, context: IntrinsicContext
@@ -37,6 +39,10 @@ internal class ClassInfoTransformer(
         when (type) {
             TrakkitIntrinsic.CI_CURRENT -> requireNotNull(context.clazz) {
                 "Not inside any class"
+            }.getClassInfo(moduleFragment, file, source).instantiate()
+
+            TrakkitIntrinsic.CI_OF -> requireNotNull(expression.typeArguments.first()?.getClass()) {
+                "Missing class type parameter"
             }.getClassInfo(moduleFragment, file, source).instantiate()
 
             else -> error("Unsupported intrinsic for ClassInfoTransformer")

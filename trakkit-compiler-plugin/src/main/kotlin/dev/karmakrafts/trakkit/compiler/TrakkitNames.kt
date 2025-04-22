@@ -27,6 +27,7 @@ internal object TrakkitNames {
     object Functions {
         val listOf: Name = Name.identifier("listOf")
         val mapOf: Name = Name.identifier("mapOf")
+        val of: Name = Name.identifier("of")
         val here: Name = Name.identifier("here")
         val hereHash: Name = Name.identifier("hereHash")
         val current: Name = Name.identifier("current")
@@ -67,6 +68,24 @@ internal object TrakkitNames {
         }
     }
 
+    object VisibilityModifier {
+        val name: Name = Name.identifier("VisibilityModifier")
+        val id: ClassId = ClassId(packageName, name)
+        val fqName: FqName = id.asSingleFqName()
+    }
+
+    object ModalityModifier {
+        val name: Name = Name.identifier("ModalityModifier")
+        val id: ClassId = ClassId(packageName, name)
+        val fqName: FqName = id.asSingleFqName()
+    }
+
+    object ClassModifier {
+        val name: Name = Name.identifier("ClassModifier")
+        val id: ClassId = ClassId(packageName, name)
+        val fqName: FqName = id.asSingleFqName()
+    }
+
     object SourceLocation {
         val name: Name = Name.identifier("SourceLocation")
         val id: ClassId = ClassId(packageName, name)
@@ -93,6 +112,7 @@ internal object TrakkitNames {
             val fqName: FqName = FqName("FunctionInfo.Companion")
 
             val current: CallableId = CallableId(packageName, fqName, Functions.current)
+            val of: CallableId = CallableId(packageName, fqName, Functions.of)
         }
     }
 
@@ -105,6 +125,7 @@ internal object TrakkitNames {
             val fqName: FqName = FqName("ClassInfo.Companion")
 
             val current: CallableId = CallableId(packageName, fqName, Functions.current)
+            val of: CallableId = CallableId(packageName, fqName, Functions.of)
         }
     }
 

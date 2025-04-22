@@ -16,6 +16,8 @@
 
 package dev.karmakrafts.trakkit.compiler
 
+import org.jetbrains.kotlin.descriptors.Modality
+import org.jetbrains.kotlin.descriptors.Visibility
 import org.jetbrains.kotlin.ir.types.IrType
 
 internal data class ClassInfo(
@@ -23,5 +25,12 @@ internal data class ClassInfo(
     val type: IrType,
     val typeParameterNames: List<String>,
     val annotations: Map<IrType, AnnotationInfo>,
-    val functions: List<FunctionInfo>
+    val functions: List<FunctionInfo>,
+    val companionObjects: List<ClassInfo>,
+    val isInterface: Boolean,
+    val isObject: Boolean,
+    val isCompanionObject: Boolean,
+    val visibility: Visibility,
+    val modality: Modality,
+    val classType: ClassModifier?
 )

@@ -45,7 +45,8 @@ data class FunctionInfo(
         else parameterNames.mapIndexed { index, name ->
             "$name: ${parameterTypes[index].getQualifiedName()}"
         }.joinToString(", ")
-        result += "${location.function}($parameters): ${returnType.getQualifiedName()}\n"
+        val escapedName = if (' ' in name) "`$name`" else name
+        result += "$escapedName($parameters): ${returnType.getQualifiedName()}\n"
         result += "\tat $location"
         return result
     }

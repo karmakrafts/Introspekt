@@ -23,20 +23,38 @@ data class ClassInfo(
     val type: KClass<*>,
     val typeParameterNames: List<String>,
     val annotations: Map<KClass<out Annotation>, AnnotationInfo>,
-    val functions: List<FunctionInfo>
+    val functions: List<FunctionInfo>,
+    val companionObjects: List<ClassInfo>,
+    val isInterface: Boolean,
+    val isObject: Boolean,
+    val isCompanionObject: Boolean,
+    val visibility: VisibilityModifier,
+    val modality: ModalityModifier,
+    val classModifier: ClassModifier?
 ) {
     companion object {
         @TrakkitIntrinsic(TrakkitIntrinsic.CI_CURRENT)
         fun current(): ClassInfo = throw TrakkitPluginNotAppliedException()
+
+        @TrakkitIntrinsic(TrakkitIntrinsic.CI_OF)
+        fun <T : Any> of(): ClassInfo = throw TrakkitPluginNotAppliedException()
     }
 
     fun toFormattedString(): String {
-        var result =
-            if (annotations.isEmpty()) "" else "${annotations.values.joinToString("\n") { it.toFormattedString() }}\n"
-        result += "class $type${if (typeParameterNames.isEmpty()) "" else "<${typeParameterNames.joinToString(", ")}>"}\n"
+        var result = if (annotations.isEmpty()) ""
+        else "${annotations.values.joinToString("\n") { it.toFormattedString() }}\n"
+        val qualifier = when {
+            isInterface -> "interface"
+            isCompanionObject -> "companion object"
+            isObject -> "object"
+            else -> "class"
+        }
+        val typeParams = if (typeParameterNames.isEmpty()) "" else "<${typeParameterNames.joinToString(", ")}>"
+        val classModifier = classModifier?.toString()?.let { "$it " } ?: ""
+        result += "$visibility $modality $classModifier$qualifier ${type.getQualifiedName()}$typeParams\n"
         result += "\tat $location"
         if (functions.isNotEmpty()) {
-            result += "\n${functions.joinToString("\n") { "\t${it.toFormattedString()}" }}"
+            result += "\n${functions.joinToString("\n") { it.toFormattedString() }}"
         }
         return result
     }

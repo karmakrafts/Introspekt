@@ -17,8 +17,12 @@
 package dev.karmakrafts.trakkit.compiler
 
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
+import org.jetbrains.kotlin.descriptors.Modality
+import org.jetbrains.kotlin.descriptors.Visibilities
+import org.jetbrains.kotlin.descriptors.Visibility
 import org.jetbrains.kotlin.ir.backend.js.utils.valueArguments
 import org.jetbrains.kotlin.ir.declarations.IrClass
+import org.jetbrains.kotlin.ir.declarations.IrEnumEntry
 import org.jetbrains.kotlin.ir.declarations.IrFile
 import org.jetbrains.kotlin.ir.declarations.IrFunction
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
@@ -31,6 +35,7 @@ import org.jetbrains.kotlin.ir.expressions.impl.IrCallImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrCallImplWithShape
 import org.jetbrains.kotlin.ir.expressions.impl.IrClassReferenceImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrConstructorCallImpl
+import org.jetbrains.kotlin.ir.expressions.impl.IrGetEnumValueImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrGetObjectValueImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrVarargImpl
 import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
@@ -45,6 +50,9 @@ import org.jetbrains.kotlin.ir.types.typeWith
 import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
 import org.jetbrains.kotlin.ir.util.constructedClassType
 import org.jetbrains.kotlin.ir.util.functions
+import org.jetbrains.kotlin.ir.util.isEnumClass
+import org.jetbrains.kotlin.ir.util.isInterface
+import org.jetbrains.kotlin.ir.util.isObject
 import org.jetbrains.kotlin.ir.util.isVararg
 import org.jetbrains.kotlin.ir.util.toIrConst
 
@@ -95,6 +103,24 @@ internal data class TrakkitPluginContext(
     val captureCallerType: IrClassSymbol = pluginContext.referenceClass(TrakkitNames.CaptureCaller.id)!!
     val captureCallerConstructor: IrConstructorSymbol =
         pluginContext.referenceConstructors(TrakkitNames.CaptureCaller.id).first()
+
+    val visibilityModifierType: IrClassSymbol = pluginContext.referenceClass(TrakkitNames.VisibilityModifier.id)!!
+
+    @OptIn(UnsafeDuringIrConstructionAPI::class)
+    val visibilityModifierValues: List<IrEnumEntry> =
+        visibilityModifierType.defaultType.classOrFail.owner.declarations.filterIsInstance<IrEnumEntry>()
+
+    val modalityModifierType: IrClassSymbol = pluginContext.referenceClass(TrakkitNames.ModalityModifier.id)!!
+
+    @OptIn(UnsafeDuringIrConstructionAPI::class)
+    val modalityModifierValues: List<IrEnumEntry> =
+        modalityModifierType.defaultType.classOrFail.owner.declarations.filterIsInstance<IrEnumEntry>()
+
+    val classModifierType: IrClassSymbol = pluginContext.referenceClass(TrakkitNames.ClassModifier.id)!!
+
+    @OptIn(UnsafeDuringIrConstructionAPI::class)
+    val classModifierValues: List<IrEnumEntry> =
+        classModifierType.defaultType.classOrFail.owner.declarations.filterIsInstance<IrEnumEntry>()
 
     // intrinsics
 
@@ -400,49 +426,132 @@ internal data class TrakkitPluginContext(
         } // @formatter:on
     }
 
+    fun Visibility.getVisibilityName(): String = when (this) {
+        Visibilities.Public -> "public"
+        Visibilities.Protected -> "protected"
+        Visibilities.Internal -> "internal"
+        else -> "private"
+    }
+
+    @OptIn(UnsafeDuringIrConstructionAPI::class)
+    fun Visibility.createVisibilityModifier(): IrGetEnumValueImpl = IrGetEnumValueImpl(
+        startOffset = SYNTHETIC_OFFSET,
+        endOffset = SYNTHETIC_OFFSET,
+        type = visibilityModifierType.defaultType,
+        symbol = requireNotNull(visibilityModifierValues.find {
+            it.name.asString().lowercase() == getVisibilityName()
+        }) {
+            "Could not find visibility modifier ${getVisibilityName()}"
+        }.symbol
+    )
+
+    fun Modality.getModalityName(): String = when (this) {
+        Modality.OPEN -> "open"
+        Modality.SEALED -> "sealed"
+        Modality.ABSTRACT -> "abstract"
+        else -> "final"
+    }
+
+    @OptIn(UnsafeDuringIrConstructionAPI::class)
+    fun Modality.createModalityModifier(): IrGetEnumValueImpl = IrGetEnumValueImpl(
+        startOffset = SYNTHETIC_OFFSET,
+        endOffset = SYNTHETIC_OFFSET,
+        type = modalityModifierType.defaultType,
+        symbol = requireNotNull(modalityModifierValues.find {
+            it.name.asString().lowercase() == getModalityName()
+        }) {
+            "Could not find modality modifier ${getModalityName()}"
+        }.symbol
+    )
+
+    fun IrClass.getClassModifier(): ClassModifier? = when {
+        isData -> ClassModifier.DATA
+        isValue -> ClassModifier.VALUE
+        isEnumClass -> ClassModifier.ENUM
+        else -> null
+    }
+
+    @OptIn(UnsafeDuringIrConstructionAPI::class)
+    fun ClassModifier.createClassModifier(): IrGetEnumValueImpl = IrGetEnumValueImpl(
+        startOffset = SYNTHETIC_OFFSET,
+        endOffset = SYNTHETIC_OFFSET,
+        type = classModifierType.defaultType,
+        symbol = requireNotNull(classModifierValues.find {
+            it.name.asString().lowercase() == name.lowercase()
+        }) {
+            "Could not find class modifier $this"
+        }.symbol
+    )
+
     @OptIn(UnsafeDuringIrConstructionAPI::class)
     fun IrClass.getClassInfo( // @formatter:off
         module: IrModuleFragment,
         file: IrFile,
         source: List<String>
-    ): ClassInfo = ClassInfo( // @formatter:on
+    ): ClassInfo = ClassInfo(
         location = getClassLocation(module, file, source, this),
         type = symbol.defaultType,
         typeParameterNames = typeParameters.map { it.name.asString() },
         annotations = annotations.toAnnotationMap(module, file, source, null),
-        functions = functions.map { it.getFunctionInfo(module, file, source) }.toList()
-    )
+        functions = functions.map { it.getFunctionInfo(module, file, source) }.toList(),
+        companionObjects = declarations
+            .filterIsInstance<IrClass>()
+            .filter { it.isCompanion }
+            .map { it.getClassInfo(module, file, source) },
+        isInterface = isInterface,
+        isObject = isObject,
+        isCompanionObject = isCompanion,
+        visibility = visibility.delegate,
+        modality = modality,
+        classType = getClassModifier()
+    ) // @formatter:on
 
-    fun ClassInfo.instantiate(): IrConstructorCallImpl {
-        return IrConstructorCallImpl(
-            startOffset = SYNTHETIC_OFFSET,
-            endOffset = SYNTHETIC_OFFSET,
+    fun ClassInfo.instantiate(): IrConstructorCallImpl = IrConstructorCallImpl(
+        startOffset = SYNTHETIC_OFFSET,
+        endOffset = SYNTHETIC_OFFSET,
+        type = classInfoType.defaultType,
+        symbol = classInfoConstructor,
+        typeArgumentsCount = 0,
+        constructorTypeArgumentsCount = 0
+    ).apply { // @formatter:off
+        // location
+        putValueArgument(0, location.instantiate())
+        // type
+        putValueArgument(1, this@instantiate.type.toClassReference())
+        // typeParameterNames
+        putValueArgument(2, createListOf(
+            type = irBuiltIns.stringType,
+            values = typeParameterNames.map { it.toIrConst(irBuiltIns.stringType) })
+        )
+        // annotations
+        putValueArgument(3, createMapOf(
+            keyType = irBuiltIns.kClassClass.typeWith(annotationType.defaultType),
+            valueType = annotationInfoType.defaultType,
+            values = annotations.map { (type, info) ->
+                type.toIrValueOrType() to info.instantiate()
+            })
+        )
+        // functions
+        putValueArgument(4, createListOf(
+            type = functionInfoType.defaultType,
+            values = functions.map { it.instantiate() })
+        )
+        // companionObjects
+        putValueArgument(5, createListOf(
             type = classInfoType.defaultType,
-            symbol = classInfoConstructor,
-            typeArgumentsCount = 0,
-            constructorTypeArgumentsCount = 0
-        ).apply {
-            // location
-            putValueArgument(0, location.instantiate())
-            // type
-            putValueArgument(1, this@instantiate.type.toClassReference())
-            // typeParameterNames
-            putValueArgument(
-                2, createListOf(
-                type = irBuiltIns.stringType,
-                values = typeParameterNames.map { it.toIrConst(irBuiltIns.stringType) }))
-            // annotations
-            putValueArgument(
-                3, createMapOf(
-                keyType = irBuiltIns.kClassClass.typeWith(annotationType.defaultType),
-                valueType = annotationInfoType.defaultType,
-                values = annotations.map { (type, info) ->
-                    type.toIrValueOrType() to info.instantiate()
-                }))
-            // functions
-            putValueArgument(
-                4, createListOf(
-                type = functionInfoType.defaultType, values = functions.map { it.instantiate() }))
-        }
-    }
+            values = companionObjects.map { it.instantiate() })
+        )
+        // isInterface
+        putValueArgument(6, isInterface.toIrConst(irBuiltIns.booleanType))
+        // isObject
+        putValueArgument(7, isObject.toIrConst(irBuiltIns.booleanType))
+        // isCompanionObject
+        putValueArgument(8, isCompanionObject.toIrConst(irBuiltIns.booleanType))
+        // visibility
+        putValueArgument(9, visibility.createVisibilityModifier())
+        // modality
+        putValueArgument(10, modality.createModalityModifier())
+        // classType
+        putValueArgument(11, classType?.createClassModifier() ?: null.toIrConst(classModifierType.defaultType))
+    } // @formatter:on
 }

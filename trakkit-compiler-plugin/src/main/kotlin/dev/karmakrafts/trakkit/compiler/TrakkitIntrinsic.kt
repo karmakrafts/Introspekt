@@ -19,17 +19,19 @@ package dev.karmakrafts.trakkit.compiler
 import org.jetbrains.kotlin.name.CallableId
 
 internal enum class TrakkitIntrinsic(
+    val supportsInlining: Boolean,
     val functionId: CallableId
 ) {
     // @formatter:off
-    SL_HERE                 (TrakkitNames.SourceLocation.Companion.here),
-    SL_HERE_HASH            (TrakkitNames.SourceLocation.Companion.hereHash),
-    SL_CURRENT_FUNCTION     (TrakkitNames.SourceLocation.Companion.currentFunction),
-    SL_CURRENT_FUNCTION_HASH(TrakkitNames.SourceLocation.Companion.currentFunctionHash),
-    SL_CURRENT_CLASS        (TrakkitNames.SourceLocation.Companion.currentClass),
-    SL_CURRENT_CLASS_HASH   (TrakkitNames.SourceLocation.Companion.currentClassHash),
-    FI_CURRENT              (TrakkitNames.FunctionInfo.Companion.current),
-    CI_CURRENT              (TrakkitNames.ClassInfo.Companion.current);
+    SL_HERE                 (true,  TrakkitNames.SourceLocation.Companion.here),
+    SL_HERE_HASH            (true,  TrakkitNames.SourceLocation.Companion.hereHash),
+    SL_CURRENT_FUNCTION     (true,  TrakkitNames.SourceLocation.Companion.currentFunction),
+    SL_CURRENT_FUNCTION_HASH(true,  TrakkitNames.SourceLocation.Companion.currentFunctionHash),
+    SL_CURRENT_CLASS        (true,  TrakkitNames.SourceLocation.Companion.currentClass),
+    SL_CURRENT_CLASS_HASH   (true,  TrakkitNames.SourceLocation.Companion.currentClassHash),
+    FI_CURRENT              (true,  TrakkitNames.FunctionInfo.Companion.current),
+    CI_CURRENT              (true,  TrakkitNames.ClassInfo.Companion.current),
+    CI_OF                   (false, TrakkitNames.ClassInfo.Companion.of);
     // @formatter:on
 
     companion object {
