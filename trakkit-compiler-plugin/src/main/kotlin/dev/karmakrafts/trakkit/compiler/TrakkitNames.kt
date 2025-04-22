@@ -135,6 +135,12 @@ internal object TrakkitNames {
         val fqName: FqName = id.asSingleFqName()
     }
 
+    object PropertyInfo {
+        val name: Name = Name.identifier("PropertyInfo")
+        val id: ClassId = ClassId(packageName, name)
+        val fqName: FqName = id.asSingleFqName()
+    }
+
     object TrakkitIntrinsic {
         val name: Name = Name.identifier("TrakkitIntrinsic")
         val id: ClassId = ClassId(packageName, name)

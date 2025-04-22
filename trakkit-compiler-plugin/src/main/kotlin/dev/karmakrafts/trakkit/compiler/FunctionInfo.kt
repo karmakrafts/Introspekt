@@ -20,6 +20,7 @@ import org.jetbrains.kotlin.ir.types.IrType
 
 internal data class FunctionInfo(
     val location: SourceLocation,
+    val name: String,
     val typeParameterNames: List<String>,
     val returnType: IrType,
     val parameterTypes: List<IrType>,

@@ -67,12 +67,10 @@ internal fun getCallLocation(
     module: IrModuleFragment,
     file: IrFile,
     source: List<String>,
-    expression: IrFunctionAccessExpression,
-    function: IrFunction?
+    expression: IrFunctionAccessExpression
 ): SourceLocation = SourceLocation(
     module = module.name.asString(),
     file = file.path,
-    function = function?.name?.asString() ?: "unknown",
     line = getLineNumber(source, expression.startOffset, expression.endOffset),
     column = getColumnNumber(source, expression.startOffset, expression.endOffset)
 )
@@ -87,7 +85,6 @@ internal fun getFunctionLocation( // @formatter:off
     return SourceLocation( // @formatter:on
         module = module.name.asString(),
         file = file.path,
-        function = function.name.asString(),
         line = if (isFakeOverride) SourceLocation.FAKE_OVERRIDE_OFFSET
         else getLineNumber(
             source, function.startOffset, function.endOffset
@@ -107,7 +104,6 @@ internal fun getClassLocation( // @formatter:off
 ): SourceLocation = SourceLocation( // @formatter:on
     module = module.name.asString(),
     file = file.path,
-    function = "",
     line = getLineNumber(source, clazz.startOffset, clazz.endOffset),
     column = getColumnNumber(source, clazz.startOffset, clazz.endOffset)
 )

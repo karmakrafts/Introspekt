@@ -19,7 +19,6 @@ package dev.karmakrafts.trakkit.compiler
 internal data class SourceLocation( // @formatter:off
     val module: String,
     val file: String,
-    val function: String,
     val line: Int,
     val column: Int
 ) { // @formatter:on

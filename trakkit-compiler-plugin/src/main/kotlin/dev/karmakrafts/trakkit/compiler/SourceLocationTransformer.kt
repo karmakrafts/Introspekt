@@ -41,9 +41,9 @@ internal class SourceLocationTransformer( // @formatter:off
     ): IrElement = with(pluginContext) {
         when (type) { // @formatter:off
             TrakkitIntrinsic.SL_HERE ->
-                getCallLocation(moduleFragment, file, source, expression, context.function).instantiate()
+                getCallLocation(moduleFragment, file, source, expression).instantiate()
             TrakkitIntrinsic.SL_HERE_HASH ->
-                getCallLocation(moduleFragment, file, source, expression, context.function).createHashSum()
+                getCallLocation(moduleFragment, file, source, expression).createHashSum()
             TrakkitIntrinsic.SL_CURRENT_FUNCTION ->
                 getFunctionLocation(moduleFragment, file, source, requireNotNull(context.function) { "Not inside any function" }).instantiate()
             TrakkitIntrinsic.SL_CURRENT_FUNCTION_HASH ->

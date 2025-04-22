@@ -20,6 +20,7 @@ import kotlin.reflect.KClass
 
 data class FunctionInfo(
     val location: SourceLocation,
+    val name: String,
     val typeParameterNames: List<String>,
     val returnType: KClass<*>,
     val parameterTypes: List<KClass<*>>,
@@ -30,9 +31,6 @@ data class FunctionInfo(
         @TrakkitIntrinsic(TrakkitIntrinsic.FI_CURRENT)
         fun current(): FunctionInfo = throw TrakkitPluginNotAppliedException()
     }
-
-    inline val name: String
-        get() = location.function
 
     fun toFormattedString(): String {
         var result =

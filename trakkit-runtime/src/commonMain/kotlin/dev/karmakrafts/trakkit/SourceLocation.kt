@@ -30,34 +30,11 @@ import dev.karmakrafts.trakkit.SourceLocation.Companion.here
  * the Trakkit compiler plugin with the actual source location information at compile time.
  */
 data class SourceLocation(
-    /**
-     * The name of the module containing the source code.
-     */
     val module: String,
-
-    /**
-     * The name of the file containing the source code.
-     */
     val file: String,
-
-    /**
-     * The name of the function containing the source code.
-     */
-    val function: String,
-
-    /**
-     * The line number in the source file.
-     */
     val line: Int,
-
-    /**
-     * The column number in the source file.
-     */
     val column: Int
 ) {
-    /**
-     * Companion object containing utility functions for [SourceLocation].
-     */
     companion object {
         /**
          * A value used for either [SourceLocation.line] or [SourceLocation.column]
