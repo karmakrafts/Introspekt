@@ -347,7 +347,7 @@ internal data class TrakkitPluginContext(
         return IrClassReferenceImpl(
             startOffset = SYNTHETIC_OFFSET,
             endOffset = SYNTHETIC_OFFSET,
-            type = this,
+            type = irBuiltIns.kClassClass.starProjectedType,
             symbol = classOrFail,
             classType = this
         )
