@@ -121,11 +121,11 @@ internal data class TrakkitPluginContext(
     private val modalityModifierType: IrClassSymbol = pluginContext.referenceClass(TrakkitNames.ModalityModifier.id)!!
     private val classModifierType: IrClassSymbol = pluginContext.referenceClass(TrakkitNames.ClassModifier.id)!!
 
-    private fun TrakkitIntrinsic.getType(): IrType = when (this) {
-        TrakkitIntrinsic.SL_HERE, TrakkitIntrinsic.SL_CURRENT_FUNCTION, TrakkitIntrinsic.SL_CURRENT_CLASS -> sourceLocationType.defaultType
-        TrakkitIntrinsic.FI_CURRENT -> functionInfoType.defaultType
-        TrakkitIntrinsic.CI_CURRENT -> classInfoType.defaultType
-        else -> irBuiltIns.intType // Hashsums
+    private fun TrakkitIntrinsic.getType(): IrType = when (resultType) {
+        IntrinsicResultType.SOURCE_LOCATION -> sourceLocationType.defaultType
+        IntrinsicResultType.FUNCTION_INFO -> functionInfoType.defaultType
+        IntrinsicResultType.CLASS_INFO -> classInfoType.defaultType
+        IntrinsicResultType.HASH -> irBuiltIns.intType
     }
 
     private fun TrakkitIntrinsic.getSymbol(): IrSimpleFunctionSymbol {

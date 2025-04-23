@@ -18,23 +18,33 @@ package dev.karmakrafts.trakkit.compiler
 
 import org.jetbrains.kotlin.name.CallableId
 
-internal enum class TrakkitIntrinsic(
-    val supportsInlining: Boolean,
-    val functionId: CallableId
-) {
+internal enum class IntrinsicResultType {
     // @formatter:off
-    SL_HERE                 (true,  TrakkitNames.SourceLocation.Companion.here),
-    SL_HERE_HASH            (true,  TrakkitNames.SourceLocation.Companion.hereHash),
-    SL_CURRENT_FUNCTION     (true,  TrakkitNames.SourceLocation.Companion.currentFunction),
-    SL_CURRENT_FUNCTION_HASH(true,  TrakkitNames.SourceLocation.Companion.currentFunctionHash),
-    SL_CURRENT_CLASS        (true,  TrakkitNames.SourceLocation.Companion.currentClass),
-    SL_CURRENT_CLASS_HASH   (true,  TrakkitNames.SourceLocation.Companion.currentClassHash),
-    SL_OF_CLASS             (false, TrakkitNames.SourceLocation.Companion.ofClass),
-    SL_OF_FUNCTION          (false, TrakkitNames.SourceLocation.Companion.ofFunction),
-    FI_CURRENT              (true,  TrakkitNames.FunctionInfo.Companion.current),
-    FI_OF                   (false, TrakkitNames.FunctionInfo.Companion.of),
-    CI_CURRENT              (true,  TrakkitNames.ClassInfo.Companion.current),
-    CI_OF                   (false, TrakkitNames.ClassInfo.Companion.of);
+    SOURCE_LOCATION,
+    FUNCTION_INFO,
+    CLASS_INFO,
+    HASH
+    // @formatter:on
+}
+
+internal enum class TrakkitIntrinsic( // @formatter:off
+    val supportsInlining: Boolean,
+    val resultType: IntrinsicResultType,
+    val functionId: CallableId
+) { // @formatter:on
+    // @formatter:off
+    SL_HERE                 (true,  IntrinsicResultType.SOURCE_LOCATION,    TrakkitNames.SourceLocation.Companion.here),
+    SL_HERE_HASH            (true,  IntrinsicResultType.HASH,               TrakkitNames.SourceLocation.Companion.hereHash),
+    SL_CURRENT_FUNCTION     (true,  IntrinsicResultType.SOURCE_LOCATION,    TrakkitNames.SourceLocation.Companion.currentFunction),
+    SL_CURRENT_FUNCTION_HASH(true,  IntrinsicResultType.HASH,               TrakkitNames.SourceLocation.Companion.currentFunctionHash),
+    SL_CURRENT_CLASS        (true,  IntrinsicResultType.SOURCE_LOCATION,    TrakkitNames.SourceLocation.Companion.currentClass),
+    SL_CURRENT_CLASS_HASH   (true,  IntrinsicResultType.HASH,               TrakkitNames.SourceLocation.Companion.currentClassHash),
+    SL_OF_CLASS             (false, IntrinsicResultType.SOURCE_LOCATION,    TrakkitNames.SourceLocation.Companion.ofClass),
+    SL_OF_FUNCTION          (false, IntrinsicResultType.SOURCE_LOCATION,    TrakkitNames.SourceLocation.Companion.ofFunction),
+    FI_CURRENT              (true,  IntrinsicResultType.FUNCTION_INFO,      TrakkitNames.FunctionInfo.Companion.current),
+    FI_OF                   (false, IntrinsicResultType.FUNCTION_INFO,      TrakkitNames.FunctionInfo.Companion.of),
+    CI_CURRENT              (true,  IntrinsicResultType.CLASS_INFO,         TrakkitNames.ClassInfo.Companion.current),
+    CI_OF                   (false, IntrinsicResultType.CLASS_INFO,         TrakkitNames.ClassInfo.Companion.of);
     // @formatter:on
 
     companion object {
