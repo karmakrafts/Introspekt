@@ -16,17 +16,45 @@
 
 package dev.karmakrafts.trakkit.compiler
 
+import org.jetbrains.kotlin.ir.declarations.IrAnonymousInitializer
 import org.jetbrains.kotlin.ir.declarations.IrClass
+import org.jetbrains.kotlin.ir.declarations.IrFile
 import org.jetbrains.kotlin.ir.declarations.IrFunction
+import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import java.util.*
 
 internal data class IntrinsicContext( // @formatter:off
+    val pluginContext: TrakkitPluginContext,
     val clazzStack: Stack<IrClass> = Stack(),
-    val functionStack: Stack<IrFunction> = Stack()
+    val functionStack: Stack<IrFunction> = Stack(),
+    val initializerStack: Stack<IrAnonymousInitializer> = Stack()
 ) { // @formatter:on
     inline val clazz: IrClass
         get() = requireNotNull(clazzStack.firstOrNull()) { "Not inside any class" }
 
     inline val function: IrFunction
         get() = requireNotNull(functionStack.firstOrNull()) { "Not inside any function" }
+
+    inline val initializer: IrAnonymousInitializer
+        get() = requireNotNull(initializerStack.firstOrNull()) { "Not inside any initializer" }
+
+    fun getFunctionLocation( // @formatter:off
+        module: IrModuleFragment,
+        file: IrFile,
+        source: List<String>
+    ): SourceLocation {
+        return functionStack.firstOrNull()?.getFunctionLocation(module, file, source)
+            ?: initializerStack.firstOrNull()?.getLocation(module, file, source)
+            ?: throw IllegalStateException("Not inside any function or initializer")
+    } // @formatter:on
+
+    fun getFunctionInfo( // @formatter:off
+        module: IrModuleFragment,
+        file: IrFile,
+        source: List<String>
+    ): FunctionInfo = with(pluginContext) {
+        return functionStack.firstOrNull()?.getFunctionInfo(module, file, source)
+            ?: initializerStack.firstOrNull()?.getFunctionInfo(module, file, source)
+            ?: throw IllegalStateException("Not inside any function or initializer")
+    } // @formatter:on
 }

@@ -17,7 +17,6 @@
 package dev.karmakrafts.trakkit.compiler
 
 import org.jetbrains.kotlin.ir.IrElement
-import org.jetbrains.kotlin.ir.backend.js.utils.valueArguments
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.IrConstructorCall
 import org.jetbrains.kotlin.ir.expressions.IrFunctionAccessExpression
@@ -45,12 +44,12 @@ internal class IntrinsicCallerParameterTransformer(
         with(pluginContext) {
             val annotationValues = function.getAnnotation(TrakkitNames.CaptureCaller.fqName)!!.getAnnotationValues()
             val intrinsicStrings = annotationValues["intrinsics"] as? List<String> ?: return@with
-            val valueArguments = expression.valueArguments
+            val valueArgumentsCount = expression.valueArgumentsCount
             intrinsicStrings.map { stringValue ->
                 val (index, name) = stringValue.split(":")
                 Pair(index.toInt(), TrakkitIntrinsic.byName(name)!!)
             }.forEach { (index, type) ->
-                if (index < valueArguments.size && valueArguments[index] != null) return@forEach
+                if (index < valueArgumentsCount && expression.getValueArgument(index) != null) return@forEach
                 expression.putValueArgument(
                     index, type.createCall(
                         startOffset = expression.startOffset,

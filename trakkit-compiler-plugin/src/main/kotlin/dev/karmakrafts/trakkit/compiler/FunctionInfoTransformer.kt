@@ -17,7 +17,6 @@
 package dev.karmakrafts.trakkit.compiler
 
 import org.jetbrains.kotlin.ir.IrElement
-import org.jetbrains.kotlin.ir.backend.js.utils.valueArguments
 import org.jetbrains.kotlin.ir.declarations.IrFile
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.declarations.IrParameterKind
@@ -40,7 +39,7 @@ internal class FunctionInfoTransformer(
     @OptIn(UnsafeDuringIrConstructionAPI::class)
     private fun TrakkitPluginContext.emitOf(expression: IrCall): IrElement {
         val parameter = expression.target.parameters.first { it.kind == IrParameterKind.Regular }
-        val argument = expression.valueArguments[parameter.indexInOldValueParameters]
+        val argument = expression.getValueArgument(parameter.indexInOldValueParameters)
         check(argument is IrFunctionReference) { "Parameter must be a function reference" }
         return requireNotNull(argument.reflectionTarget) {
             "Parameter reference must have a reflection target"
@@ -51,7 +50,7 @@ internal class FunctionInfoTransformer(
         type: TrakkitIntrinsic, expression: IrCall, context: IntrinsicContext
     ): IrElement = with(pluginContext) {
         when (type) { // @formatter:off
-            TrakkitIntrinsic.FI_CURRENT -> context.function.getFunctionInfo(moduleFragment, file, source).instantiate()
+            TrakkitIntrinsic.FI_CURRENT -> context.getFunctionInfo(moduleFragment, file, source).instantiate()
             TrakkitIntrinsic.FI_OF -> emitOf(expression)
             else -> error("Unsupported intrinsic for FunctionInfoTransformer")
         } // @formatter:on

@@ -18,6 +18,7 @@ package dev.karmakrafts.trakkit.compiler
 
 import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.IrStatement
+import org.jetbrains.kotlin.ir.declarations.IrAnonymousInitializer
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrFunction
 import org.jetbrains.kotlin.ir.expressions.IrCall
@@ -45,8 +46,15 @@ internal abstract class TrakkitIntrinsicTransformer(
         declaration: IrFunction, data: IntrinsicContext
     ): IrStatement {
         data.functionStack.push(declaration)
-        val result = super.visitFunction(declaration, data) // Pass down the parent function
+        val result = super.visitFunction(declaration, data)
         data.functionStack.pop()
+        return result
+    }
+
+    override fun visitAnonymousInitializer(declaration: IrAnonymousInitializer, data: IntrinsicContext): IrStatement {
+        data.initializerStack.push(declaration)
+        val result = super.visitAnonymousInitializer(declaration, data)
+        data.initializerStack.pop()
         return result
     }
 

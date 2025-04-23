@@ -36,20 +36,22 @@ data class FunctionInfo(
         fun of(function: KFunction<*>): FunctionInfo = throw TrakkitPluginNotAppliedException()
     }
 
-    fun toFormattedString(): String {
-        var result =
-            if (annotations.isEmpty()) "" else "${annotations.values.joinToString("\n") { it.toFormattedString() }}\n"
-        result += "fun "
-        if (typeParameterNames.isNotEmpty()) {
-            result += "<${typeParameterNames.joinToString(", ")}> "
-        }
+    fun toFormattedString(indent: Int = 0): String {
+        // Annotations
+        var result = if (annotations.isEmpty()) ""
+        else "${annotations.values.joinToString("\n") { it.toFormattedString(indent) }}\n"
+        // Parameters
         val parameters = if (parameterNames.isEmpty()) ""
         else parameterNames.mapIndexed { index, name ->
             "$name: ${parameterTypes[index].getQualifiedName()}"
         }.joinToString(", ")
+        // Function
+        result += "${"\t".repeat(indent)}fun "
+        if (typeParameterNames.isNotEmpty()) {
+            result += "<${typeParameterNames.joinToString(", ")}> "
+        }
         val escapedName = if (' ' in name) "`$name`" else name
-        result += "$escapedName($parameters): ${returnType.getQualifiedName()}\n"
-        result += "\tat $location"
+        result += "$escapedName($parameters): ${returnType.getQualifiedName()}"
         return result
     }
 }

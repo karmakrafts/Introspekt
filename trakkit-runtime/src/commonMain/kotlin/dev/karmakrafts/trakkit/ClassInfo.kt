@@ -41,9 +41,12 @@ data class ClassInfo(
         fun <T : Any> of(): ClassInfo = throw TrakkitPluginNotAppliedException()
     }
 
-    fun toFormattedString(): String {
+    fun toFormattedString(indent: Int = 0): String {
+        val indentString = "\t".repeat(indent)
+        // Annotations
         var result = if (annotations.isEmpty()) ""
-        else "${annotations.values.joinToString("\n") { it.toFormattedString() }}\n"
+        else "${annotations.values.joinToString("\n") { it.toFormattedString(indent) }}\n"
+        // Class
         val qualifier = when {
             isInterface -> "interface"
             isCompanionObject -> "companion object"
@@ -52,11 +55,12 @@ data class ClassInfo(
         }
         val typeParams = if (typeParameterNames.isEmpty()) "" else "<${typeParameterNames.joinToString(", ")}>"
         val classModifier = classModifier?.toString()?.let { "$it " } ?: ""
-        result += "$visibility $modality $classModifier$qualifier ${type.getQualifiedName()}$typeParams\n"
-        result += "\tat $location"
+        result += "$indentString$visibility $modality $classModifier$qualifier ${type.getQualifiedName()}$typeParams {\n"
+        // Functions
         if (functions.isNotEmpty()) {
-            result += "\n${functions.joinToString("\n") { it.toFormattedString() }}"
+            result += "${functions.joinToString("\n\n") { it.toFormattedString(indent + 1) }}\n"
         }
+        result += "$indentString}"
         return result
     }
 }

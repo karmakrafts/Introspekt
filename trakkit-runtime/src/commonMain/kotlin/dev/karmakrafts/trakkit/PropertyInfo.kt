@@ -26,8 +26,9 @@ data class PropertyInfo(
     val visibility: VisibilityModifier,
     val modality: ModalityModifier
 ) {
-    fun toFormattedString(): String {
-        var result = "$visibility $modality "
+    fun toFormattedString(indent: Int = 0): String {
+        val indentString = "\t".repeat(indent)
+        var result = "$indentString$visibility $modality "
         result += if (isMutable) "var " else "val "
         result += "$name: ${type.getQualifiedName()}"
         return result

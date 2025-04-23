@@ -17,7 +17,6 @@
 package dev.karmakrafts.trakkit.compiler
 
 import org.jetbrains.kotlin.ir.IrElement
-import org.jetbrains.kotlin.ir.backend.js.utils.valueArguments
 import org.jetbrains.kotlin.ir.declarations.IrFile
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.declarations.IrParameterKind
@@ -53,7 +52,7 @@ internal class SourceLocationTransformer( // @formatter:off
     @OptIn(UnsafeDuringIrConstructionAPI::class)
     private fun TrakkitPluginContext.emitOfFunction(expression: IrCall): IrElement {
         val parameter = expression.target.parameters.first { it.kind == IrParameterKind.Regular }
-        val argument = expression.valueArguments[parameter.indexInOldValueParameters]
+        val argument = expression.getValueArgument(parameter.indexInOldValueParameters)
         check(argument is IrFunctionReference) { "Parameter must be a function reference" }
         return requireNotNull(argument.reflectionTarget) {
             "Parameter reference must have a reflection target"
@@ -66,8 +65,8 @@ internal class SourceLocationTransformer( // @formatter:off
         when (type) { // @formatter:off
             TrakkitIntrinsic.SL_HERE -> expression.getLocation(moduleFragment, file, source).instantiate()
             TrakkitIntrinsic.SL_HERE_HASH -> expression.getLocation(moduleFragment, file, source).createHashSum()
-            TrakkitIntrinsic.SL_CURRENT_FUNCTION -> context.function.getFunctionLocation(moduleFragment, file, source).instantiate()
-            TrakkitIntrinsic.SL_CURRENT_FUNCTION_HASH -> context.function.getFunctionLocation(moduleFragment, file, source).createHashSum()
+            TrakkitIntrinsic.SL_CURRENT_FUNCTION -> context.getFunctionLocation(moduleFragment, file, source).instantiate()
+            TrakkitIntrinsic.SL_CURRENT_FUNCTION_HASH -> context.getFunctionLocation(moduleFragment, file, source).createHashSum()
             TrakkitIntrinsic.SL_CURRENT_CLASS -> context.clazz.getLocation(moduleFragment, file, source).instantiate()
             TrakkitIntrinsic.SL_CURRENT_CLASS_HASH -> context.clazz.getLocation(moduleFragment, file, source).createHashSum()
             TrakkitIntrinsic.SL_OF_CLASS -> emitOfClass(expression)

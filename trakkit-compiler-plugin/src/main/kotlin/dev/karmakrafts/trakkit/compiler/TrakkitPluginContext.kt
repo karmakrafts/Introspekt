@@ -20,7 +20,7 @@ import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.descriptors.Visibilities
 import org.jetbrains.kotlin.descriptors.Visibility
-import org.jetbrains.kotlin.ir.backend.js.utils.valueArguments
+import org.jetbrains.kotlin.ir.declarations.IrAnonymousInitializer
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrEnumEntry
 import org.jetbrains.kotlin.ir.declarations.IrFile
@@ -55,6 +55,8 @@ import org.jetbrains.kotlin.ir.util.isEnumClass
 import org.jetbrains.kotlin.ir.util.isInterface
 import org.jetbrains.kotlin.ir.util.isObject
 import org.jetbrains.kotlin.ir.util.isVararg
+import org.jetbrains.kotlin.ir.util.parentAsClass
+import org.jetbrains.kotlin.ir.util.primaryConstructor
 import org.jetbrains.kotlin.ir.util.toIrConst
 
 internal data class TrakkitPluginContext(
@@ -192,12 +194,12 @@ internal data class TrakkitPluginContext(
         val parameters = constructor.parameters.filter { it.kind == IrParameterKind.Regular }
         if (parameters.isEmpty()) return emptyMap()
         val parameterNames = parameters.map { it.name.asString() }
-        check(parameterNames.size == valueArguments.size) { "Missing annotation parameter info" }
+        check(parameterNames.size == valueArgumentsCount) { "Missing annotation parameter info" }
         val values = HashMap<String, Any?>()
         val firstParamIndex = parameters.first().indexInOldValueParameters
         val lastParamIndex = firstParamIndex + parameters.size
         for (index in firstParamIndex..<lastParamIndex) {
-            val value = valueArguments[index]
+            val value = getValueArgument(index)
             values[parameterNames[index]] = when (value) {
                 is IrConst -> value.value
                 is IrVararg -> value.elements.map { element ->
@@ -205,7 +207,7 @@ internal data class TrakkitPluginContext(
                     element.value
                 }.toList()
 
-                else -> error("Unsupported annotation parameter type $value")
+                else -> null
             }
         }
         return values
@@ -367,15 +369,37 @@ internal data class TrakkitPluginContext(
         module: IrModuleFragment,
         file: IrFile,
         source: List<String>,
-    ): FunctionInfo = FunctionInfo( // @formatter:on
+    ): FunctionInfo = FunctionInfo(
         location = getFunctionLocation(module, file, source),
         name = name.asString(),
         typeParameterNames = typeParameters.map { it.name.asString() },
         returnType = returnType,
-        parameterTypes = valueParameters.filter { it.kind == IrParameterKind.Regular }.map { it.type },
-        parameterNames = valueParameters.filter { it.kind == IrParameterKind.Regular }.map { it.name.asString() },
+        parameterTypes = valueParameters.filter { it.kind == IrParameterKind.Regular }
+            .map { it.type },
+        parameterNames = valueParameters.filter { it.kind == IrParameterKind.Regular }
+            .map { it.name.asString() },
         annotations = annotations.toAnnotationMap(module, file, source)
-    )
+    ) // @formatter:on
+
+    @OptIn(UnsafeDuringIrConstructionAPI::class)
+    fun IrAnonymousInitializer.getFunctionInfo( // @formatter:off
+        module: IrModuleFragment,
+        file: IrFile,
+        source: List<String>,
+    ): FunctionInfo { // @formatter:on
+        val constructor = requireNotNull(parentAsClass.primaryConstructor) { "Missing primary class constructor" }
+        return FunctionInfo( // @formatter:off
+            location = getLocation(module, file, source),
+            name = constructor.name.asString(),
+            typeParameterNames = constructor.typeParameters.map { it.name.asString() },
+            returnType = constructor.returnType,
+            parameterTypes = constructor.valueParameters.filter { it.kind == IrParameterKind.Regular }
+                .map { it.type },
+            parameterNames = constructor.valueParameters.filter { it.kind == IrParameterKind.Regular }
+                .map { it.name.asString() },
+            annotations = annotations.toAnnotationMap(module, file, source)
+        ) // @formatter:on
+    }
 
     fun FunctionInfo.instantiate(): IrConstructorCallImpl { // @formatter:on
         return IrConstructorCallImpl(

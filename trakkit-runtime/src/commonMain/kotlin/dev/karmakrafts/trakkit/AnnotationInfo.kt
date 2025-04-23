@@ -23,11 +23,11 @@ data class AnnotationInfo( // @formatter:off
     val type: KClass<out Annotation>,
     val values: Map<String, Any>
 ) { // @formatter:on
-    fun toFormattedString(): String {
-        var result = "@${type.getQualifiedName()}\n"
-        result += "\tat $location"
+    fun toFormattedString(indent: Int = 0): String {
+        val indentString = "\t".repeat(indent)
+        var result = "$indentString@${type.getQualifiedName()}"
         if (values.isNotEmpty()) {
-            result += "\n\t$values"
+            result += "($values)"
         }
         return result
     }
