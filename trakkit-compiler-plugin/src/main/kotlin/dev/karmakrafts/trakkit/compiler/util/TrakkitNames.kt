@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package dev.karmakrafts.trakkit.compiler
+package dev.karmakrafts.trakkit.compiler.util
 
 import org.jetbrains.kotlin.name.CallableId
 import org.jetbrains.kotlin.name.ClassId
@@ -37,6 +37,7 @@ internal object TrakkitNames {
         val currentFunctionHash: Name = Name.identifier("currentFunctionHash")
         val currentClass: Name = Name.identifier("currentClass")
         val currentClassHash: Name = Name.identifier("currentClassHash")
+        val getOrCreate: Name = Name.identifier("getOrCreate")
     }
 
     object Kotlin {
@@ -95,6 +96,7 @@ internal object TrakkitNames {
 
         object Companion {
             val fqName: FqName = FqName("SourceLocation.Companion")
+            val id: ClassId = ClassId(packageName, fqName, false)
 
             val here: CallableId = CallableId(packageName, fqName, Functions.here)
             val hereHash: CallableId = CallableId(packageName, fqName, Functions.hereHash)
@@ -104,7 +106,14 @@ internal object TrakkitNames {
             val currentClassHash: CallableId = CallableId(packageName, fqName, Functions.currentClassHash)
             val ofClass: CallableId = CallableId(packageName, fqName, Functions.ofClass)
             val ofFunction: CallableId = CallableId(packageName, fqName, Functions.ofFunction)
+            val getOrCreate: CallableId = CallableId(packageName, fqName, Functions.getOrCreate)
         }
+    }
+
+    object ElementInfo {
+        val name: Name = Name.identifier("ElementInfo")
+        val id: ClassId = ClassId(packageName, name)
+        val fqName: FqName = id.asSingleFqName()
     }
 
     object FunctionInfo {
@@ -114,9 +123,11 @@ internal object TrakkitNames {
 
         object Companion {
             val fqName: FqName = FqName("FunctionInfo.Companion")
+            val id: ClassId = ClassId(packageName, fqName, false)
 
             val current: CallableId = CallableId(packageName, fqName, Functions.current)
             val of: CallableId = CallableId(packageName, fqName, Functions.of)
+            val getOrCreate: CallableId = CallableId(packageName, fqName, Functions.getOrCreate)
         }
     }
 
@@ -127,14 +138,16 @@ internal object TrakkitNames {
 
         object Companion {
             val fqName: FqName = FqName("ClassInfo.Companion")
+            val id: ClassId = ClassId(packageName, fqName, false)
 
             val current: CallableId = CallableId(packageName, fqName, Functions.current)
             val of: CallableId = CallableId(packageName, fqName, Functions.of)
+            val getOrCreate: CallableId = CallableId(packageName, fqName, Functions.getOrCreate)
         }
     }
 
-    object AnnotationInfo {
-        val name: Name = Name.identifier("AnnotationInfo")
+    object AnnotationUsageInfo {
+        val name: Name = Name.identifier("AnnotationUsageInfo")
         val id: ClassId = ClassId(packageName, name)
         val fqName: FqName = id.asSingleFqName()
     }
@@ -143,6 +156,13 @@ internal object TrakkitNames {
         val name: Name = Name.identifier("PropertyInfo")
         val id: ClassId = ClassId(packageName, name)
         val fqName: FqName = id.asSingleFqName()
+
+        object Companion {
+            val fqName: FqName = FqName("PropertyInfo.Companion")
+            val id: ClassId = ClassId(packageName, fqName, false)
+
+            val getOrCreate: CallableId = CallableId(packageName, fqName, Functions.getOrCreate)
+        }
     }
 
     object TrakkitIntrinsic {

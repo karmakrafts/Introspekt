@@ -16,13 +16,14 @@
 
 package dev.karmakrafts.trakkit
 
+import co.touchlab.stately.collections.SharedHashMap
 import kotlin.reflect.KClass
 
 data class ClassInfo(
-    val location: SourceLocation,
+    override val location: SourceLocation,
     val type: KClass<*>,
     val typeParameterNames: List<String>,
-    val annotations: Map<KClass<out Annotation>, AnnotationInfo>,
+    val annotations: Map<KClass<out Annotation>, AnnotationUsageInfo>,
     val functions: List<FunctionInfo>,
     val properties: List<PropertyInfo>,
     val companionObjects: List<ClassInfo>,
@@ -32,13 +33,50 @@ data class ClassInfo(
     val visibility: VisibilityModifier,
     val modality: ModalityModifier,
     val classModifier: ClassModifier?
-) {
+) : ElementInfo {
     companion object {
+        private val cache: SharedHashMap<KClass<*>, ClassInfo> = SharedHashMap()
+
         @TrakkitIntrinsic(TrakkitIntrinsic.CI_CURRENT)
         fun current(): ClassInfo = throw TrakkitPluginNotAppliedException()
 
         @TrakkitIntrinsic(TrakkitIntrinsic.CI_OF)
         fun <T : Any> of(): ClassInfo = throw TrakkitPluginNotAppliedException()
+
+        @TrakkitCompilerApi
+        fun getOrCreate(
+            location: SourceLocation,
+            type: KClass<*>,
+            typeParameterNames: List<String>,
+            annotations: Map<KClass<out Annotation>, AnnotationUsageInfo>,
+            functions: List<FunctionInfo>,
+            properties: List<PropertyInfo>,
+            companionObjects: List<ClassInfo>,
+            isInterface: Boolean,
+            isObject: Boolean,
+            isCompanionObject: Boolean,
+            visibility: VisibilityModifier,
+            modality: ModalityModifier,
+            classModifier: ClassModifier?
+        ): ClassInfo {
+            return cache.getOrPut(type) {
+                ClassInfo(
+                    location,
+                    type,
+                    typeParameterNames,
+                    annotations,
+                    functions,
+                    properties,
+                    companionObjects,
+                    isInterface,
+                    isObject,
+                    isCompanionObject,
+                    visibility,
+                    modality,
+                    classModifier
+                )
+            }
+        }
     }
 
     fun toFormattedString(indent: Int = 0): String {
@@ -56,11 +94,24 @@ data class ClassInfo(
         val typeParams = if (typeParameterNames.isEmpty()) "" else "<${typeParameterNames.joinToString(", ")}>"
         val classModifier = classModifier?.toString()?.let { "$it " } ?: ""
         result += "$indentString$visibility $modality $classModifier$qualifier ${type.getQualifiedName()}$typeParams {\n"
+        // Properties
+        val hasProperties = properties.isNotEmpty()
+        if (hasProperties) {
+            result += "${properties.joinToString("\n") { it.toFormattedString(indent + 1) }}\n"
+        }
         // Functions
         if (functions.isNotEmpty()) {
+            if (hasProperties) result += '\n'
             result += "${functions.joinToString("\n\n") { it.toFormattedString(indent + 1) }}\n"
         }
         result += "$indentString}"
         return result
+    }
+
+    override fun hashCode(): Int = type.hashCode() // Use type identity
+
+    override fun equals(other: Any?): Boolean {
+        return if (other !is ClassInfo) false
+        else type === other.type // Use type identity
     }
 }

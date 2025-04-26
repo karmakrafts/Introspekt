@@ -16,6 +16,7 @@
 
 package dev.karmakrafts.trakkit
 
+import co.touchlab.stately.collections.SharedHashMap
 import kotlin.reflect.KFunction
 
 data class SourceLocation( // @formatter:off
@@ -25,6 +26,23 @@ data class SourceLocation( // @formatter:off
     val column: Int
 ) { // @formatter:on
     companion object {
+        private val cache: SharedHashMap<Int, SourceLocation> = SharedHashMap()
+
+        private fun hash(module: String, file: String, line: Int, column: Int): Int {
+            var result = module.hashCode()
+            result = 31 * result + file.hashCode()
+            result = 31 * result + line
+            result = 31 * result + column
+            return result
+        }
+
+        @TrakkitCompilerApi
+        fun getOrCreate(module: String, file: String, line: Int, column: Int): SourceLocation {
+            return cache.getOrPut(hash(module, file, line, column)) {
+                SourceLocation(module, file, line, column)
+            }
+        }
+
         /**
          * A value used for either [SourceLocation.line] or [SourceLocation.column]
          * if the associated element was added as a fake-override.

@@ -16,24 +16,62 @@
 
 package dev.karmakrafts.trakkit
 
+import co.touchlab.stately.collections.SharedHashMap
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 
 data class FunctionInfo(
-    val location: SourceLocation,
+    override val location: SourceLocation,
+    val qualifiedName: String,
     val name: String,
     val typeParameterNames: List<String>,
     val returnType: KClass<*>,
     val parameterTypes: List<KClass<*>>,
     val parameterNames: List<String>,
-    val annotations: Map<KClass<out Annotation>, AnnotationInfo>,
-) {
+    val annotations: Map<KClass<out Annotation>, AnnotationUsageInfo>
+) : ElementInfo {
     companion object {
+        private val cache: SharedHashMap<Int, FunctionInfo> = SharedHashMap()
+
         @TrakkitIntrinsic(TrakkitIntrinsic.FI_CURRENT)
         fun current(): FunctionInfo = throw TrakkitPluginNotAppliedException()
 
         @TrakkitIntrinsic(TrakkitIntrinsic.FI_OF)
         fun of(function: KFunction<*>): FunctionInfo = throw TrakkitPluginNotAppliedException()
+
+        private fun getCacheKey(
+            qualifiedName: String, returnType: KClass<*>, parameterTypes: List<KClass<*>>
+        ): Int {
+            var result = qualifiedName.hashCode()
+            result = 31 * result + returnType.hashCode()
+            result = 31 * result + parameterTypes.hashCode()
+            return result
+        }
+
+        @TrakkitCompilerApi
+        fun getOrCreate(
+            location: SourceLocation,
+            qualifiedName: String,
+            name: String,
+            typeParameterNames: List<String>,
+            returnType: KClass<*>,
+            parameterTypes: List<KClass<*>>,
+            parameterNames: List<String>,
+            annotations: Map<KClass<out Annotation>, AnnotationUsageInfo>
+        ): FunctionInfo {
+            return cache.getOrPut(getCacheKey(qualifiedName, returnType, parameterTypes)) {
+                FunctionInfo(
+                    location,
+                    qualifiedName,
+                    name,
+                    typeParameterNames,
+                    returnType,
+                    parameterTypes,
+                    parameterNames,
+                    annotations
+                )
+            }
+        }
     }
 
     fun toFormattedString(indent: Int = 0): String {

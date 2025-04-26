@@ -14,17 +14,21 @@
  * limitations under the License.
  */
 
-package dev.karmakrafts.trakkit.compiler
+package dev.karmakrafts.trakkit
 
-import org.jetbrains.kotlin.descriptors.Modality
-import org.jetbrains.kotlin.descriptors.Visibility
-import org.jetbrains.kotlin.ir.types.IrType
+import kotlin.reflect.KClass
 
-internal data class PropertyInfo(
+data class AnnotationUsageInfo( // @formatter:off
     val location: SourceLocation,
-    val name: String,
-    val type: IrType,
-    val isMutable: Boolean,
-    val visibility: Visibility,
-    val modality: Modality
-)
+    val type: KClass<out Annotation>,
+    val values: Map<String, Any>
+) { // @formatter:on
+    fun toFormattedString(indent: Int = 0): String {
+        val indentString = "\t".repeat(indent)
+        var result = "$indentString@${type.getQualifiedName()}"
+        if (values.isNotEmpty()) {
+            result += "($values)"
+        }
+        return result
+    }
+}

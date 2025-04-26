@@ -16,6 +16,10 @@
 
 package dev.karmakrafts.trakkit.compiler
 
+import dev.karmakrafts.trakkit.compiler.element.FunctionInfo
+import dev.karmakrafts.trakkit.compiler.util.SourceLocation
+import dev.karmakrafts.trakkit.compiler.util.getFunctionLocation
+import dev.karmakrafts.trakkit.compiler.util.getLocation
 import org.jetbrains.kotlin.ir.declarations.IrAnonymousInitializer
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrFile
@@ -53,6 +57,10 @@ internal data class IntrinsicContext( // @formatter:off
         file: IrFile,
         source: List<String>
     ): FunctionInfo = with(pluginContext) {
+        val function = functionStack.firstOrNull()
+        if(function != null) {
+            return function.getFunctionInfo(module, file, source)
+        }
         return functionStack.firstOrNull()?.getFunctionInfo(module, file, source)
             ?: initializerStack.firstOrNull()?.getFunctionInfo(module, file, source)
             ?: throw IllegalStateException("Not inside any function or initializer")

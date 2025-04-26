@@ -14,8 +14,11 @@
  * limitations under the License.
  */
 
-package dev.karmakrafts.trakkit.compiler
+package dev.karmakrafts.trakkit.compiler.transformer
 
+import dev.karmakrafts.trakkit.compiler.IntrinsicContext
+import dev.karmakrafts.trakkit.compiler.util.TrakkitIntrinsic
+import dev.karmakrafts.trakkit.compiler.util.getIntrinsicType
 import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.IrStatement
 import org.jetbrains.kotlin.ir.declarations.IrAnonymousInitializer

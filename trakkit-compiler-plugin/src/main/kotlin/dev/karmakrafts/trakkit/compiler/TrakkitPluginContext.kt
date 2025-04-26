@@ -16,10 +16,23 @@
 
 package dev.karmakrafts.trakkit.compiler
 
+import dev.karmakrafts.trakkit.compiler.element.AnnotationUsageInfo
+import dev.karmakrafts.trakkit.compiler.element.ClassInfo
+import dev.karmakrafts.trakkit.compiler.element.ElementInfo
+import dev.karmakrafts.trakkit.compiler.element.FunctionInfo
+import dev.karmakrafts.trakkit.compiler.element.PropertyInfo
+import dev.karmakrafts.trakkit.compiler.util.ClassModifier
+import dev.karmakrafts.trakkit.compiler.util.IntrinsicResultType
+import dev.karmakrafts.trakkit.compiler.util.SourceLocation
+import dev.karmakrafts.trakkit.compiler.util.TrakkitIntrinsic
+import dev.karmakrafts.trakkit.compiler.util.TrakkitNames
+import dev.karmakrafts.trakkit.compiler.util.getFunctionLocation
+import dev.karmakrafts.trakkit.compiler.util.getLocation
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.descriptors.Visibilities
 import org.jetbrains.kotlin.descriptors.Visibility
+import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.declarations.IrAnonymousInitializer
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrEnumEntry
@@ -27,6 +40,8 @@ import org.jetbrains.kotlin.ir.declarations.IrFile
 import org.jetbrains.kotlin.ir.declarations.IrFunction
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.declarations.IrParameterKind
+import org.jetbrains.kotlin.ir.declarations.IrParameterKind.Regular
+import org.jetbrains.kotlin.ir.declarations.IrProperty
 import org.jetbrains.kotlin.ir.expressions.IrConst
 import org.jetbrains.kotlin.ir.expressions.IrConstructorCall
 import org.jetbrains.kotlin.ir.expressions.IrExpression
@@ -50,19 +65,22 @@ import org.jetbrains.kotlin.ir.types.starProjectedType
 import org.jetbrains.kotlin.ir.types.typeWith
 import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
 import org.jetbrains.kotlin.ir.util.constructedClassType
+import org.jetbrains.kotlin.ir.util.fqNameWhenAvailable
 import org.jetbrains.kotlin.ir.util.functions
 import org.jetbrains.kotlin.ir.util.isEnumClass
 import org.jetbrains.kotlin.ir.util.isInterface
 import org.jetbrains.kotlin.ir.util.isObject
 import org.jetbrains.kotlin.ir.util.isVararg
+import org.jetbrains.kotlin.ir.util.kotlinFqName
 import org.jetbrains.kotlin.ir.util.parentAsClass
 import org.jetbrains.kotlin.ir.util.primaryConstructor
+import org.jetbrains.kotlin.ir.util.properties
 import org.jetbrains.kotlin.ir.util.toIrConst
 
 internal data class TrakkitPluginContext(
     private val pluginContext: IrPluginContext
 ) : IrPluginContext by pluginContext {
-    private val annotationType: IrClassSymbol = pluginContext.referenceClass(TrakkitNames.Kotlin.Annotation.id)!!
+    internal val annotationType: IrClassSymbol = pluginContext.referenceClass(TrakkitNames.Kotlin.Annotation.id)!!
 
     @OptIn(UnsafeDuringIrConstructionAPI::class)
     private val listOfFunction: IrSimpleFunctionSymbol = pluginContext.referenceFunctions(TrakkitNames.Kotlin.listOf)
@@ -78,48 +96,65 @@ internal data class TrakkitPluginContext(
         pluginContext.referenceConstructors(TrakkitNames.Kotlin.Pair.id).first()
     private val pairType: IrClassSymbol = pluginContext.referenceClass(TrakkitNames.Kotlin.Pair.id)!!
 
-    private val annotationInfoType: IrClassSymbol =
-        requireNotNull(pluginContext.referenceClass(TrakkitNames.AnnotationInfo.id)) {
+    internal val annotationInfoType: IrClassSymbol =
+        requireNotNull(pluginContext.referenceClass(TrakkitNames.AnnotationUsageInfo.id)) {
             "Cannot find AnnotationInfo type, Trakkit runtime library is most likely missing"
         }
-    private val annotationInfoConstructor: IrConstructorSymbol =
-        pluginContext.referenceConstructors(TrakkitNames.AnnotationInfo.id).first()
+    internal val annotationInfoConstructor: IrConstructorSymbol =
+        requireNotNull(pluginContext.referenceConstructors(TrakkitNames.AnnotationUsageInfo.id)).first()
 
     private val sourceLocationType: IrClassSymbol =
         requireNotNull(pluginContext.referenceClass(TrakkitNames.SourceLocation.id)) {
             "Cannot find SourceLocation type, Trakkit runtime library is most likely missing"
         }
-    private val sourceLocationConstructor: IrConstructorSymbol =
-        pluginContext.referenceConstructors(TrakkitNames.SourceLocation.id).first()
+    private val sourcLocationCompanionType: IrClassSymbol =
+        requireNotNull(pluginContext.referenceClass(TrakkitNames.SourceLocation.Companion.id)) {
+            "Cannot find SourceLocation.Companion type, Trakkit runtime library is most likely missing"
+        }
+    private val sourceLocationGetOrCreate: IrSimpleFunctionSymbol =
+        pluginContext.referenceFunctions(TrakkitNames.SourceLocation.Companion.getOrCreate).first()
 
-    private val functionInfoType: IrClassSymbol =
+    internal val functionInfoType: IrClassSymbol =
         requireNotNull(pluginContext.referenceClass(TrakkitNames.FunctionInfo.id)) {
             "Cannot find FunctionInfo type, Trakkit runtime library is most likely missing"
         }
-    private val functionInfoConstructor: IrConstructorSymbol =
-        pluginContext.referenceConstructors(TrakkitNames.FunctionInfo.id).first()
+    internal val functionInfoCompanionType: IrClassSymbol =
+        requireNotNull(pluginContext.referenceClass(TrakkitNames.FunctionInfo.Companion.id)) {
+            "Cannot find FunctionInfo.Commpanion type, Trakkit runtime library is most likely missing"
+        }
+    internal val functionInfoGetOrCreate: IrSimpleFunctionSymbol =
+        pluginContext.referenceFunctions(TrakkitNames.FunctionInfo.Companion.getOrCreate).first()
 
-    private val propertyInfoType: IrClassSymbol =
+    internal val propertyInfoType: IrClassSymbol =
         requireNotNull(pluginContext.referenceClass(TrakkitNames.PropertyInfo.id)) {
             "Cannot find PropertyInfo type, Trakkit runtime library is most likely missing"
         }
-    private val propertyInfoConstructor: IrConstructorSymbol =
-        pluginContext.referenceConstructors(TrakkitNames.PropertyInfo.id).first()
+    internal val propertyInfoCompanionType: IrClassSymbol =
+        requireNotNull(pluginContext.referenceClass(TrakkitNames.PropertyInfo.Companion.id)) {
+            "Cannot find PropertyInfo.Companion type, Trakkit runtime library is most likely missing"
+        }
+    internal val propertyInfoGetOrCreate: IrSimpleFunctionSymbol =
+        pluginContext.referenceFunctions(TrakkitNames.PropertyInfo.Companion.getOrCreate).first()
 
-    private val classInfoType: IrClassSymbol = requireNotNull(pluginContext.referenceClass(TrakkitNames.ClassInfo.id)) {
-        "Cannot find ClassInfo type, Trakkit runtime library is most likely missing"
-    }
-    private val classInfoConstructor: IrConstructorSymbol =
-        pluginContext.referenceConstructors(TrakkitNames.ClassInfo.id).first()
+    internal val classInfoType: IrClassSymbol =
+        requireNotNull(pluginContext.referenceClass(TrakkitNames.ClassInfo.id)) {
+            "Cannot find ClassInfo type, Trakkit runtime library is most likely missing"
+        }
+    internal val classInfoCompanionType: IrClassSymbol =
+        requireNotNull(pluginContext.referenceClass(TrakkitNames.ClassInfo.Companion.id)) {
+            "Cannot find ClassInfo.Companion type, Trakkit runtime library is most likely missing"
+        }
+    internal val classInfoGetOrCreate: IrSimpleFunctionSymbol =
+        pluginContext.referenceFunctions(TrakkitNames.ClassInfo.Companion.getOrCreate).first()
 
     private val captureCallerType: IrClassSymbol = pluginContext.referenceClass(TrakkitNames.CaptureCaller.id)!!
     private val captureCallerConstructor: IrConstructorSymbol =
         pluginContext.referenceConstructors(TrakkitNames.CaptureCaller.id).first()
 
-    private val visibilityModifierType: IrClassSymbol =
+    internal val visibilityModifierType: IrClassSymbol =
         pluginContext.referenceClass(TrakkitNames.VisibilityModifier.id)!!
-    private val modalityModifierType: IrClassSymbol = pluginContext.referenceClass(TrakkitNames.ModalityModifier.id)!!
-    private val classModifierType: IrClassSymbol = pluginContext.referenceClass(TrakkitNames.ClassModifier.id)!!
+    internal val modalityModifierType: IrClassSymbol = pluginContext.referenceClass(TrakkitNames.ModalityModifier.id)!!
+    internal val classModifierType: IrClassSymbol = pluginContext.referenceClass(TrakkitNames.ClassModifier.id)!!
 
     private fun TrakkitIntrinsic.getType(): IrType = when (resultType) {
         IntrinsicResultType.SOURCE_LOCATION -> sourceLocationType.defaultType
@@ -143,12 +178,7 @@ internal data class TrakkitPluginContext(
     ).apply {
         functionId.classId?.let(pluginContext::referenceClass)?.let { classSymbol ->
             check(classSymbol.owner.isCompanion) { "Intrinsic parent must be a companion object or the top level scope" }
-            dispatchReceiver = IrGetObjectValueImpl(
-                startOffset = SYNTHETIC_OFFSET,
-                endOffset = SYNTHETIC_OFFSET,
-                type = classSymbol.defaultType,
-                symbol = classSymbol
-            )  // @formatter:on
+            dispatchReceiver = classSymbol.getObjectInstance()
         }
     }
 
@@ -159,33 +189,30 @@ internal data class TrakkitPluginContext(
         symbol = captureCallerConstructor,
         typeArgumentsCount = 0,
         constructorTypeArgumentsCount = 0
-    ).apply {
-        putValueArgument(
-            0, IrVarargImpl(
-                startOffset = SYNTHETIC_OFFSET,
-                endOffset = SYNTHETIC_OFFSET,
-                type = irBuiltIns.arrayClass.typeWith(irBuiltIns.stringType),
-                varargElementType = irBuiltIns.stringType,
-                elements = intrinsics.map { it.toIrValueOrType() })
+    ).apply { // @formatter:off
+        putValueArgument(0, IrVarargImpl(
+            startOffset = SYNTHETIC_OFFSET,
+            endOffset = SYNTHETIC_OFFSET,
+            type = irBuiltIns.arrayClass.typeWith(irBuiltIns.stringType),
+            varargElementType = irBuiltIns.stringType,
+            elements = intrinsics.map { it.toIrValueOrType() })
         )
-    }
+    } // @formatter:on
 
     private fun Pair<IrExpression?, IrExpression?>.instantiate(
         firstType: IrType, secondType: IrType
-    ): IrConstructorCallImpl {
-        return IrConstructorCallImpl(
-            startOffset = SYNTHETIC_OFFSET,
-            endOffset = SYNTHETIC_OFFSET,
-            type = pairType.typeWith(firstType, secondType),
-            symbol = pairConstructor,
-            typeArgumentsCount = 2,
-            constructorTypeArgumentsCount = 2
-        ).apply {
-            putTypeArgument(0, firstType)
-            putTypeArgument(1, secondType)
-            putValueArgument(0, first ?: null.toIrConst(firstType))
-            putValueArgument(1, second ?: null.toIrConst(secondType))
-        }
+    ): IrConstructorCallImpl = IrConstructorCallImpl(
+        startOffset = SYNTHETIC_OFFSET,
+        endOffset = SYNTHETIC_OFFSET,
+        type = pairType.typeWith(firstType, secondType),
+        symbol = pairConstructor,
+        typeArgumentsCount = 2,
+        constructorTypeArgumentsCount = 2
+    ).apply {
+        putTypeArgument(0, firstType)
+        putTypeArgument(1, secondType)
+        putValueArgument(0, first ?: null.toIrConst(firstType))
+        putValueArgument(1, second ?: null.toIrConst(secondType))
     }
 
     @OptIn(UnsafeDuringIrConstructionAPI::class)
@@ -214,67 +241,66 @@ internal data class TrakkitPluginContext(
     }
 
     @OptIn(UnsafeDuringIrConstructionAPI::class)
-    fun IrConstructorCall.getAnnotationInfo( // @formatter:off
+    fun IrConstructorCall.getAnnotationUsageInfo( // @formatter:off
         module: IrModuleFragment,
         file: IrFile,
-        source: List<String>
-    ): AnnotationInfo = AnnotationInfo( // @formatter:on
+        source: List<String>,
+    ): AnnotationUsageInfo = AnnotationUsageInfo(
+        // @formatter:on
         location = getLocation(module, file, source),
         type = symbol.owner.constructedClassType,
-        values = getAnnotationValues()
+        values = getAnnotationValues(),
     )
 
-    private fun createListOf(type: IrType, values: List<IrExpression>): IrCallImpl {
-        return IrCallImplWithShape(
+    internal fun createListOf(
+        type: IrType, values: List<IrExpression>
+    ): IrCallImpl = IrCallImplWithShape(
+        startOffset = SYNTHETIC_OFFSET,
+        endOffset = SYNTHETIC_OFFSET,
+        type = listType.typeWith(type),
+        symbol = listOfFunction,
+        typeArgumentsCount = 1,
+        valueArgumentsCount = 1,
+        contextParameterCount = 0,
+        hasDispatchReceiver = false,
+        hasExtensionReceiver = false
+    ).apply { // @formatter:off
+        putTypeArgument(0, type)
+        putValueArgument(0, IrVarargImpl(
             startOffset = SYNTHETIC_OFFSET,
             endOffset = SYNTHETIC_OFFSET,
-            type = listType.typeWith(type),
-            symbol = listOfFunction,
-            typeArgumentsCount = 1,
-            valueArgumentsCount = 1,
-            contextParameterCount = 0,
-            hasDispatchReceiver = false,
-            hasExtensionReceiver = false
-        ).apply { // @formatter:off
-            putTypeArgument(0, type)
-            putValueArgument(0, IrVarargImpl(
-                startOffset = SYNTHETIC_OFFSET,
-                endOffset = SYNTHETIC_OFFSET,
-                type = irBuiltIns.arrayClass.typeWith(type),
-                varargElementType = type,
-                elements = values
-            ))
-        } // @formatter:on
-    }
+            type = irBuiltIns.arrayClass.typeWith(type),
+            varargElementType = type,
+            elements = values
+        ))
+    } // @formatter:on
 
-    private fun createMapOf( // @formatter:off
+    internal fun createMapOf( // @formatter:off
         keyType: IrType,
         valueType: IrType,
         values: List<Pair<IrExpression?, IrExpression?>>
-    ): IrCallImpl { // @formatter:on
-        return IrCallImplWithShape(
+    ): IrCallImpl = IrCallImplWithShape( // @formatter:on
+        startOffset = SYNTHETIC_OFFSET,
+        endOffset = SYNTHETIC_OFFSET,
+        type = mapType.typeWith(keyType, valueType),
+        symbol = mapOfFunction,
+        typeArgumentsCount = 2,
+        valueArgumentsCount = 1,
+        contextParameterCount = 0,
+        hasDispatchReceiver = false,
+        hasExtensionReceiver = false
+    ).apply { // @formatter:off
+        putTypeArgument(0, keyType)
+        putTypeArgument(1, valueType)
+        val pairType = pairType.typeWith(keyType, valueType)
+        putValueArgument(0, IrVarargImpl(
             startOffset = SYNTHETIC_OFFSET,
             endOffset = SYNTHETIC_OFFSET,
-            type = mapType.typeWith(keyType, valueType),
-            symbol = mapOfFunction,
-            typeArgumentsCount = 2,
-            valueArgumentsCount = 1,
-            contextParameterCount = 0,
-            hasDispatchReceiver = false,
-            hasExtensionReceiver = false
-        ).apply { // @formatter:off
-            putTypeArgument(0, keyType)
-            putTypeArgument(1, valueType)
-            val pairType = pairType.typeWith(keyType, valueType)
-            putValueArgument(0, IrVarargImpl(
-                startOffset = SYNTHETIC_OFFSET,
-                endOffset = SYNTHETIC_OFFSET,
-                type = irBuiltIns.arrayClass.typeWith(pairType),
-                varargElementType = pairType,
-                elements = values.map { it.instantiate(keyType, valueType) }
-            ))
-        } // @formatter:on
-    }
+            type = irBuiltIns.arrayClass.typeWith(pairType),
+            varargElementType = pairType,
+            elements = values.map { it.instantiate(keyType, valueType) }
+        ))
+    } // @formatter:on
 
     private fun Any?.getConstType(): IrType = when (this) {
         is Byte -> irBuiltIns.byteType
@@ -292,7 +318,7 @@ internal data class TrakkitPluginContext(
         else -> error("Unsupported IrConst type ${this@getConstType::class}")
     }
 
-    private fun Any?.toIrValueOrType(): IrExpression = when (this@toIrValueOrType) {
+    internal fun Any?.toIrValueOrType(): IrExpression = when (this@toIrValueOrType) {
         is IrType -> this@toIrValueOrType.toClassReference()
         is List<*> -> createListOf(irBuiltIns.anyType, this@toIrValueOrType.map { it.toIrValueOrType() })
         // TODO: create actual arrays here?
@@ -300,50 +326,37 @@ internal data class TrakkitPluginContext(
         else -> toIrConst(this@toIrValueOrType.getConstType())
     }
 
-    private fun AnnotationInfo.instantiate(): IrConstructorCallImpl {
-        return IrConstructorCallImpl(
-            startOffset = SYNTHETIC_OFFSET,
-            endOffset = SYNTHETIC_OFFSET,
-            type = annotationInfoType.defaultType,
-            symbol = annotationInfoConstructor,
-            typeArgumentsCount = 0,
-            constructorTypeArgumentsCount = 0
-        ).apply { // @formatter:off
-            var index = 0
-            putValueArgument(index++, location.instantiate())
-            putValueArgument(index++, this@instantiate.type.toClassReference())
-            putValueArgument(index, createMapOf(
-                keyType = irBuiltIns.stringType,
-                valueType = irBuiltIns.anyType,
-                values = values.map { (key, value) ->
-                    key.toIrConst(irBuiltIns.stringType) to value.toIrValueOrType()
-                }
-            ))
-        } // @formatter:on
-    }
+    internal fun IrClassSymbol.getObjectInstance(): IrGetObjectValueImpl = IrGetObjectValueImpl(
+        startOffset = SYNTHETIC_OFFSET,
+        endOffset = SYNTHETIC_OFFSET,
+        type = defaultType,
+        symbol = this@getObjectInstance
+    )
 
-    fun SourceLocation.instantiate(): IrConstructorCallImpl {
-        return IrConstructorCallImpl(
-            startOffset = SYNTHETIC_OFFSET,
-            endOffset = SYNTHETIC_OFFSET,
-            type = sourceLocationType.defaultType,
-            symbol = sourceLocationConstructor,
-            typeArgumentsCount = 0,
-            constructorTypeArgumentsCount = 0
-        ).apply {
-            var index = 0
-            putValueArgument(index++, module.toIrConst(irBuiltIns.stringType))
-            putValueArgument(index++, file.toIrConst(irBuiltIns.stringType))
-            putValueArgument(index++, line.toIrConst(irBuiltIns.intType))
-            putValueArgument(index, column.toIrConst(irBuiltIns.intType))
-        }
+    fun SourceLocation.instantiateCached(): IrCallImpl = IrCallImplWithShape(
+        startOffset = SYNTHETIC_OFFSET,
+        endOffset = SYNTHETIC_OFFSET,
+        type = sourceLocationType.defaultType,
+        symbol = sourceLocationGetOrCreate,
+        typeArgumentsCount = 0,
+        valueArgumentsCount = 4,
+        contextParameterCount = 0,
+        hasDispatchReceiver = true,
+        hasExtensionReceiver = false
+    ).apply {
+        var index = 0
+        putValueArgument(index++, module.toIrConst(irBuiltIns.stringType))
+        putValueArgument(index++, file.toIrConst(irBuiltIns.stringType))
+        putValueArgument(index++, line.toIrConst(irBuiltIns.intType))
+        putValueArgument(index, column.toIrConst(irBuiltIns.intType))
+        dispatchReceiver = sourcLocationCompanionType.getObjectInstance()
     }
 
     fun SourceLocation.createHashSum(): IrConst {
         return hashCode().toIrConst(irBuiltIns.intType)
     }
 
-    private fun IrType.toClassReference(): IrClassReferenceImpl {
+    internal fun IrType.toClassReference(): IrClassReferenceImpl {
         return IrClassReferenceImpl(
             startOffset = SYNTHETIC_OFFSET,
             endOffset = SYNTHETIC_OFFSET,
@@ -357,90 +370,69 @@ internal data class TrakkitPluginContext(
         module: IrModuleFragment,
         file: IrFile,
         source: List<String>
-    ): HashMap<IrType, AnnotationInfo> { // @formatter:on
-        val annotations = HashMap<IrType, AnnotationInfo>()
+    ): HashMap<IrType, AnnotationUsageInfo> { // @formatter:on
+        val annotations = HashMap<IrType, AnnotationUsageInfo>()
         for (call in this) {
-            annotations[call.type] = call.getAnnotationInfo(module, file, source)
+            annotations[call.type] = call.getAnnotationUsageInfo(module, file, source)
         }
         return annotations
+    }
+
+    internal fun IrElement.getElementInfoOrNull(
+        module: IrModuleFragment, file: IrFile, source: List<String>
+    ): ElementInfo? = when (this) {
+        is IrFunction -> getFunctionInfo(module, file, source)
+        is IrClass -> getClassInfo(module, file, source)
+        is IrProperty -> getPropertyInfo(module, file, source)
+        else -> null
+    }
+
+    internal fun IrElement.getElementInfo(
+        module: IrModuleFragment, file: IrFile, source: List<String>
+    ): ElementInfo = requireNotNull(getElementInfoOrNull(module, file, source)) {
+        "Could not retrieve element info for element $this"
     }
 
     fun IrFunction.getFunctionInfo( // @formatter:off
         module: IrModuleFragment,
         file: IrFile,
         source: List<String>,
-    ): FunctionInfo = FunctionInfo(
+    ): FunctionInfo = FunctionInfo.getOrCreate(
         location = getFunctionLocation(module, file, source),
+        qualifiedName = kotlinFqName.asString(),
         name = name.asString(),
         typeParameterNames = typeParameters.map { it.name.asString() },
         returnType = returnType,
-        parameterTypes = valueParameters.filter { it.kind == IrParameterKind.Regular }
+        parameterTypes = valueParameters.filter { it.kind == Regular }
             .map { it.type },
-        parameterNames = valueParameters.filter { it.kind == IrParameterKind.Regular }
+        parameterNames = valueParameters.filter { it.kind == Regular }
             .map { it.name.asString() },
-        annotations = annotations.toAnnotationMap(module, file, source)
-    ) // @formatter:on
+        hashTransform = { hash -> 31 * hash + parent.hashCode() }
+    ) { // @formatter:on
+        annotations = this@getFunctionInfo.annotations.toAnnotationMap(module, file, source)
+    }
 
     @OptIn(UnsafeDuringIrConstructionAPI::class)
     fun IrAnonymousInitializer.getFunctionInfo( // @formatter:off
         module: IrModuleFragment,
         file: IrFile,
-        source: List<String>,
+        source: List<String>
     ): FunctionInfo { // @formatter:on
         val constructor = requireNotNull(parentAsClass.primaryConstructor) { "Missing primary class constructor" }
-        return FunctionInfo( // @formatter:off
+        return FunctionInfo.getOrCreate( // @formatter:off
             location = getLocation(module, file, source),
+            qualifiedName = constructor.kotlinFqName.asString(),
             name = constructor.name.asString(),
             typeParameterNames = constructor.typeParameters.map { it.name.asString() },
             returnType = constructor.returnType,
-            parameterTypes = constructor.valueParameters.filter { it.kind == IrParameterKind.Regular }
+            parameterTypes = constructor.valueParameters.filter { it.kind == Regular }
                 .map { it.type },
-            parameterNames = constructor.valueParameters.filter { it.kind == IrParameterKind.Regular }
+            parameterNames = constructor.valueParameters.filter { it.kind == Regular }
                 .map { it.name.asString() },
-            annotations = annotations.toAnnotationMap(module, file, source)
-        ) // @formatter:on
-    }
-
-    fun FunctionInfo.instantiate(): IrConstructorCallImpl { // @formatter:on
-        return IrConstructorCallImpl(
-            startOffset = SYNTHETIC_OFFSET,
-            endOffset = SYNTHETIC_OFFSET,
-            type = functionInfoType.defaultType,
-            symbol = functionInfoConstructor,
-            typeArgumentsCount = 0,
-            constructorTypeArgumentsCount = 0
-        ).apply { // @formatter:off
-            var index = 0
-            // location
-            putValueArgument(index++, location.instantiate())
-            // name
-            putValueArgument(index++, name.toIrConst(irBuiltIns.stringType))
-            // typeParameterNames
-            putValueArgument(index++, createListOf(
-                type = irBuiltIns.stringType,
-                values = typeParameterNames.map { it.toIrConst(irBuiltIns.stringType) }
-            ))
-            // returnType
-            putValueArgument(index++, returnType.toClassReference())
-            // parameterTypes
-            putValueArgument(index++, createListOf(
-                type = irBuiltIns.kClassClass.starProjectedType,
-                values = parameterTypes.map { it.type.toIrValueOrType() }
-            ))
-            // parameterNames
-            putValueArgument(index++, createListOf(
-                type = irBuiltIns.stringType,
-                values = parameterNames.map { it.toIrConst(irBuiltIns.stringType) }
-            ))
-            // annotations
-            putValueArgument(index, createMapOf(
-                keyType = irBuiltIns.kClassClass.typeWith(annotationType.defaultType),
-                valueType = annotationInfoType.defaultType,
-                values = annotations.map { (type, info) ->
-                    type.toIrValueOrType() to info.instantiate()
-                }
-            ))
-        } // @formatter:on
+            hashTransform = { hash -> 31 * hash + parent.hashCode() }
+        ) { // @formatter:on
+            annotations = this@getFunctionInfo.annotations.toAnnotationMap(module, file, source)
+        }
     }
 
     @OptIn(UnsafeDuringIrConstructionAPI::class)
@@ -450,51 +442,50 @@ internal data class TrakkitPluginContext(
                 .find { it.name.asString() == name }) { "No entry $name in $this" }.symbol
     }
 
-    private inline fun <T> T.getEnumValue(type: IrClassSymbol, mapper: T.() -> String): IrGetEnumValueImpl {
-        return IrGetEnumValueImpl(
-            startOffset = SYNTHETIC_OFFSET,
-            endOffset = SYNTHETIC_OFFSET,
-            type = type.defaultType,
-            symbol = type.getEnumConstant(this.mapper())
-        )
-    }
+    internal inline fun <T> T.getEnumValue(
+        type: IrClassSymbol, mapper: T.() -> String
+    ): IrGetEnumValueImpl = IrGetEnumValueImpl(
+        startOffset = SYNTHETIC_OFFSET,
+        endOffset = SYNTHETIC_OFFSET,
+        type = type.defaultType,
+        symbol = type.getEnumConstant(this.mapper())
+    )
 
-    private fun Visibility.getVisibilityName(): String = when (this) {
+    internal fun Visibility.getVisibilityName(): String = when (this) {
         Visibilities.Public -> "PUBLIC"
         Visibilities.Protected -> "PROTECTED"
         Visibilities.Internal -> "INTERNAL"
         else -> "PRIVATE"
     }
 
-    private fun Modality.getModalityName(): String = when (this) {
+    internal fun Modality.getModalityName(): String = when (this) {
         Modality.OPEN -> "OPEN"
         Modality.SEALED -> "SEALED"
         Modality.ABSTRACT -> "ABSTRACT"
-        else -> "FINAL"
+        Modality.FINAL -> "FINAL"
     }
 
-    private fun PropertyInfo.instantiate(): IrConstructorCallImpl = IrConstructorCallImpl(
-        startOffset = SYNTHETIC_OFFSET,
-        endOffset = SYNTHETIC_OFFSET,
-        type = propertyInfoType.defaultType,
-        symbol = propertyInfoConstructor,
-        typeArgumentsCount = 0,
-        constructorTypeArgumentsCount = 0
-    ).apply { // @formatter:off
-        var index = 0
-        // location
-        putValueArgument(index++, location.instantiate())
-        // name
-        putValueArgument(index++, name.toIrConst(irBuiltIns.stringType))
-        // type
-        putValueArgument(index++, type.toClassReference())
-        // isMutable
-        putValueArgument(index++, isMutable.toIrConst(irBuiltIns.booleanType))
-        // visibility
-        putValueArgument(index++, visibility.getEnumValue(visibilityModifierType) { getVisibilityName() })
-        // modality
-        putValueArgument(index, modality.getEnumValue(modalityModifierType) { getModalityName() })
-    } // @formatter:on
+    private fun IrProperty.getPropertyInfo( // @formatter:off
+        module: IrModuleFragment,
+        file: IrFile,
+        source: List<String>
+    ): PropertyInfo = PropertyInfo.getOrCreate(
+        location = getLocation(module, file, source),
+        qualifiedName = requireNotNull(fqNameWhenAvailable) {
+            "Could not obtain fully qualified name of property ${this@getPropertyInfo}"
+        }.asString(),
+        name = name.asString(),
+        type = requireNotNull(getter?.returnType) {
+            "Could not determine property type for ${name.asString()}"
+        },
+        isMutable = isVar,
+        visibility = visibility.delegate,
+        modality = modality,
+        getter = requireNotNull(getter) {
+            "Property requires at least a getter"
+        }.getFunctionInfo(module, file, source),
+        setter = setter?.getFunctionInfo(module, file, source)
+    ) // @formatter:on
 
     private fun IrClass.getClassModifier(): ClassModifier? = when {
         isData -> ClassModifier.DATA
@@ -506,23 +497,18 @@ internal data class TrakkitPluginContext(
     @OptIn(UnsafeDuringIrConstructionAPI::class)
     private fun IrClass.getCompanionObjects(
         module: IrModuleFragment, file: IrFile, source: List<String>
-    ): List<ClassInfo> {
-        return declarations.filterIsInstance<IrClass>()
-            .filter { it.isCompanion }
-            .map { it.getClassInfo(module, file, source) }
-    }
+    ): List<ClassInfo> =
+        declarations.filterIsInstance<IrClass>().filter { it.isCompanion }.map { it.getClassInfo(module, file, source) }
 
     @OptIn(UnsafeDuringIrConstructionAPI::class)
     fun IrClass.getClassInfo( // @formatter:off
         module: IrModuleFragment,
         file: IrFile,
         source: List<String>
-    ): ClassInfo = ClassInfo(
+    ): ClassInfo = ClassInfo.getOrCreate(
         location = getLocation(module, file, source),
         type = symbol.defaultType,
         typeParameterNames = typeParameters.map { it.name.asString() },
-        annotations = annotations.toAnnotationMap(module, file, source),
-        functions = functions.map { it.getFunctionInfo(module, file, source) }.toList(),
         companionObjects = getCompanionObjects(module, file, source),
         isInterface = isInterface,
         isObject = isObject,
@@ -530,61 +516,9 @@ internal data class TrakkitPluginContext(
         visibility = visibility.delegate,
         modality = modality,
         classType = getClassModifier()
-    ) // @formatter:on
-
-    fun ClassInfo.instantiate(): IrConstructorCallImpl = IrConstructorCallImpl(
-        startOffset = SYNTHETIC_OFFSET,
-        endOffset = SYNTHETIC_OFFSET,
-        type = classInfoType.defaultType,
-        symbol = classInfoConstructor,
-        typeArgumentsCount = 0,
-        constructorTypeArgumentsCount = 0
-    ).apply { // @formatter:off
-        var index = 0
-        // location
-        putValueArgument(index++, location.instantiate())
-        // type
-        putValueArgument(index++, this@instantiate.type.toClassReference())
-        // typeParameterNames
-        putValueArgument(index++, createListOf(
-            type = irBuiltIns.stringType,
-            values = typeParameterNames.map { it.toIrConst(irBuiltIns.stringType) })
-        )
-        // annotations
-        putValueArgument(index++, createMapOf(
-            keyType = irBuiltIns.kClassClass.typeWith(annotationType.defaultType),
-            valueType = annotationInfoType.defaultType,
-            values = annotations.map { (type, info) ->
-                type.toIrValueOrType() to info.instantiate()
-            })
-        )
-        // functions
-        putValueArgument(index++, createListOf(
-            type = functionInfoType.defaultType,
-            values = functions.map { it.instantiate() })
-        )
-        // properties
-        putValueArgument(index++, createListOf(
-            type = propertyInfoType.defaultType,
-            values = emptyList() // TODO: implement this
-        ))
-        // companionObjects
-        putValueArgument(index++, createListOf(
-            type = classInfoType.defaultType,
-            values = companionObjects.map { it.instantiate() })
-        )
-        // isInterface
-        putValueArgument(index++, isInterface.toIrConst(irBuiltIns.booleanType))
-        // isObject
-        putValueArgument(index++, isObject.toIrConst(irBuiltIns.booleanType))
-        // isCompanionObject
-        putValueArgument(index++, isCompanionObject.toIrConst(irBuiltIns.booleanType))
-        // visibility
-        putValueArgument(index++, visibility.getEnumValue(visibilityModifierType) { getVisibilityName() })
-        // modality
-        putValueArgument(index++, modality.getEnumValue(modalityModifierType) { getModalityName() })
-        // classModifier
-        putValueArgument(index, classType?.getEnumValue(classModifierType, ClassModifier::name)
-            ?: null.toIrConst(classModifierType.defaultType))
-    } // @formatter:on
+    ) {
+        functions = this@getClassInfo.functions.map { it.getFunctionInfo(module, file, source) }.toList()
+        properties = this@getClassInfo.properties.map { it.getPropertyInfo(module, file, source) }.toList()
+        annotations = this@getClassInfo.annotations.toAnnotationMap(module, file, source)
+    }
 }

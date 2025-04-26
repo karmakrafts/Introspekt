@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package dev.karmakrafts.trakkit.compiler
+package dev.karmakrafts.trakkit.compiler.util
 
 import org.jetbrains.kotlin.name.CallableId
 

@@ -14,17 +14,8 @@
  * limitations under the License.
  */
 
-package dev.karmakrafts.trakkit.compiler
+package dev.karmakrafts.trakkit
 
-internal data class SourceLocation( // @formatter:off
-    val module: String,
-    val file: String,
-    val line: Int,
-    val column: Int
-) { // @formatter:on
-    companion object {
-        const val FAKE_OVERRIDE_OFFSET = -1
-        const val SYNTHETIC_OFFSET = -2
-        const val UNDEFINED_OFFSET = -3
-    }
+sealed interface ElementInfo {
+    val location: SourceLocation
 }

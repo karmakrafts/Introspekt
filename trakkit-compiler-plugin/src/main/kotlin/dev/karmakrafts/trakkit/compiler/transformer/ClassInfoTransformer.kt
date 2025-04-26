@@ -14,45 +14,41 @@
  * limitations under the License.
  */
 
-package dev.karmakrafts.trakkit.compiler
+package dev.karmakrafts.trakkit.compiler.transformer
 
+import dev.karmakrafts.trakkit.compiler.IntrinsicContext
+import dev.karmakrafts.trakkit.compiler.util.TrakkitIntrinsic
+import dev.karmakrafts.trakkit.compiler.TrakkitPluginContext
 import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.declarations.IrFile
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
-import org.jetbrains.kotlin.ir.declarations.IrParameterKind
 import org.jetbrains.kotlin.ir.expressions.IrCall
-import org.jetbrains.kotlin.ir.expressions.IrFunctionReference
-import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
-import org.jetbrains.kotlin.ir.util.target
+import org.jetbrains.kotlin.ir.types.getClass
 
-internal class FunctionInfoTransformer(
+internal class ClassInfoTransformer(
     private val pluginContext: TrakkitPluginContext,
     private val moduleFragment: IrModuleFragment,
     private val file: IrFile,
     private val source: List<String>
 ) : TrakkitIntrinsicTransformer(
     setOf( // @formatter:off
-        TrakkitIntrinsic.FI_CURRENT,
-        TrakkitIntrinsic.FI_OF
+        TrakkitIntrinsic.CI_CURRENT,
+        TrakkitIntrinsic.CI_OF
     ) // @formatter:on
 ) {
-    @OptIn(UnsafeDuringIrConstructionAPI::class)
     private fun TrakkitPluginContext.emitOf(expression: IrCall): IrElement {
-        val parameter = expression.target.parameters.first { it.kind == IrParameterKind.Regular }
-        val argument = expression.getValueArgument(parameter.indexInOldValueParameters)
-        check(argument is IrFunctionReference) { "Parameter must be a function reference" }
-        return requireNotNull(argument.reflectionTarget) {
-            "Parameter reference must have a reflection target"
-        }.owner.getFunctionInfo(moduleFragment, file, source).instantiate()
+        return requireNotNull(expression.typeArguments.first()?.getClass()) {
+            "Missing class type parameter"
+        }.getClassInfo(moduleFragment, file, source).instantiateCached(pluginContext)
     }
 
     override fun visitIntrinsic(
         type: TrakkitIntrinsic, expression: IrCall, context: IntrinsicContext
     ): IrElement = with(pluginContext) {
-        when (type) { // @formatter:off
-            TrakkitIntrinsic.FI_CURRENT -> context.getFunctionInfo(moduleFragment, file, source).instantiate()
-            TrakkitIntrinsic.FI_OF -> emitOf(expression)
-            else -> error("Unsupported intrinsic for FunctionInfoTransformer")
-        } // @formatter:on
+        when (type) {
+            TrakkitIntrinsic.CI_CURRENT -> context.clazz.getClassInfo(moduleFragment, file, source).instantiateCached(pluginContext)
+            TrakkitIntrinsic.CI_OF -> emitOf(expression)
+            else -> error("Unsupported intrinsic for ClassInfoTransformer")
+        }
     }
 }

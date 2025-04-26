@@ -16,6 +16,11 @@
 
 package dev.karmakrafts.trakkit.compiler
 
+import dev.karmakrafts.trakkit.compiler.transformer.ClassInfoTransformer
+import dev.karmakrafts.trakkit.compiler.transformer.FunctionInfoTransformer
+import dev.karmakrafts.trakkit.compiler.transformer.IntrinsicCalleeParameterTransformer
+import dev.karmakrafts.trakkit.compiler.transformer.IntrinsicCallerParameterTransformer
+import dev.karmakrafts.trakkit.compiler.transformer.SourceLocationTransformer
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment

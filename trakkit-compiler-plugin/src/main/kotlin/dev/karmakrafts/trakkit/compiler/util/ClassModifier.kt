@@ -14,21 +14,10 @@
  * limitations under the License.
  */
 
-package dev.karmakrafts.trakkit
+package dev.karmakrafts.trakkit.compiler.util
 
-import kotlin.reflect.KClass
-
-data class AnnotationInfo( // @formatter:off
-    val location: SourceLocation,
-    val type: KClass<out Annotation>,
-    val values: Map<String, Any>
-) { // @formatter:on
-    fun toFormattedString(indent: Int = 0): String {
-        val indentString = "\t".repeat(indent)
-        var result = "$indentString@${type.getQualifiedName()}"
-        if (values.isNotEmpty()) {
-            result += "($values)"
-        }
-        return result
-    }
+enum class ClassModifier {
+    DATA,
+    VALUE,
+    ENUM
 }

@@ -16,16 +16,49 @@
 
 package dev.karmakrafts.trakkit
 
+import co.touchlab.stately.collections.SharedHashMap
 import kotlin.reflect.KClass
 
 data class PropertyInfo(
-    val location: SourceLocation,
+    override val location: SourceLocation,
+    val qualifiedName: String,
     val name: String,
     val type: KClass<*>,
     val isMutable: Boolean,
     val visibility: VisibilityModifier,
-    val modality: ModalityModifier
-) {
+    val modality: ModalityModifier,
+    val getter: FunctionInfo,
+    val setter: FunctionInfo?
+) : ElementInfo {
+    companion object {
+        private val cache: SharedHashMap<Int, PropertyInfo> = SharedHashMap()
+
+        private fun getCacheKey(
+            qualifiedName: String, type: KClass<*>
+        ): Int {
+            var result = qualifiedName.hashCode()
+            result = 31 * result + type.hashCode()
+            return result
+        }
+
+        @TrakkitCompilerApi
+        fun getOrCreate(
+            location: SourceLocation,
+            qualifiedName: String,
+            name: String,
+            type: KClass<*>,
+            isMutable: Boolean,
+            visibility: VisibilityModifier,
+            modality: ModalityModifier,
+            getter: FunctionInfo,
+            setter: FunctionInfo?
+        ): PropertyInfo {
+            return cache.getOrPut(getCacheKey(qualifiedName, type)) {
+                PropertyInfo(location, qualifiedName, name, type, isMutable, visibility, modality, getter, setter)
+            }
+        }
+    }
+
     fun toFormattedString(indent: Int = 0): String {
         val indentString = "\t".repeat(indent)
         var result = "$indentString$visibility $modality "

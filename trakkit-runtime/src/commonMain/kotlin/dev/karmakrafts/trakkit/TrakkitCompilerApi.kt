@@ -14,10 +14,7 @@
  * limitations under the License.
  */
 
-package dev.karmakrafts.trakkit.compiler
+package dev.karmakrafts.trakkit
 
-enum class ClassModifier {
-    DATA,
-    VALUE,
-    ENUM
-}
+@Retention(AnnotationRetention.SOURCE)
+annotation class TrakkitCompilerApi

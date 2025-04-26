@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package dev.karmakrafts.trakkit.compiler
+package dev.karmakrafts.trakkit.compiler.util
 
 import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.declarations.IrFile
@@ -66,9 +66,9 @@ internal fun IrFunction.getFunctionLocation( // @formatter:off
     module: IrModuleFragment,
     file: IrFile,
     source: List<String>
-): SourceLocation {
+): SourceLocation { // @formatter:on
     val isFakeOverride = isFakeOverride
-    return SourceLocation( // @formatter:on
+    return SourceLocation.getOrCreate(
         module = module.name.asString(),
         file = file.path,
         line = if (isFakeOverride) SourceLocation.FAKE_OVERRIDE_OFFSET
@@ -82,7 +82,7 @@ internal fun IrElement.getLocation( // @formatter:off
     module: IrModuleFragment,
     file: IrFile,
     source: List<String>,
-): SourceLocation = SourceLocation( // @formatter:on
+): SourceLocation = SourceLocation.getOrCreate( // @formatter:on
     module = module.name.asString(),
     file = file.path,
     line = getLineNumber(source, startOffset, endOffset),

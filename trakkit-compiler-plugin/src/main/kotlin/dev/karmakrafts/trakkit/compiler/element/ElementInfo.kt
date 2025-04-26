@@ -14,16 +14,13 @@
  * limitations under the License.
  */
 
-package dev.karmakrafts.trakkit.compiler
+package dev.karmakrafts.trakkit.compiler.element
 
-import org.jetbrains.kotlin.ir.types.IrType
+import dev.karmakrafts.trakkit.compiler.TrakkitPluginContext
+import org.jetbrains.kotlin.ir.expressions.IrCall
 
-internal data class FunctionInfo(
-    val location: SourceLocation,
-    val name: String,
-    val typeParameterNames: List<String>,
-    val returnType: IrType,
-    val parameterTypes: List<IrType>,
-    val parameterNames: List<String>,
-    val annotations: Map<IrType, AnnotationInfo>,
-)
+internal sealed interface ElementInfo {
+    val name: String
+    val qualifiedName: String
+    fun instantiateCached(context: TrakkitPluginContext): IrCall
+}

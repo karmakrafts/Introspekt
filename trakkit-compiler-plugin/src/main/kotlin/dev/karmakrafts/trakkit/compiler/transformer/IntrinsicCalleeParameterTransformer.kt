@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-package dev.karmakrafts.trakkit.compiler
+package dev.karmakrafts.trakkit.compiler.transformer
 
+import dev.karmakrafts.trakkit.compiler.TrakkitPluginContext
+import dev.karmakrafts.trakkit.compiler.util.getIntrinsicType
 import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.declarations.IrFunction
 import org.jetbrains.kotlin.ir.expressions.IrCall
@@ -39,6 +41,7 @@ internal class IntrinsicCalleeParameterTransformer(
     override fun visitFunction(declaration: IrFunction) {
         super.visitFunction(declaration)
         val callsiteIntrinsics = ArrayList<Pair<Int, String>>()
+        var shouldAnnotate = false
         for (parameter in declaration.valueParameters) {
             val defaultBody = parameter.defaultValue ?: continue
             var shouldRemoveDefault = false
@@ -52,7 +55,9 @@ internal class IntrinsicCalleeParameterTransformer(
             }
             if (!shouldRemoveDefault) continue
             parameter.defaultValue = null
+            shouldAnnotate = true
         }
+        if(!shouldAnnotate) return
         // Inject @CaptureCaller marker so we can reconstruct intrinsics @ the callsite(s) in index:name format
         declaration.annotations += pluginContext.createCaptureCaller(callsiteIntrinsics.map { (index, name) ->
             "$index:$name"
