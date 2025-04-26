@@ -171,6 +171,12 @@ internal object TrakkitNames {
         val fqName: FqName = id.asSingleFqName()
     }
 
+    object TrakkitCompilerApi {
+        val name: Name = Name.identifier("TrakkitCompilerApi")
+        val id: ClassId = ClassId(packageName, name)
+        val fqName: FqName = id.asSingleFqName()
+    }
+
     object CaptureCaller {
         val name: Name = Name.identifier("CaptureCaller")
         val id: ClassId = ClassId(packageName, name)

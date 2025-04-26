@@ -37,7 +37,7 @@ data class SourceLocation( // @formatter:off
         }
 
         @TrakkitCompilerApi
-        fun getOrCreate(module: String, file: String, line: Int, column: Int): SourceLocation {
+        internal fun getOrCreate(module: String, file: String, line: Int, column: Int): SourceLocation {
             return cache.getOrPut(hash(module, file, line, column)) {
                 SourceLocation(module, file, line, column)
             }

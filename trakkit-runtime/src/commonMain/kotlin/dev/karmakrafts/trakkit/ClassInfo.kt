@@ -22,6 +22,7 @@ import kotlin.reflect.KClass
 data class ClassInfo(
     override val location: SourceLocation,
     val type: KClass<*>,
+    val qualifiedName: String,
     val typeParameterNames: List<String>,
     val annotations: Map<KClass<out Annotation>, AnnotationUsageInfo>,
     val functions: List<FunctionInfo>,
@@ -44,9 +45,10 @@ data class ClassInfo(
         fun <T : Any> of(): ClassInfo = throw TrakkitPluginNotAppliedException()
 
         @TrakkitCompilerApi
-        fun getOrCreate(
+        internal fun getOrCreate(
             location: SourceLocation,
             type: KClass<*>,
+            qualifiedName: String,
             typeParameterNames: List<String>,
             annotations: Map<KClass<out Annotation>, AnnotationUsageInfo>,
             functions: List<FunctionInfo>,
@@ -63,6 +65,7 @@ data class ClassInfo(
                 ClassInfo(
                     location,
                     type,
+                    qualifiedName,
                     typeParameterNames,
                     annotations,
                     functions,
@@ -93,7 +96,7 @@ data class ClassInfo(
         }
         val typeParams = if (typeParameterNames.isEmpty()) "" else "<${typeParameterNames.joinToString(", ")}>"
         val classModifier = classModifier?.toString()?.let { "$it " } ?: ""
-        result += "$indentString$visibility $modality $classModifier$qualifier ${type.getQualifiedName()}$typeParams {\n"
+        result += "$indentString$visibility $modality $classModifier$qualifier $qualifiedName$typeParams {\n"
         // Properties
         val hasProperties = properties.isNotEmpty()
         if (hasProperties) {

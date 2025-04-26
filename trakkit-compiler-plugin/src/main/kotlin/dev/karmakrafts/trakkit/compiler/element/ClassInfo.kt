@@ -88,7 +88,7 @@ internal data class ClassInfo(
             type = classInfoType.defaultType,
             symbol = classInfoGetOrCreate,
             typeArgumentsCount = 0,
-            valueArgumentsCount = 13,
+            valueArgumentsCount = 14,
             contextParameterCount = 0,
             hasDispatchReceiver = true,
             hasExtensionReceiver = false
@@ -98,6 +98,8 @@ internal data class ClassInfo(
             putValueArgument(index++, location.instantiateCached())
             // type
             putValueArgument(index++, this@ClassInfo.type.toClassReference())
+            // qualifiedName
+            putValueArgument(index++, qualifiedName.toIrConst(irBuiltIns.stringType))
             // typeParameterNames
             putValueArgument(index++, createListOf(
                 type = irBuiltIns.stringType,

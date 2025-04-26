@@ -18,7 +18,8 @@ package dev.karmakrafts.trakkit
 
 import kotlin.reflect.KClass
 
-data class AnnotationUsageInfo( // @formatter:off
+@ConsistentCopyVisibility
+data class AnnotationUsageInfo @TrakkitCompilerApi internal constructor( // @formatter:off
     val location: SourceLocation,
     val type: KClass<out Annotation>,
     val values: Map<String, Any>

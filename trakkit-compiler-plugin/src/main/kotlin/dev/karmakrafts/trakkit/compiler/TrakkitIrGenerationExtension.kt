@@ -17,6 +17,7 @@
 package dev.karmakrafts.trakkit.compiler
 
 import dev.karmakrafts.trakkit.compiler.transformer.ClassInfoTransformer
+import dev.karmakrafts.trakkit.compiler.transformer.CompilerApiTransformer
 import dev.karmakrafts.trakkit.compiler.transformer.FunctionInfoTransformer
 import dev.karmakrafts.trakkit.compiler.transformer.IntrinsicCalleeParameterTransformer
 import dev.karmakrafts.trakkit.compiler.transformer.IntrinsicCallerParameterTransformer
@@ -34,6 +35,7 @@ internal class TrakkitIrGenerationExtension : IrGenerationExtension {
         moduleFragment: IrModuleFragment, pluginContext: IrPluginContext
     ) {
         val trakkitContext = TrakkitPluginContext(pluginContext)
+        moduleFragment.acceptVoid(CompilerApiTransformer())
         for (file in moduleFragment.files) {
             val source = runCatching { Path(file.path).readLines() }.getOrNull() ?: continue
             val context = IntrinsicContext(trakkitContext)

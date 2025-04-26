@@ -32,5 +32,7 @@ annotation class TrakkitIntrinsic(val value: String) {
         internal const val FI_OF: String = "fi_of"
         internal const val CI_CURRENT: String = "ci_current"
         internal const val CI_OF: String = "ci_of"
+        internal const val TS_PUSH: String = "ts_push"
+        internal const val TS_POP: String = "ts_pop"
     }
 }

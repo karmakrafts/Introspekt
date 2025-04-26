@@ -49,7 +49,7 @@ data class FunctionInfo(
         }
 
         @TrakkitCompilerApi
-        fun getOrCreate(
+        internal fun getOrCreate(
             location: SourceLocation,
             qualifiedName: String,
             name: String,

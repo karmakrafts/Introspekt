@@ -42,7 +42,7 @@ data class PropertyInfo(
         }
 
         @TrakkitCompilerApi
-        fun getOrCreate(
+        internal fun getOrCreate(
             location: SourceLocation,
             qualifiedName: String,
             name: String,

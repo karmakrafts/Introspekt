@@ -16,5 +16,6 @@
 
 package dev.karmakrafts.trakkit
 
-@Retention(AnnotationRetention.SOURCE)
-annotation class TrakkitCompilerApi
+@Retention(AnnotationRetention.BINARY)
+@Target(AnnotationTarget.FUNCTION, AnnotationTarget.CONSTRUCTOR)
+internal annotation class TrakkitCompilerApi
