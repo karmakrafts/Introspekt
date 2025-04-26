@@ -38,6 +38,8 @@ internal object TrakkitNames {
         val currentClass: Name = Name.identifier("currentClass")
         val currentClassHash: Name = Name.identifier("currentClassHash")
         val getOrCreate: Name = Name.identifier("getOrCreate")
+        val push: Name = Name.identifier("push")
+        val pop: Name = Name.identifier("pop")
     }
 
     object Kotlin {
@@ -181,5 +183,19 @@ internal object TrakkitNames {
         val name: Name = Name.identifier("CaptureCaller")
         val id: ClassId = ClassId(packageName, name)
         val fqName: FqName = id.asSingleFqName()
+    }
+
+    object TraceSpan {
+        val name: Name = Name.identifier("TraceSpan")
+        val id: ClassId = ClassId(packageName, name)
+        val fqName: FqName = id.asSingleFqName()
+
+        object Companion {
+            val fqName: FqName = FqName("TraceSpan.Companion")
+            val id: ClassId = ClassId(packageName, fqName, false)
+
+            val push: CallableId = CallableId(packageName, fqName, Functions.push)
+            val pop: CallableId = CallableId(packageName, fqName, Functions.pop)
+        }
     }
 }

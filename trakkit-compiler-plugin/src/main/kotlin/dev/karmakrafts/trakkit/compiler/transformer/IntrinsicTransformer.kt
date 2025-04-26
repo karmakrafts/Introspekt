@@ -24,16 +24,24 @@ import org.jetbrains.kotlin.ir.IrStatement
 import org.jetbrains.kotlin.ir.declarations.IrAnonymousInitializer
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrFunction
+import org.jetbrains.kotlin.ir.expressions.IrBody
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.util.target
 import org.jetbrains.kotlin.ir.visitors.IrTransformer
 
-internal abstract class TrakkitIntrinsicTransformer(
+internal abstract class IntrinsicTransformer(
     private val intrinsics: Set<TrakkitIntrinsic>
 ) : IrTransformer<IntrinsicContext>() {
     override fun visitElement(element: IrElement, data: IntrinsicContext): IrElement {
         element.transformChildren(this, data)
         return element
+    }
+
+    override fun visitBody(body: IrBody, data: IntrinsicContext): IrBody {
+        data.bodyStack.push(body)
+        val result = super.visitBody(body, data)
+        data.bodyStack.pop()
+        return result
     }
 
     override fun visitClass(

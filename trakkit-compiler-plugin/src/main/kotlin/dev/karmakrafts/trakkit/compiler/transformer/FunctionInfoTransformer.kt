@@ -33,7 +33,7 @@ internal class FunctionInfoTransformer(
     private val moduleFragment: IrModuleFragment,
     private val file: IrFile,
     private val source: List<String>
-) : TrakkitIntrinsicTransformer(
+) : IntrinsicTransformer(
     setOf( // @formatter:off
         TrakkitIntrinsic.FI_CURRENT,
         TrakkitIntrinsic.FI_OF

@@ -25,22 +25,34 @@ import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrFile
 import org.jetbrains.kotlin.ir.declarations.IrFunction
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
+import org.jetbrains.kotlin.ir.declarations.IrValueParameter
+import org.jetbrains.kotlin.ir.expressions.IrBody
 import java.util.*
 
 internal data class IntrinsicContext( // @formatter:off
     val pluginContext: TrakkitPluginContext,
     val clazzStack: Stack<IrClass> = Stack(),
     val functionStack: Stack<IrFunction> = Stack(),
-    val initializerStack: Stack<IrAnonymousInitializer> = Stack()
+    val initializerStack: Stack<IrAnonymousInitializer> = Stack(),
+    val bodyStack: Stack<IrBody> = Stack()
 ) { // @formatter:on
     inline val clazz: IrClass
         get() = requireNotNull(clazzStack.firstOrNull()) { "Not inside any class" }
 
+    inline val classOrNull: IrClass?
+        get() = clazzStack.firstOrNull()
+
     inline val function: IrFunction
         get() = requireNotNull(functionStack.firstOrNull()) { "Not inside any function" }
 
+    inline val functionOrNull: IrFunction?
+        get() = functionStack.firstOrNull()
+
     inline val initializer: IrAnonymousInitializer
         get() = requireNotNull(initializerStack.firstOrNull()) { "Not inside any initializer" }
+
+    inline val bodyOrNull: IrBody?
+        get() = bodyStack.firstOrNull()
 
     fun getFunctionLocation( // @formatter:off
         module: IrModuleFragment,

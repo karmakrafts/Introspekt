@@ -147,6 +147,25 @@ internal data class TrakkitPluginContext(
     internal val classInfoGetOrCreate: IrSimpleFunctionSymbol =
         pluginContext.referenceFunctions(TrakkitNames.ClassInfo.Companion.getOrCreate).first()
 
+    internal val traceSpanType: IrClassSymbol =
+        requireNotNull(pluginContext.referenceClass(TrakkitNames.TraceSpan.id)) {
+            "Cannot find TraceSpan type, Trakkit runtime library is most likely missing"
+        }
+    internal val traceSpanCompanionType: IrClassSymbol =
+        requireNotNull(pluginContext.referenceClass(TrakkitNames.TraceSpan.Companion.id)) {
+            "Cannot find TraceSpan.Companion type, Trakkit runtime library is most likely missing"
+        }
+    internal val traceSpanConstructor: IrConstructorSymbol =
+        requireNotNull(pluginContext.referenceConstructors(TrakkitNames.TraceSpan.id)).first()
+
+    @OptIn(UnsafeDuringIrConstructionAPI::class)
+    internal val traceSpanPush: IrSimpleFunctionSymbol =
+        requireNotNull(pluginContext.referenceFunctions(TrakkitNames.TraceSpan.Companion.push).find { symbol ->
+            symbol.owner.parameters
+                .first { it.kind == IrParameterKind.Regular }
+                .type == traceSpanType.defaultType
+        }) { "Cannot find TraceSpan.Companion.push function, Trakkit runtime is most likely missing" }
+
     private val captureCallerType: IrClassSymbol = pluginContext.referenceClass(TrakkitNames.CaptureCaller.id)!!
     private val captureCallerConstructor: IrConstructorSymbol =
         pluginContext.referenceConstructors(TrakkitNames.CaptureCaller.id).first()
@@ -160,7 +179,9 @@ internal data class TrakkitPluginContext(
         IntrinsicResultType.SOURCE_LOCATION -> sourceLocationType.defaultType
         IntrinsicResultType.FUNCTION_INFO -> functionInfoType.defaultType
         IntrinsicResultType.CLASS_INFO -> classInfoType.defaultType
-        IntrinsicResultType.HASH -> irBuiltIns.intType
+        IntrinsicResultType.TRACE_SPAN -> traceSpanType.defaultType
+        IntrinsicResultType.INT -> irBuiltIns.intType
+        IntrinsicResultType.UNIT -> irBuiltIns.unitType
     }
 
     private fun TrakkitIntrinsic.getSymbol(): IrSimpleFunctionSymbol {

@@ -23,7 +23,9 @@ internal enum class IntrinsicResultType {
     SOURCE_LOCATION,
     FUNCTION_INFO,
     CLASS_INFO,
-    HASH
+    TRACE_SPAN,
+    INT,
+    UNIT
     // @formatter:on
 }
 
@@ -34,17 +36,19 @@ internal enum class TrakkitIntrinsic( // @formatter:off
 ) { // @formatter:on
     // @formatter:off
     SL_HERE                 (true,  IntrinsicResultType.SOURCE_LOCATION,    TrakkitNames.SourceLocation.Companion.here),
-    SL_HERE_HASH            (true,  IntrinsicResultType.HASH,               TrakkitNames.SourceLocation.Companion.hereHash),
+    SL_HERE_HASH            (true,  IntrinsicResultType.INT,                TrakkitNames.SourceLocation.Companion.hereHash),
     SL_CURRENT_FUNCTION     (true,  IntrinsicResultType.SOURCE_LOCATION,    TrakkitNames.SourceLocation.Companion.currentFunction),
-    SL_CURRENT_FUNCTION_HASH(true,  IntrinsicResultType.HASH,               TrakkitNames.SourceLocation.Companion.currentFunctionHash),
+    SL_CURRENT_FUNCTION_HASH(true,  IntrinsicResultType.INT,                TrakkitNames.SourceLocation.Companion.currentFunctionHash),
     SL_CURRENT_CLASS        (true,  IntrinsicResultType.SOURCE_LOCATION,    TrakkitNames.SourceLocation.Companion.currentClass),
-    SL_CURRENT_CLASS_HASH   (true,  IntrinsicResultType.HASH,               TrakkitNames.SourceLocation.Companion.currentClassHash),
+    SL_CURRENT_CLASS_HASH   (true,  IntrinsicResultType.INT,                TrakkitNames.SourceLocation.Companion.currentClassHash),
     SL_OF_CLASS             (false, IntrinsicResultType.SOURCE_LOCATION,    TrakkitNames.SourceLocation.Companion.ofClass),
     SL_OF_FUNCTION          (false, IntrinsicResultType.SOURCE_LOCATION,    TrakkitNames.SourceLocation.Companion.ofFunction),
     FI_CURRENT              (true,  IntrinsicResultType.FUNCTION_INFO,      TrakkitNames.FunctionInfo.Companion.current),
     FI_OF                   (false, IntrinsicResultType.FUNCTION_INFO,      TrakkitNames.FunctionInfo.Companion.of),
     CI_CURRENT              (true,  IntrinsicResultType.CLASS_INFO,         TrakkitNames.ClassInfo.Companion.current),
-    CI_OF                   (false, IntrinsicResultType.CLASS_INFO,         TrakkitNames.ClassInfo.Companion.of);
+    CI_OF                   (false, IntrinsicResultType.CLASS_INFO,         TrakkitNames.ClassInfo.Companion.of),
+    TS_PUSH                 (false, IntrinsicResultType.TRACE_SPAN,         TrakkitNames.TraceSpan.Companion.push),
+    TS_POP                  (false, IntrinsicResultType.UNIT,               TrakkitNames.TraceSpan.Companion.pop);
     // @formatter:on
 
     companion object {

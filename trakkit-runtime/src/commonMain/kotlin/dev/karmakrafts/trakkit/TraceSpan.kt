@@ -19,30 +19,28 @@ package dev.karmakrafts.trakkit
 import co.touchlab.stately.concurrency.ThreadLocalRef
 import co.touchlab.stately.concurrency.value
 
-data class TraceSpan(
+@ConsistentCopyVisibility
+data class TraceSpan @TrakkitCompilerApi internal constructor(
+    val name: String,
     val start: SourceLocation,
     val end: SourceLocation,
     val function: FunctionInfo
 ) {
     companion object {
-        private val stack: ThreadLocalRef<ArrayList<TraceSpan>> = ThreadLocalRef<ArrayList<TraceSpan>>().apply {
+        internal val stack: ThreadLocalRef<ArrayList<TraceSpan>> = ThreadLocalRef<ArrayList<TraceSpan>>().apply {
             value = ArrayList()
         }
 
         @TrakkitIntrinsic(TrakkitIntrinsic.TS_PUSH)
-        fun push(): TraceSpan = throw TrakkitPluginNotAppliedException()
-
-        @TrakkitIntrinsic(TrakkitIntrinsic.TS_POP)
-        fun pop(): Unit = throw TrakkitPluginNotAppliedException()
+        fun push(name: String): TraceSpan = throw TrakkitPluginNotAppliedException()
 
         @TrakkitCompilerApi
-        internal fun push(span: TraceSpan) {
+        internal fun push(span: TraceSpan): TraceSpan {
             stack.value!!.add(span)
-        }
-
-        @TrakkitCompilerApi
-        internal fun pop(span: TraceSpan) {
-            stack.value!!.remove(span)
+            return span
         }
     }
+
+    @TrakkitIntrinsic(TrakkitIntrinsic.TS_POP)
+    fun pop() = stack.value!!.remove(this)
 }

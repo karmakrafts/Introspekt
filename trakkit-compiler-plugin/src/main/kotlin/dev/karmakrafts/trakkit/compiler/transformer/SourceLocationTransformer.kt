@@ -36,7 +36,7 @@ internal class SourceLocationTransformer( // @formatter:off
     private val moduleFragment: IrModuleFragment,
     private val file: IrFile,
     private val source: List<String>
-) : TrakkitIntrinsicTransformer( // @formatter:on
+) : IntrinsicTransformer( // @formatter:on
     setOf( // @formatter:off
         TrakkitIntrinsic.SL_HERE,
         TrakkitIntrinsic.SL_HERE_HASH,

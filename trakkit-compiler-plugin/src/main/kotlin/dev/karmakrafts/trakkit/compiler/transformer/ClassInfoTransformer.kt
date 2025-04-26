@@ -30,7 +30,7 @@ internal class ClassInfoTransformer(
     private val moduleFragment: IrModuleFragment,
     private val file: IrFile,
     private val source: List<String>
-) : TrakkitIntrinsicTransformer(
+) : IntrinsicTransformer(
     setOf( // @formatter:off
         TrakkitIntrinsic.CI_CURRENT,
         TrakkitIntrinsic.CI_OF
