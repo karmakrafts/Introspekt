@@ -14,28 +14,10 @@
  * limitations under the License.
  */
 
-rootProject.name = "introspekt"
+package dev.karmakrafts.introspekt
 
-pluginManagement {
-    repositories {
-        google()
-        mavenCentral()
-        mavenLocal()
-        gradlePluginPortal()
-        maven("https://central.sonatype.com/repository/maven-snapshots")
-    }
-}
+import kotlin.reflect.KClass
 
-@Suppress("UnstableApiUsage")
-dependencyResolutionManagement {
-    repositories {
-        google()
-        mavenCentral()
-        mavenLocal()
-        maven("https://central.sonatype.com/repository/maven-snapshots")
-    }
-}
+expect fun KClass<*>.getQualifiedName(): String
 
-include("introspekt-runtime")
-include("introspekt-gradle-plugin")
-include("introspekt-compiler-plugin")
+expect fun KClass<*>.getSimpleName(): String

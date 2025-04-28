@@ -14,28 +14,14 @@
  * limitations under the License.
  */
 
-rootProject.name = "introspekt"
+package dev.karmakrafts.introspekt
 
-pluginManagement {
-    repositories {
-        google()
-        mavenCentral()
-        mavenLocal()
-        gradlePluginPortal()
-        maven("https://central.sonatype.com/repository/maven-snapshots")
-    }
-}
+import kotlin.uuid.Uuid
 
-@Suppress("UnstableApiUsage")
-dependencyResolutionManagement {
-    repositories {
-        google()
-        mavenCentral()
-        mavenLocal()
-        maven("https://central.sonatype.com/repository/maven-snapshots")
-    }
-}
-
-include("introspekt-runtime")
-include("introspekt-gradle-plugin")
-include("introspekt-compiler-plugin")
+@ConsistentCopyVisibility
+data class TraceEvent internal constructor(
+    val location: SourceLocation,
+    val id: Uuid,
+    val message: String,
+    val data: Map<String, Any>
+)

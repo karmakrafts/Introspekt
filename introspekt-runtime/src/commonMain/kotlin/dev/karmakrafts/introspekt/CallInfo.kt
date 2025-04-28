@@ -14,28 +14,10 @@
  * limitations under the License.
  */
 
-rootProject.name = "introspekt"
+package dev.karmakrafts.introspekt
 
-pluginManagement {
-    repositories {
-        google()
-        mavenCentral()
-        mavenLocal()
-        gradlePluginPortal()
-        maven("https://central.sonatype.com/repository/maven-snapshots")
-    }
-}
-
-@Suppress("UnstableApiUsage")
-dependencyResolutionManagement {
-    repositories {
-        google()
-        mavenCentral()
-        mavenLocal()
-        maven("https://central.sonatype.com/repository/maven-snapshots")
-    }
-}
-
-include("introspekt-runtime")
-include("introspekt-gradle-plugin")
-include("introspekt-compiler-plugin")
+data class CallInfo(
+    val location: SourceLocation,
+    val caller: FunctionInfo,
+    val callee: FunctionInfo
+)

@@ -14,28 +14,20 @@
  * limitations under the License.
  */
 
-rootProject.name = "introspekt"
+package dev.karmakrafts.introspekt
 
-pluginManagement {
-    repositories {
-        google()
-        mavenCentral()
-        mavenLocal()
-        gradlePluginPortal()
-        maven("https://central.sonatype.com/repository/maven-snapshots")
-    }
+import java.util.Stack
+
+private val traceSpanStack: ThreadLocal<Stack<TraceSpan>> = ThreadLocal.withInitial { Stack() }
+
+internal actual fun pushTraceSpan(span: TraceSpan) {
+    traceSpanStack.get()!!.push(span)
 }
 
-@Suppress("UnstableApiUsage")
-dependencyResolutionManagement {
-    repositories {
-        google()
-        mavenCentral()
-        mavenLocal()
-        maven("https://central.sonatype.com/repository/maven-snapshots")
-    }
+internal actual fun popTraceSpan(): TraceSpan {
+    return traceSpanStack.get()!!.pop()
 }
 
-include("introspekt-runtime")
-include("introspekt-gradle-plugin")
-include("introspekt-compiler-plugin")
+internal actual fun peekTraceSpan(): TraceSpan? {
+    return traceSpanStack.get()!!.firstOrNull()
+}

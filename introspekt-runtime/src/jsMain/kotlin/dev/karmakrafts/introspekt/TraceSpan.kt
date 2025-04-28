@@ -14,28 +14,20 @@
  * limitations under the License.
  */
 
-rootProject.name = "introspekt"
+package dev.karmakrafts.introspekt
 
-pluginManagement {
-    repositories {
-        google()
-        mavenCentral()
-        mavenLocal()
-        gradlePluginPortal()
-        maven("https://central.sonatype.com/repository/maven-snapshots")
-    }
+import co.touchlab.stately.collections.SharedLinkedList
+
+private val traceSpanStack: SharedLinkedList<TraceSpan> = SharedLinkedList()
+
+internal actual fun pushTraceSpan(span: TraceSpan) {
+    traceSpanStack.add(span)
 }
 
-@Suppress("UnstableApiUsage")
-dependencyResolutionManagement {
-    repositories {
-        google()
-        mavenCentral()
-        mavenLocal()
-        maven("https://central.sonatype.com/repository/maven-snapshots")
-    }
+internal actual fun popTraceSpan(): TraceSpan {
+    return traceSpanStack.removeFirst()
 }
 
-include("introspekt-runtime")
-include("introspekt-gradle-plugin")
-include("introspekt-compiler-plugin")
+internal actual fun peekTraceSpan(): TraceSpan? {
+    return traceSpanStack.firstOrNull()
+}

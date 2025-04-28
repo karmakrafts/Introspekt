@@ -34,8 +34,8 @@ plugins {
     alias(libs.plugins.gradleNexus)
 }
 
-group = "dev.karmakrafts.trakkit"
-version = GitLabCI.getDefaultVersion(libs.versions.trakkit)
+group = "dev.karmakrafts.introspekt"
+version = GitLabCI.getDefaultVersion(libs.versions.introspekt)
 
 allprojects {
     configureJava(rootProject.libs.versions.java)
@@ -51,7 +51,7 @@ subprojects {
     if (GitLabCI.isCI) defaultDependencyLocking()
 
     publishing {
-        setProjectInfo(rootProject.name, "Positional code API for Kotlin/Multiplatform")
+        setProjectInfo(rootProject.name, "Positional code and compile time introspection API for Kotlin/Multiplatform")
         with(GitLabCI) { karmaKraftsDefaults() }
     }
 

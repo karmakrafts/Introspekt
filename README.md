@@ -1,10 +1,10 @@
-# Trakkit
+# Introspekt
 
-[![](https://git.karmakrafts.dev/kk/trakkit/badges/master/pipeline.svg)](https://git.karmakrafts.dev/kk/trakkit/-/pipelines)
-[![](https://img.shields.io/maven-metadata/v?metadataUrl=https%3A%2F%2Frepo.maven.apache.org%2Fmaven2%2Fdev%2Fkarmakrafts%2Ftrakkit%2Ftrakkit-runtime%2Fmaven-metadata.xml
-)](https://git.karmakrafts.dev/kk/trakkit/-/packages)
-[![](https://img.shields.io/maven-metadata/v?metadataUrl=https%3A%2F%2Fcentral.sonatype.com%2Frepository%2Fmaven-snapshots%2Fdev%2Fkarmakrafts%2Ftrakkit%2Ftrakkit-runtime%2Fmaven-metadata.xml
-)](https://git.karmakrafts.dev/kk/trakkit/-/packages)
+[![](https://git.karmakrafts.dev/kk/introspekt/badges/master/pipeline.svg)](https://git.karmakrafts.dev/kk/introspekt/-/pipelines)
+[![](https://img.shields.io/maven-metadata/v?metadataUrl=https%3A%2F%2Frepo.maven.apache.org%2Fmaven2%2Fdev%2Fkarmakrafts%2Fintrospekt%2Fintrospekt-runtime%2Fmaven-metadata.xml
+)](https://git.karmakrafts.dev/kk/introspekt/-/packages)
+[![](https://img.shields.io/maven-metadata/v?metadataUrl=https%3A%2F%2Fcentral.sonatype.com%2Frepository%2Fmaven-snapshots%2Fdev%2Fkarmakrafts%2Fintrospekt%2Fintrospekt-runtime%2Fmaven-metadata.xml
+)](https://git.karmakrafts.dev/kk/introspekt/-/packages)
 
 Trakkit is a positional code API and introspection framework for Kotlin Multiplatform.  
 It currently adds the following features:
@@ -41,14 +41,14 @@ Then add a dependency on the plugin in your root buildscript:
 
 ```kotlin
 plugins {
-    id("dev.karmakrafts.trakkit.trakkit-gradle-plugin") version "<version>"
+    id("dev.karmakrafts.introspekt.introspekt-gradle-plugin") version "<version>"
 }
 
 kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                implementation("dev.karmakrafts.trakkit:trakkit-runtime:<version>")
+                implementation("dev.karmakrafts.introspekt:introspekt-runtime:<version>")
             }
         }
     }
