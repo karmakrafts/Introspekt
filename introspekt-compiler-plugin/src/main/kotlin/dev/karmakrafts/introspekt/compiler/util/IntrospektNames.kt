@@ -22,7 +22,7 @@ import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 
 internal object IntrospektNames {
-    val packageName: FqName = FqName("dev.karmakrafts.trakkit")
+    val packageName: FqName = FqName("dev.karmakrafts.introspekt")
 
     object Functions {
         val listOf: Name = Name.identifier("listOf")
@@ -167,14 +167,14 @@ internal object IntrospektNames {
         }
     }
 
-    object TrakkitIntrinsic {
-        val name: Name = Name.identifier("TrakkitIntrinsic")
+    object IntrospektIntrinsic {
+        val name: Name = Name.identifier("IntrospektIntrinsic")
         val id: ClassId = ClassId(packageName, name)
         val fqName: FqName = id.asSingleFqName()
     }
 
-    object TrakkitCompilerApi {
-        val name: Name = Name.identifier("TrakkitCompilerApi")
+    object IntrospektCompilerApi {
+        val name: Name = Name.identifier("IntrospektCompilerApi")
         val id: ClassId = ClassId(packageName, name)
         val fqName: FqName = id.asSingleFqName()
     }

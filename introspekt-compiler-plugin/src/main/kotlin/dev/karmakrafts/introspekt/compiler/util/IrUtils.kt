@@ -29,8 +29,8 @@ import org.jetbrains.kotlin.ir.util.isFakeOverride
 private const val UNDEFINED_OFFSET: Int = -1
 
 internal fun IrFunction.getIntrinsicType(): TrakkitIntrinsic? {
-    if (!hasAnnotation(IntrospektNames.TrakkitIntrinsic.id)) return null
-    val intrinsicName = getAnnotationArgumentValue<String>(IntrospektNames.TrakkitIntrinsic.fqName, "value") ?: return null
+    if (!hasAnnotation(IntrospektNames.IntrospektIntrinsic.id)) return null
+    val intrinsicName = getAnnotationArgumentValue<String>(IntrospektNames.IntrospektIntrinsic.fqName, "value") ?: return null
     return TrakkitIntrinsic.byName(intrinsicName)
 }
 

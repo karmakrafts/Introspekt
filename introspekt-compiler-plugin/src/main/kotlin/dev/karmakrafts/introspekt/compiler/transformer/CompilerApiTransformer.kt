@@ -31,7 +31,7 @@ internal class CompilerApiTransformer : IrVisitorVoid() {
 
     override fun visitFunction(declaration: IrFunction) {
         super.visitFunction(declaration)
-        if (!declaration.hasAnnotation(IntrospektNames.TrakkitCompilerApi.id)) return
+        if (!declaration.hasAnnotation(IntrospektNames.IntrospektCompilerApi.id)) return
         declaration.visibility = DescriptorVisibilities.PUBLIC
     }
 }
