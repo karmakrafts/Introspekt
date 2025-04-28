@@ -43,7 +43,7 @@ internal data class ClassInfo(
     val classType: ClassModifier?,
     var functions: List<FunctionInfo> = emptyList(),
     var properties: List<PropertyInfo> = emptyList(),
-    var annotations: Map<IrType, AnnotationUsageInfo> = emptyMap()
+    var annotations: Map<IrType, List<AnnotationUsageInfo>> = emptyMap()
 ) : ElementInfo {
     companion object {
         private val cache: HashMap<IrType, ClassInfo> = HashMap()
@@ -109,8 +109,11 @@ internal data class ClassInfo(
             putValueArgument(index++, createMapOf(
                 keyType = irBuiltIns.kClassClass.typeWith(annotationType.defaultType),
                 valueType = annotationInfoType.defaultType,
-                values = annotations.map { (type, info) ->
-                    type.toIrValueOrType() to info.instantiate(context)
+                values = annotations.map { (type, infos) ->
+                    type.toIrValue() to createListOf(
+                        type = annotationInfoType.defaultType,
+                        values = infos.map { it.instantiate(context) }
+                    )
                 })
             )
             // functions

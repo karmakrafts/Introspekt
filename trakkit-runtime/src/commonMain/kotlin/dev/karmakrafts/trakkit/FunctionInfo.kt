@@ -28,7 +28,7 @@ data class FunctionInfo(
     val returnType: KClass<*>,
     val parameterTypes: List<KClass<*>>,
     val parameterNames: List<String>,
-    val annotations: Map<KClass<out Annotation>, AnnotationUsageInfo>
+    val annotations: Map<KClass<out Annotation>, List<AnnotationUsageInfo>>
 ) : ElementInfo {
     companion object {
         private val cache: SharedHashMap<Int, FunctionInfo> = SharedHashMap()
@@ -57,7 +57,7 @@ data class FunctionInfo(
             returnType: KClass<*>,
             parameterTypes: List<KClass<*>>,
             parameterNames: List<String>,
-            annotations: Map<KClass<out Annotation>, AnnotationUsageInfo>
+            annotations: Map<KClass<out Annotation>, List<AnnotationUsageInfo>>
         ): FunctionInfo {
             return cache.getOrPut(getCacheKey(qualifiedName, returnType, parameterTypes)) {
                 FunctionInfo(
@@ -74,10 +74,22 @@ data class FunctionInfo(
         }
     }
 
+    fun hasAnnotation(type: KClass<out Annotation>): Boolean = type in annotations
+    inline fun <reified A : Annotation> hasAnnotation(): Boolean = hasAnnotation(A::class)
+
+    fun getAnnotation(type: KClass<out Annotation>): AnnotationUsageInfo = annotations[type]!!.first()
+    inline fun <reified A : Annotation> getAnnotation(): AnnotationUsageInfo = getAnnotation(A::class)
+
+    fun getAnnotations(type: KClass<out Annotation>): List<AnnotationUsageInfo> = annotations[type] ?: emptyList()
+    inline fun <reified A : Annotation> getAnnotations(): List<AnnotationUsageInfo> = getAnnotations(A::class)
+
+    fun getAnnotationOrNull(type: KClass<out Annotation>): AnnotationUsageInfo? = annotations[type]?.firstOrNull()
+    inline fun <reified A : Annotation> getAnnotationOrNull(): AnnotationUsageInfo? = getAnnotationOrNull(A::class)
+
     fun toFormattedString(indent: Int = 0): String {
         // Annotations
         var result = if (annotations.isEmpty()) ""
-        else "${annotations.values.joinToString("\n") { it.toFormattedString(indent) }}\n"
+        else "${annotations.values.flatten().joinToString("\n") { it.toFormattedString(indent) }}\n"
         // Parameters
         val parameters = if (parameterNames.isEmpty()) ""
         else parameterNames.mapIndexed { index, name ->

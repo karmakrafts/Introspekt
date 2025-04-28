@@ -23,9 +23,7 @@ internal enum class IntrinsicResultType {
     SOURCE_LOCATION,
     FUNCTION_INFO,
     CLASS_INFO,
-    TRACE_SPAN,
-    INT,
-    UNIT
+    INT
     // @formatter:on
 }
 
@@ -46,9 +44,7 @@ internal enum class TrakkitIntrinsic( // @formatter:off
     FI_CURRENT              (true,  IntrinsicResultType.FUNCTION_INFO,      TrakkitNames.FunctionInfo.Companion.current),
     FI_OF                   (false, IntrinsicResultType.FUNCTION_INFO,      TrakkitNames.FunctionInfo.Companion.of),
     CI_CURRENT              (true,  IntrinsicResultType.CLASS_INFO,         TrakkitNames.ClassInfo.Companion.current),
-    CI_OF                   (false, IntrinsicResultType.CLASS_INFO,         TrakkitNames.ClassInfo.Companion.of),
-    TS_PUSH                 (false, IntrinsicResultType.TRACE_SPAN,         TrakkitNames.TraceSpan.Companion.push),
-    TS_POP                  (false, IntrinsicResultType.UNIT,               TrakkitNames.TraceSpan.Companion.pop);
+    CI_OF                   (false, IntrinsicResultType.CLASS_INFO,         TrakkitNames.ClassInfo.Companion.of);
     // @formatter:on
 
     companion object {

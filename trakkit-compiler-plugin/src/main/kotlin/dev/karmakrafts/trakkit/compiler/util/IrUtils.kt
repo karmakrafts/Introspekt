@@ -34,7 +34,7 @@ internal fun IrFunction.getIntrinsicType(): TrakkitIntrinsic? {
     return TrakkitIntrinsic.byName(intrinsicName)
 }
 
-internal fun getLineNumber(source: List<String>, startOffset: Int, endOffset: Int): Int {
+internal fun getLineNumber(source: List<String>, startOffset: Int, endOffset: Int = startOffset): Int {
     when {
         startOffset == UNDEFINED_OFFSET || endOffset == UNDEFINED_OFFSET -> return SourceLocation.UNDEFINED_OFFSET
         startOffset == SYNTHETIC_OFFSET || endOffset == SYNTHETIC_OFFSET -> return SourceLocation.SYNTHETIC_OFFSET
@@ -48,7 +48,7 @@ internal fun getLineNumber(source: List<String>, startOffset: Int, endOffset: In
     return 0
 }
 
-internal fun getColumnNumber(source: List<String>, startOffset: Int, endOffset: Int): Int {
+internal fun getColumnNumber(source: List<String>, startOffset: Int, endOffset: Int = startOffset): Int {
     when {
         startOffset == UNDEFINED_OFFSET || endOffset == UNDEFINED_OFFSET -> return SourceLocation.UNDEFINED_OFFSET
         startOffset == SYNTHETIC_OFFSET || endOffset == SYNTHETIC_OFFSET -> return SourceLocation.SYNTHETIC_OFFSET

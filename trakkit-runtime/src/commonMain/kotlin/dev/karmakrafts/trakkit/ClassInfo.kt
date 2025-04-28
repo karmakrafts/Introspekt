@@ -24,7 +24,7 @@ data class ClassInfo(
     val type: KClass<*>,
     val qualifiedName: String,
     val typeParameterNames: List<String>,
-    val annotations: Map<KClass<out Annotation>, AnnotationUsageInfo>,
+    val annotations: Map<KClass<out Annotation>, List<AnnotationUsageInfo>>,
     val functions: List<FunctionInfo>,
     val properties: List<PropertyInfo>,
     val companionObjects: List<ClassInfo>,
@@ -50,7 +50,7 @@ data class ClassInfo(
             type: KClass<*>,
             qualifiedName: String,
             typeParameterNames: List<String>,
-            annotations: Map<KClass<out Annotation>, AnnotationUsageInfo>,
+            annotations: Map<KClass<out Annotation>, List<AnnotationUsageInfo>>,
             functions: List<FunctionInfo>,
             properties: List<PropertyInfo>,
             companionObjects: List<ClassInfo>,
@@ -82,11 +82,23 @@ data class ClassInfo(
         }
     }
 
+    fun hasAnnotation(type: KClass<out Annotation>): Boolean = type in annotations
+    inline fun <reified A : Annotation> hasAnnotation(): Boolean = hasAnnotation(A::class)
+
+    fun getAnnotation(type: KClass<out Annotation>): AnnotationUsageInfo = annotations[type]!!.first()
+    inline fun <reified A : Annotation> getAnnotation(): AnnotationUsageInfo = getAnnotation(A::class)
+
+    fun getAnnotations(type: KClass<out Annotation>): List<AnnotationUsageInfo> = annotations[type] ?: emptyList()
+    inline fun <reified A : Annotation> getAnnotations(): List<AnnotationUsageInfo> = getAnnotations(A::class)
+
+    fun getAnnotationOrNull(type: KClass<out Annotation>): AnnotationUsageInfo? = annotations[type]?.firstOrNull()
+    inline fun <reified A : Annotation> getAnnotationOrNull(): AnnotationUsageInfo? = getAnnotationOrNull(A::class)
+
     fun toFormattedString(indent: Int = 0): String {
         val indentString = "\t".repeat(indent)
         // Annotations
         var result = if (annotations.isEmpty()) ""
-        else "${annotations.values.joinToString("\n") { it.toFormattedString(indent) }}\n"
+        else "${annotations.values.flatten().joinToString("\n") { it.toFormattedString(indent) }}\n"
         // Class
         val qualifier = when {
             isInterface -> "interface"

@@ -18,24 +18,9 @@ package dev.karmakrafts.trakkit
 
 import kotlin.reflect.KClass
 
-@ConsistentCopyVisibility
-data class AnnotationUsageInfo @TrakkitCompilerApi internal constructor( // @formatter:off
+class LocalInfo(
+    val name: String,
+    val qualifiedName: String,
     val location: SourceLocation,
-    val type: KClass<out Annotation>,
-    val values: Map<String, Any>
-) { // @formatter:on
-    @Suppress("UNCHECKED_CAST")
-    fun <V> getValue(name: String): V = values[name] as V
-
-    @Suppress("UNCHECKED_CAST")
-    fun <V> getValueOrNull(name: String): V? = values[name] as? V
-
-    fun toFormattedString(indent: Int = 0): String {
-        val indentString = "\t".repeat(indent)
-        var result = "$indentString@${type.getQualifiedName()}"
-        if (values.isNotEmpty()) {
-            result += "($values)"
-        }
-        return result
-    }
-}
+    val type: KClass<*>
+) {}

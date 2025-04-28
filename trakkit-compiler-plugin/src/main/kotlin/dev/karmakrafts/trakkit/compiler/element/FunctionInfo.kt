@@ -36,7 +36,7 @@ internal data class FunctionInfo(
     val returnType: IrType,
     val parameterTypes: List<IrType>,
     val parameterNames: List<String>,
-    var annotations: Map<IrType, AnnotationUsageInfo> = emptyMap()
+    var annotations: Map<IrType, List<AnnotationUsageInfo>> = emptyMap()
 ) : ElementInfo {
     companion object {
         private val cache: Int2ObjectOpenHashMap<FunctionInfo> = Int2ObjectOpenHashMap()
@@ -100,7 +100,7 @@ internal data class FunctionInfo(
             putValueArgument(
                 index++, createListOf(
                 type = irBuiltIns.kClassClass.starProjectedType,
-                values = parameterTypes.map { it.type.toIrValueOrType() }))
+                values = parameterTypes.map { it.type.toIrValue()!! }))
             // parameterNames
             putValueArgument(
                 index++, createListOf(
@@ -111,8 +111,11 @@ internal data class FunctionInfo(
                 index, createMapOf(
                 keyType = irBuiltIns.kClassClass.typeWith(annotationType.defaultType),
                 valueType = annotationInfoType.defaultType,
-                values = annotations.map { (type, info) ->
-                    type.toIrValueOrType() to info.instantiate(context)
+                values = annotations.map { (type, infos) ->
+                    type.toIrValue() to createListOf(
+                        type = annotationInfoType.defaultType,
+                        values = infos.map { it.instantiate(context) }
+                    )
                 }))
             dispatchReceiver = functionInfoCompanionType.getObjectInstance()
         } // @formatter:on

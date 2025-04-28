@@ -25,6 +25,9 @@ plugins {
 }
 
 kotlin {
+    compilerOptions {
+        freeCompilerArgs.add("-opt-in=kotlin.uuid.ExperimentalUuidApi")
+    }
     mingwX64()
     linuxX64()
     linuxArm64()
@@ -66,9 +69,16 @@ kotlin {
             }
         }
         val nonWebMain by creating { dependsOn(commonMain) }
+        val jvmAndAndroidMain by creating { dependsOn(commonMain) }
         val nativeMain by getting { dependsOn(nonWebMain) }
-        val jvmMain by getting { dependsOn(nonWebMain) }
-        val androidMain by getting { dependsOn(nonWebMain) }
+        val jvmMain by getting {
+            dependsOn(nonWebMain)
+            dependsOn(jvmAndAndroidMain)
+        }
+        val androidMain by getting {
+            dependsOn(nonWebMain)
+            dependsOn(jvmAndAndroidMain)
+        }
     }
 }
 

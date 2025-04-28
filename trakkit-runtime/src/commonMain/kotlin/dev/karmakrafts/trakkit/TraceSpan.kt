@@ -16,31 +16,58 @@
 
 package dev.karmakrafts.trakkit
 
-import co.touchlab.stately.concurrency.ThreadLocalRef
-import co.touchlab.stately.concurrency.value
+import kotlin.uuid.Uuid
+
+internal expect fun pushTraceSpan(span: TraceSpan)
+
+internal expect fun popTraceSpan(): TraceSpan
+
+internal expect fun peekTraceSpan(): TraceSpan?
 
 @ConsistentCopyVisibility
-data class TraceSpan @TrakkitCompilerApi internal constructor(
+data class TraceSpan private constructor( // @formatter:off
     val name: String,
+    val id: Uuid,
     val start: SourceLocation,
-    val end: SourceLocation,
     val function: FunctionInfo
-) {
+) { // @formatter:on
     companion object {
-        internal val stack: ThreadLocalRef<ArrayList<TraceSpan>> = ThreadLocalRef<ArrayList<TraceSpan>>().apply {
-            value = ArrayList()
+        private fun FunctionInfo.shouldTraceEnter(): Boolean {
+            if (!hasAnnotation<Trace>()) return false
+            val traceTypes = getAnnotation<Trace>().getValueOrNull<Int>("types") ?: Trace.ALL
+            return traceTypes and Trace.SPAN_ENTER != 0
         }
 
-        @TrakkitIntrinsic(TrakkitIntrinsic.TS_PUSH)
-        fun push(name: String): TraceSpan = throw TrakkitPluginNotAppliedException()
-
-        @TrakkitCompilerApi
-        internal fun push(span: TraceSpan): TraceSpan {
-            stack.value!!.add(span)
-            return span
+        private fun FunctionInfo.shouldTraceLeave(): Boolean {
+            if (!hasAnnotation<Trace>()) return false
+            val traceTypes = getAnnotation<Trace>().getValueOrNull<Int>("types") ?: Trace.ALL
+            return traceTypes and Trace.SPAN_LEAVE != 0
         }
+
+        @OptIn(GeneratedTrakkitApi::class)
+        @CaptureCaller("2:sl_here", "3:fi_current")
+        fun enter(
+            name: String,
+            id: Uuid = Uuid.random(),
+            start: SourceLocation = SourceLocation.here(),
+            function: FunctionInfo = FunctionInfo.current()
+        ) {
+            if (!function.shouldTraceEnter()) return
+            val span = TraceSpan(name, id, start, function)
+            TraceCollector.enterSpan(span)
+            pushTraceSpan(span)
+        }
+
+        @OptIn(GeneratedTrakkitApi::class)
+        @CaptureCaller("0:sl_here", "1:fi_current")
+        fun leave( // @formatter:off
+            end: SourceLocation = SourceLocation.here(),
+            function: FunctionInfo = FunctionInfo.current()
+        ) { // @formatter:on
+            if (!function.shouldTraceLeave()) return
+            TraceCollector.leaveSpan(popTraceSpan(), end)
+        }
+
+        fun current(): TraceSpan? = peekTraceSpan()
     }
-
-    @TrakkitIntrinsic(TrakkitIntrinsic.TS_POP)
-    fun pop() = stack.value!!.remove(this)
 }

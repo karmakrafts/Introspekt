@@ -20,6 +20,7 @@ import dev.karmakrafts.trakkit.compiler.util.TrakkitIntrinsic
 import dev.karmakrafts.trakkit.compiler.util.TrakkitNames
 import dev.karmakrafts.trakkit.compiler.TrakkitPluginContext
 import org.jetbrains.kotlin.ir.IrElement
+import org.jetbrains.kotlin.ir.declarations.IrFile
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.IrConstructorCall
 import org.jetbrains.kotlin.ir.expressions.IrFunctionAccessExpression

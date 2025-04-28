@@ -22,7 +22,6 @@ import dev.karmakrafts.trakkit.compiler.transformer.FunctionInfoTransformer
 import dev.karmakrafts.trakkit.compiler.transformer.IntrinsicCalleeParameterTransformer
 import dev.karmakrafts.trakkit.compiler.transformer.IntrinsicCallerParameterTransformer
 import dev.karmakrafts.trakkit.compiler.transformer.SourceLocationTransformer
-import dev.karmakrafts.trakkit.compiler.transformer.TraceSpanTransformer
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
@@ -45,7 +44,6 @@ internal class TrakkitIrGenerationExtension : IrGenerationExtension {
             file.transform(SourceLocationTransformer(trakkitContext, moduleFragment, file, source), context)
             file.transform(FunctionInfoTransformer(trakkitContext, moduleFragment, file, source), context)
             file.transform(ClassInfoTransformer(trakkitContext, moduleFragment, file, source), context)
-            file.transform(TraceSpanTransformer(trakkitContext, moduleFragment, file, source), context)
         }
     }
 }

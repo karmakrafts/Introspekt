@@ -46,7 +46,7 @@ internal data class AnnotationUsageInfo( // @formatter:off
                     keyType = irBuiltIns.stringType,
                     valueType = irBuiltIns.anyType,
                     values = values.map { (key, value) ->
-                        key.toIrConst(irBuiltIns.stringType) to value.toIrValueOrType()
+                        key.toIrConst(irBuiltIns.stringType) to value?.toIrValue()
                     })
             )
         }
