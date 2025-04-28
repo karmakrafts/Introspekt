@@ -16,8 +16,7 @@
 
 package dev.karmakrafts.introspekt.compiler.transformer
 
-import dev.karmakrafts.introspekt.compiler.IntrinsicContext
-import dev.karmakrafts.introspekt.compiler.util.TrakkitIntrinsic
+import dev.karmakrafts.introspekt.compiler.util.IntrospektIntrinsic
 import dev.karmakrafts.introspekt.compiler.util.getIntrinsicType
 import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.IrStatement
@@ -30,7 +29,7 @@ import org.jetbrains.kotlin.ir.util.target
 import org.jetbrains.kotlin.ir.visitors.IrTransformer
 
 internal abstract class IntrinsicTransformer(
-    private val intrinsics: Set<TrakkitIntrinsic>
+    private val intrinsics: Set<IntrospektIntrinsic>
 ) : IrTransformer<IntrinsicContext>() {
     override fun visitElement(element: IrElement, data: IntrinsicContext): IrElement {
         element.transformChildren(this, data)
@@ -47,9 +46,9 @@ internal abstract class IntrinsicTransformer(
     override fun visitClass(
         declaration: IrClass, data: IntrinsicContext
     ): IrStatement {
-        data.clazzStack.push(declaration)
+        data.classStack.push(declaration)
         val result = super.visitClass(declaration, data)
-        data.clazzStack.pop()
+        data.classStack.pop()
         return result
     }
 
@@ -75,5 +74,5 @@ internal abstract class IntrinsicTransformer(
         return visitIntrinsic(intrinsicType, expression, data)
     }
 
-    abstract fun visitIntrinsic(type: TrakkitIntrinsic, expression: IrCall, context: IntrinsicContext): IrElement
+    abstract fun visitIntrinsic(type: IntrospektIntrinsic, expression: IrCall, context: IntrinsicContext): IrElement
 }

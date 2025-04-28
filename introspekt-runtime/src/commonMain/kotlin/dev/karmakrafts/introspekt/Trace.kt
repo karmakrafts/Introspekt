@@ -46,7 +46,7 @@ annotation class Trace( // @formatter:off
         const val RECURSIVE_DEPTH: Int = -1
 
         @OptIn(GeneratedIntrospektApi::class)
-        @CaptureCaller("3:sl_here", "4:fi_current")
+        @CaptureCaller("3:SL_HERE", "4:FI_CURRENT")
         @IntrospektCompilerApi
         fun event(
             message: String,

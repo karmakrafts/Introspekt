@@ -43,8 +43,8 @@ internal data class ClassInfo(
     val classType: ClassModifier?,
     var functions: List<FunctionInfo> = emptyList(),
     var properties: List<PropertyInfo> = emptyList(),
-    var annotations: Map<IrType, List<AnnotationUsageInfo>> = emptyMap()
-) : ElementInfo {
+    override var annotations: Map<IrType, List<AnnotationUsageInfo>> = emptyMap()
+) : ElementInfo, AnnotatedElement {
     companion object {
         private val cache: HashMap<IrType, ClassInfo> = HashMap()
 
@@ -88,7 +88,7 @@ internal data class ClassInfo(
             type = classInfoType.defaultType,
             symbol = classInfoGetOrCreate,
             typeArgumentsCount = 0,
-            valueArgumentsCount = 14,
+            valueArgumentsCount = 15,
             contextParameterCount = 0,
             hasDispatchReceiver = true,
             hasExtensionReceiver = false
@@ -100,22 +100,15 @@ internal data class ClassInfo(
             putValueArgument(index++, this@ClassInfo.type.toClassReference())
             // qualifiedName
             putValueArgument(index++, qualifiedName.toIrConst(irBuiltIns.stringType))
+            // name
+            putValueArgument(index++, name.toIrConst(irBuiltIns.stringType))
             // typeParameterNames
             putValueArgument(index++, createListOf(
                 type = irBuiltIns.stringType,
                 values = typeParameterNames.map { it.toIrConst(irBuiltIns.stringType) })
             )
             // annotations
-            putValueArgument(index++, createMapOf(
-                keyType = irBuiltIns.kClassClass.typeWith(annotationType.defaultType),
-                valueType = annotationUsageInfoType.defaultType,
-                values = annotations.map { (type, infos) ->
-                    type.toIrValue() to createListOf(
-                        type = annotationUsageInfoType.defaultType,
-                        values = infos.map { it.instantiate(context) }
-                    )
-                })
-            )
+            putValueArgument(index++, instantiateAnnotations(context))
             // functions
             putValueArgument(index++, createListOf(
                 type = functionInfoType.defaultType,

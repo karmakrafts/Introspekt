@@ -16,8 +16,7 @@
 
 package dev.karmakrafts.introspekt.compiler.transformer
 
-import dev.karmakrafts.introspekt.compiler.IntrinsicContext
-import dev.karmakrafts.introspekt.compiler.util.TrakkitIntrinsic
+import dev.karmakrafts.introspekt.compiler.util.IntrospektIntrinsic
 import dev.karmakrafts.introspekt.compiler.IntrospektPluginContext
 import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.declarations.IrFile
@@ -35,8 +34,8 @@ internal class FunctionInfoTransformer(
     private val source: List<String>
 ) : IntrinsicTransformer(
     setOf( // @formatter:off
-        TrakkitIntrinsic.FI_CURRENT,
-        TrakkitIntrinsic.FI_OF
+        IntrospektIntrinsic.FI_CURRENT,
+        IntrospektIntrinsic.FI_OF
     ) // @formatter:on
 ) {
     @OptIn(UnsafeDuringIrConstructionAPI::class)
@@ -50,11 +49,11 @@ internal class FunctionInfoTransformer(
     }
 
     override fun visitIntrinsic(
-        type: TrakkitIntrinsic, expression: IrCall, context: IntrinsicContext
+        type: IntrospektIntrinsic, expression: IrCall, context: IntrinsicContext
     ): IrElement = with(pluginContext) {
         when (type) { // @formatter:off
-            TrakkitIntrinsic.FI_CURRENT -> context.getFunctionInfo(moduleFragment, file, source).instantiateCached(pluginContext)
-            TrakkitIntrinsic.FI_OF -> emitOf(expression)
+            IntrospektIntrinsic.FI_CURRENT -> context.getFunctionInfo(moduleFragment, file, source).instantiateCached(pluginContext)
+            IntrospektIntrinsic.FI_OF -> emitOf(expression)
             else -> error("Unsupported intrinsic for FunctionInfoTransformer")
         } // @formatter:on
     }

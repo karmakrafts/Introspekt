@@ -27,7 +27,7 @@ internal enum class IntrinsicResultType {
     // @formatter:on
 }
 
-internal enum class TrakkitIntrinsic( // @formatter:off
+internal enum class IntrospektIntrinsic( // @formatter:off
     val supportsInlining: Boolean,
     val resultType: IntrinsicResultType,
     val functionId: CallableId
@@ -46,8 +46,4 @@ internal enum class TrakkitIntrinsic( // @formatter:off
     CI_CURRENT              (true,  IntrinsicResultType.CLASS_INFO,         IntrospektNames.ClassInfo.Companion.current),
     CI_OF                   (false, IntrinsicResultType.CLASS_INFO,         IntrospektNames.ClassInfo.Companion.of);
     // @formatter:on
-
-    companion object {
-        fun byName(name: String): TrakkitIntrinsic? = entries.find { it.name.equals(name, true) }
-    }
 }

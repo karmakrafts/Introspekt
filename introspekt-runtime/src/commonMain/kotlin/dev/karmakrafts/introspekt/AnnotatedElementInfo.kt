@@ -18,7 +18,7 @@ package dev.karmakrafts.introspekt
 
 import kotlin.reflect.KClass
 
-sealed interface DecoratedElementInfo : ElementInfo {
+sealed interface AnnotatedElementInfo : ElementInfo {
     val annotations: Map<KClass<out Annotation>, List<AnnotationUsageInfo>>
 
     fun hasAnnotation(type: KClass<out Annotation>): Boolean = type in annotations
@@ -27,7 +27,7 @@ sealed interface DecoratedElementInfo : ElementInfo {
     fun getAnnotationOrNull(type: KClass<out Annotation>): AnnotationUsageInfo? = annotations[type]?.firstOrNull()
 }
 
-inline fun <reified A : Annotation> DecoratedElementInfo.hasAnnotation(): Boolean = hasAnnotation(A::class)
-inline fun <reified A : Annotation> DecoratedElementInfo.getAnnotation(): AnnotationUsageInfo = getAnnotation(A::class)
-inline fun <reified A : Annotation> DecoratedElementInfo.getAnnotations(): List<AnnotationUsageInfo> = getAnnotations(A::class)
-inline fun <reified A : Annotation> DecoratedElementInfo.getAnnotationOrNull(): AnnotationUsageInfo? = getAnnotationOrNull(A::class)
+inline fun <reified A : Annotation> AnnotatedElementInfo.hasAnnotation(): Boolean = hasAnnotation(A::class)
+inline fun <reified A : Annotation> AnnotatedElementInfo.getAnnotation(): AnnotationUsageInfo = getAnnotation(A::class)
+inline fun <reified A : Annotation> AnnotatedElementInfo.getAnnotations(): List<AnnotationUsageInfo> = getAnnotations(A::class)
+inline fun <reified A : Annotation> AnnotatedElementInfo.getAnnotationOrNull(): AnnotationUsageInfo? = getAnnotationOrNull(A::class)

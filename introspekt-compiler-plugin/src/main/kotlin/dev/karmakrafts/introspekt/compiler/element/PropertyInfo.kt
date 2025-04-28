@@ -24,7 +24,6 @@ import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.impl.IrCallImplWithShape
 import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.defaultType
-import org.jetbrains.kotlin.ir.types.typeWith
 import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
 import org.jetbrains.kotlin.ir.util.toIrConst
 import org.jetbrains.kotlin.it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
@@ -39,8 +38,8 @@ internal data class PropertyInfo(
     val modality: Modality,
     val getter: FunctionInfo,
     val setter: FunctionInfo?,
-    var annotations: Map<IrType, List<AnnotationUsageInfo>> = emptyMap()
-) : ElementInfo {
+    override var annotations: Map<IrType, List<AnnotationUsageInfo>> = emptyMap()
+) : ElementInfo, AnnotatedElement {
     companion object {
         private val cache: Int2ObjectOpenHashMap<PropertyInfo> = Int2ObjectOpenHashMap()
 
@@ -64,7 +63,9 @@ internal data class PropertyInfo(
             setter: FunctionInfo?,
             createCallback: PropertyInfo.() -> Unit = {}
         ): PropertyInfo = cache.getOrPut(getCacheKey(qualifiedName, type)) {
-            PropertyInfo(location, qualifiedName, name, type, isMutable, visibility, modality, getter, setter).apply(createCallback)
+            PropertyInfo(location, qualifiedName, name, type, isMutable, visibility, modality, getter, setter).apply(
+                createCallback
+            )
         }
     }
 
@@ -100,16 +101,7 @@ internal data class PropertyInfo(
             // setter
             putValueArgument(index++, setter?.instantiateCached(context) ?: null.toIrConst(functionInfoType.defaultType))
             // annotations
-            putValueArgument(index, createMapOf(
-                keyType = irBuiltIns.kClassClass.typeWith(annotationType.defaultType),
-                valueType = annotationUsageInfoType.defaultType,
-                values = annotations.map { (type, infos) ->
-                    type.toIrValue() to createListOf(
-                        type = annotationUsageInfoType.defaultType,
-                        values = infos.map { it.instantiate(context) }
-                    )
-                })
-            )
+            putValueArgument(index, instantiateAnnotations(context))
             dispatchReceiver = propertyInfoCompanionType.getObjectInstance()
         } // @formatter:on
     }

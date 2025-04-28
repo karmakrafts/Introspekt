@@ -16,8 +16,7 @@
 
 package dev.karmakrafts.introspekt.compiler.transformer
 
-import dev.karmakrafts.introspekt.compiler.IntrinsicContext
-import dev.karmakrafts.introspekt.compiler.util.TrakkitIntrinsic
+import dev.karmakrafts.introspekt.compiler.util.IntrospektIntrinsic
 import dev.karmakrafts.introspekt.compiler.IntrospektPluginContext
 import dev.karmakrafts.introspekt.compiler.util.getFunctionLocation
 import dev.karmakrafts.introspekt.compiler.util.getLocation
@@ -38,14 +37,14 @@ internal class SourceLocationTransformer( // @formatter:off
     private val source: List<String>
 ) : IntrinsicTransformer( // @formatter:on
     setOf( // @formatter:off
-        TrakkitIntrinsic.SL_HERE,
-        TrakkitIntrinsic.SL_HERE_HASH,
-        TrakkitIntrinsic.SL_CURRENT_FUNCTION,
-        TrakkitIntrinsic.SL_CURRENT_FUNCTION_HASH,
-        TrakkitIntrinsic.SL_CURRENT_CLASS,
-        TrakkitIntrinsic.SL_CURRENT_CLASS_HASH,
-        TrakkitIntrinsic.SL_OF_CLASS,
-        TrakkitIntrinsic.SL_OF_FUNCTION
+        IntrospektIntrinsic.SL_HERE,
+        IntrospektIntrinsic.SL_HERE_HASH,
+        IntrospektIntrinsic.SL_CURRENT_FUNCTION,
+        IntrospektIntrinsic.SL_CURRENT_FUNCTION_HASH,
+        IntrospektIntrinsic.SL_CURRENT_CLASS,
+        IntrospektIntrinsic.SL_CURRENT_CLASS_HASH,
+        IntrospektIntrinsic.SL_OF_CLASS,
+        IntrospektIntrinsic.SL_OF_FUNCTION
     ) // @formatter:on
 ) {
     private fun IntrospektPluginContext.emitOfClass(expression: IrCall): IrElement {
@@ -65,17 +64,17 @@ internal class SourceLocationTransformer( // @formatter:off
     }
 
     override fun visitIntrinsic(
-        type: TrakkitIntrinsic, expression: IrCall, context: IntrinsicContext
+        type: IntrospektIntrinsic, expression: IrCall, context: IntrinsicContext
     ): IrElement = with(pluginContext) {
         when (type) { // @formatter:off
-            TrakkitIntrinsic.SL_HERE -> expression.getLocation(moduleFragment, file, source).instantiateCached()
-            TrakkitIntrinsic.SL_HERE_HASH -> expression.getLocation(moduleFragment, file, source).createHashSum()
-            TrakkitIntrinsic.SL_CURRENT_FUNCTION -> context.getFunctionLocation(moduleFragment, file, source).instantiateCached()
-            TrakkitIntrinsic.SL_CURRENT_FUNCTION_HASH -> context.getFunctionLocation(moduleFragment, file, source).createHashSum()
-            TrakkitIntrinsic.SL_CURRENT_CLASS -> context.clazz.getLocation(moduleFragment, file, source).instantiateCached()
-            TrakkitIntrinsic.SL_CURRENT_CLASS_HASH -> context.clazz.getLocation(moduleFragment, file, source).createHashSum()
-            TrakkitIntrinsic.SL_OF_CLASS -> emitOfClass(expression)
-            TrakkitIntrinsic.SL_OF_FUNCTION -> emitOfFunction(expression)
+            IntrospektIntrinsic.SL_HERE -> expression.getLocation(moduleFragment, file, source).instantiateCached()
+            IntrospektIntrinsic.SL_HERE_HASH -> expression.getLocation(moduleFragment, file, source).createHashSum()
+            IntrospektIntrinsic.SL_CURRENT_FUNCTION -> context.getFunctionLocation(moduleFragment, file, source).instantiateCached()
+            IntrospektIntrinsic.SL_CURRENT_FUNCTION_HASH -> context.getFunctionLocation(moduleFragment, file, source).createHashSum()
+            IntrospektIntrinsic.SL_CURRENT_CLASS -> context.`class`.getLocation(moduleFragment, file, source).instantiateCached()
+            IntrospektIntrinsic.SL_CURRENT_CLASS_HASH -> context.`class`.getLocation(moduleFragment, file, source).createHashSum()
+            IntrospektIntrinsic.SL_OF_CLASS -> emitOfClass(expression)
+            IntrospektIntrinsic.SL_OF_FUNCTION -> emitOfFunction(expression)
             else -> error("Unsupported intrinsic for SourceLocationTransformer")
         } // @formatter:on
     }

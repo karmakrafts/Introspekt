@@ -184,4 +184,15 @@ internal object IntrospektNames {
         val id: ClassId = ClassId(packageName, name)
         val fqName: FqName = id.asSingleFqName()
     }
+
+    object Trace {
+        val name: Name = Name.identifier("Trace")
+        val id: ClassId = ClassId(packageName, name)
+        val fqName: FqName = id.asSingleFqName()
+
+        object Companion {
+            val fqName: FqName = FqName("Trace.Companion")
+            val id: ClassId = ClassId(packageName, fqName, false)
+        }
+    }
 }

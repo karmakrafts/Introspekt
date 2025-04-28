@@ -33,7 +33,7 @@ data class TraceSpan private constructor( // @formatter:off
 ) { // @formatter:on
     companion object {
         @OptIn(GeneratedIntrospektApi::class)
-        @CaptureCaller("2:sl_here", "3:fi_current")
+        @CaptureCaller("2:SL_HERE", "3:FI_CURRENT")
         @IntrospektCompilerApi
         fun enter(
             name: String,
@@ -47,7 +47,7 @@ data class TraceSpan private constructor( // @formatter:off
         }
 
         @OptIn(GeneratedIntrospektApi::class)
-        @CaptureCaller("0:sl_here", "1:fi_current")
+        @CaptureCaller("0:SL_HERE", "1:FI_CURRENT")
         @IntrospektCompilerApi
         fun leave( // @formatter:off
             end: SourceLocation = SourceLocation.here(),

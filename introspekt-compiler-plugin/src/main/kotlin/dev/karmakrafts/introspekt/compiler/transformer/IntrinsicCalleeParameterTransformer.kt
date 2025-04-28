@@ -51,7 +51,7 @@ internal class IntrinsicCalleeParameterTransformer(
                 val intrinsicType = function.getIntrinsicType() ?: continue
                 if (!intrinsicType.supportsInlining) continue // Skip any intrinsics that don't support inlining
                 shouldRemoveDefault = true
-                callsiteIntrinsics += Pair(parameter.indexInParameters, intrinsicType.name.lowercase())
+                callsiteIntrinsics += Pair(parameter.indexInParameters, intrinsicType.name)
             }
             if (!shouldRemoveDefault) continue
             parameter.defaultValue = null

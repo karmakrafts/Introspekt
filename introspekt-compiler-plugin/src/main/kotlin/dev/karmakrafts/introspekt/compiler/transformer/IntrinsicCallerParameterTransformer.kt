@@ -16,7 +16,7 @@
 
 package dev.karmakrafts.introspekt.compiler.transformer
 
-import dev.karmakrafts.introspekt.compiler.util.TrakkitIntrinsic
+import dev.karmakrafts.introspekt.compiler.util.IntrospektIntrinsic
 import dev.karmakrafts.introspekt.compiler.util.IntrospektNames
 import dev.karmakrafts.introspekt.compiler.IntrospektPluginContext
 import org.jetbrains.kotlin.ir.IrElement
@@ -50,7 +50,7 @@ internal class IntrinsicCallerParameterTransformer(
             val valueArgumentsCount = expression.valueArgumentsCount
             intrinsicStrings.map { stringValue ->
                 val (index, name) = stringValue.split(":")
-                Pair(index.toInt(), TrakkitIntrinsic.byName(name)!!)
+                Pair(index.toInt(), IntrospektIntrinsic.valueOf(name))
             }.forEach { (index, type) ->
                 if (index < valueArgumentsCount && expression.getValueArgument(index) != null) return@forEach
                 expression.putValueArgument(

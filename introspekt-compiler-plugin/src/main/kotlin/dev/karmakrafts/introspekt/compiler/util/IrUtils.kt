@@ -17,21 +17,89 @@
 package dev.karmakrafts.introspekt.compiler.util
 
 import org.jetbrains.kotlin.ir.IrElement
+import org.jetbrains.kotlin.ir.declarations.IrAnnotationContainer
 import org.jetbrains.kotlin.ir.declarations.IrFile
 import org.jetbrains.kotlin.ir.declarations.IrFunction
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
+import org.jetbrains.kotlin.ir.declarations.IrParameterKind
 import org.jetbrains.kotlin.ir.declarations.path
+import org.jetbrains.kotlin.ir.expressions.IrClassReference
+import org.jetbrains.kotlin.ir.expressions.IrConst
+import org.jetbrains.kotlin.ir.expressions.IrConstructorCall
+import org.jetbrains.kotlin.ir.expressions.IrErrorExpression
+import org.jetbrains.kotlin.ir.expressions.IrExpression
+import org.jetbrains.kotlin.ir.expressions.IrExpressionBody
+import org.jetbrains.kotlin.ir.expressions.IrGetEnumValue
+import org.jetbrains.kotlin.ir.expressions.IrGetField
+import org.jetbrains.kotlin.ir.expressions.IrVararg
+import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
+import org.jetbrains.kotlin.ir.types.classFqName
 import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
-import org.jetbrains.kotlin.ir.util.getAnnotationArgumentValue
 import org.jetbrains.kotlin.ir.util.hasAnnotation
 import org.jetbrains.kotlin.ir.util.isFakeOverride
+import org.jetbrains.kotlin.name.FqName
 
 private const val UNDEFINED_OFFSET: Int = -1
 
-internal fun IrFunction.getIntrinsicType(): TrakkitIntrinsic? {
+@OptIn(UnsafeDuringIrConstructionAPI::class)
+internal fun IrElement?.unwrapAnyAnnotationValue(): Any? {
+    return when (this) {
+        is IrErrorExpression -> error("Got IrErrorExpression in getConstType: $description")
+        is IrExpressionBody -> expression
+        is IrGetField -> symbol.owner.initializer
+        is IrGetEnumValue -> symbol.owner.name.asString() // Enum values are unwrapped to their constant names
+        is IrClassReference -> type
+        is IrConst -> value
+        is IrVararg -> elements.map { element ->
+            check(element is IrExpression) { "Annotation vararg element must be an expression" }
+            element.unwrapAnyAnnotationValue()
+        }.toList()
+
+        else -> null
+    }
+}
+
+@Suppress("UNCHECKED_CAST")
+internal inline fun <reified T> IrElement?.unwrapAnnotationValue(): T? {
+    val value = unwrapAnyAnnotationValue()
+    val javaType = T::class.java
+    return when {
+        javaType.isEnum -> (javaType.enumConstants as Array<Enum<*>>).find { it.name == value }
+        else -> value
+    } as? T
+}
+
+internal fun IrAnnotationContainer.getAnnotation(
+    type: FqName, index: Int = 0
+): IrConstructorCall? {
+    return annotations.filter { it.type.classFqName == type }.getOrNull(index)
+}
+
+@OptIn(UnsafeDuringIrConstructionAPI::class)
+internal inline fun <reified T> IrAnnotationContainer.getAnnotationValue(
+    type: FqName, name: String, index: Int = 0
+): T? {
+    val annotation = getAnnotation(type, index) ?: return null
+    val constructor = annotation.symbol.owner
+    // @formatter:off
+    val parameter = constructor.parameters
+        .filter { it.kind == IrParameterKind.Regular }
+        .find { it.name.asString() == name }
+        ?: return null
+    // @formatter:on
+    return annotation.getValueArgument(parameter.indexInOldValueParameters).unwrapAnnotationValue<T>()
+}
+
+internal fun IrFunction.getIntrinsicType(): IntrospektIntrinsic? {
     if (!hasAnnotation(IntrospektNames.IntrospektIntrinsic.id)) return null
-    val intrinsicName = getAnnotationArgumentValue<String>(IntrospektNames.IntrospektIntrinsic.fqName, "value") ?: return null
-    return TrakkitIntrinsic.byName(intrinsicName)
+    return getAnnotationValue<IntrospektIntrinsic>(IntrospektNames.IntrospektIntrinsic.fqName, "type")
+}
+
+internal fun IrAnnotationContainer.isTraceable(): Boolean = hasAnnotation(IntrospektNames.Trace.id)
+
+internal fun IrAnnotationContainer.getTraceType(): List<TraceType> {
+    if (!isTraceable()) return emptyList()
+    return emptyList() // TODO: implement this
 }
 
 internal fun getLineNumber(source: List<String>, startOffset: Int, endOffset: Int = startOffset): Int {

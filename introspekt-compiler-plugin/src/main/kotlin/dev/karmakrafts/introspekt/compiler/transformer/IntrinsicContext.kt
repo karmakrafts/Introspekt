@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package dev.karmakrafts.introspekt.compiler
+package dev.karmakrafts.introspekt.compiler.transformer
 
+import dev.karmakrafts.introspekt.compiler.IntrospektPluginContext
 import dev.karmakrafts.introspekt.compiler.element.FunctionInfo
 import dev.karmakrafts.introspekt.compiler.util.SourceLocation
 import dev.karmakrafts.introspekt.compiler.util.getFunctionLocation
@@ -28,18 +29,17 @@ import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.expressions.IrBody
 import java.util.*
 
-internal data class IntrinsicContext( // @formatter:off
-    val pluginContext: IntrospektPluginContext,
-    val clazzStack: Stack<IrClass> = Stack(),
-    val functionStack: Stack<IrFunction> = Stack(),
-    val initializerStack: Stack<IrAnonymousInitializer> = Stack(),
+internal data class IntrinsicContext(val pluginContext: IntrospektPluginContext) {
+    val classStack: Stack<IrClass> = Stack()
+    val functionStack: Stack<IrFunction> = Stack()
+    val initializerStack: Stack<IrAnonymousInitializer> = Stack()
     val bodyStack: Stack<IrBody> = Stack()
-) { // @formatter:on
-    inline val clazz: IrClass
-        get() = requireNotNull(clazzStack.firstOrNull()) { "Not inside any class" }
+
+    inline val `class`: IrClass
+        get() = requireNotNull(classStack.firstOrNull()) { "Not inside any class" }
 
     inline val classOrNull: IrClass?
-        get() = clazzStack.firstOrNull()
+        get() = classStack.firstOrNull()
 
     inline val function: IrFunction
         get() = requireNotNull(functionStack.firstOrNull()) { "Not inside any function" }

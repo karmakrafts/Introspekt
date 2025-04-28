@@ -63,28 +63,28 @@ data class SourceLocation( // @formatter:off
          */
         const val UNDEFINED_OFFSET: Int = -3
 
-        @IntrospektIntrinsic(IntrospektIntrinsic.SL_HERE)
+        @IntrospektIntrinsic(IntrospektIntrinsic.Type.SL_HERE)
         fun here(): SourceLocation = throw IntrospektPluginNotAppliedException()
 
-        @IntrospektIntrinsic(IntrospektIntrinsic.SL_HERE_HASH)
+        @IntrospektIntrinsic(IntrospektIntrinsic.Type.SL_HERE_HASH)
         fun hereHash(): Int = throw IntrospektPluginNotAppliedException()
 
-        @IntrospektIntrinsic(IntrospektIntrinsic.SL_CURRENT_FUNCTION)
+        @IntrospektIntrinsic(IntrospektIntrinsic.Type.SL_CURRENT_FUNCTION)
         fun currentFunction(): SourceLocation = throw IntrospektPluginNotAppliedException()
 
-        @IntrospektIntrinsic(IntrospektIntrinsic.SL_CURRENT_FUNCTION_HASH)
+        @IntrospektIntrinsic(IntrospektIntrinsic.Type.SL_CURRENT_FUNCTION_HASH)
         fun currentFunctionHash(): Int = throw IntrospektPluginNotAppliedException()
 
-        @IntrospektIntrinsic(IntrospektIntrinsic.SL_CURRENT_CLASS)
+        @IntrospektIntrinsic(IntrospektIntrinsic.Type.SL_CURRENT_CLASS)
         fun currentClass(): SourceLocation = throw IntrospektPluginNotAppliedException()
 
-        @IntrospektIntrinsic(IntrospektIntrinsic.SL_CURRENT_CLASS_HASH)
+        @IntrospektIntrinsic(IntrospektIntrinsic.Type.SL_CURRENT_CLASS_HASH)
         fun currentClassHash(): Int = throw IntrospektPluginNotAppliedException()
 
-        @IntrospektIntrinsic(IntrospektIntrinsic.SL_OF_CLASS)
+        @IntrospektIntrinsic(IntrospektIntrinsic.Type.SL_OF_CLASS)
         fun <T : Any> ofClass(): SourceLocation = throw IntrospektPluginNotAppliedException()
 
-        @IntrospektIntrinsic(IntrospektIntrinsic.SL_OF_FUNCTION)
+        @IntrospektIntrinsic(IntrospektIntrinsic.Type.SL_OF_FUNCTION)
         fun ofFunction(function: KFunction<*>): SourceLocation = throw IntrospektPluginNotAppliedException()
     }
 

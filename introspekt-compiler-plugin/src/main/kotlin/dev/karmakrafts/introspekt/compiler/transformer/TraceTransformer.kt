@@ -20,28 +20,48 @@ import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.declarations.IrAnonymousInitializer
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrFunction
+import org.jetbrains.kotlin.ir.expressions.IrBlockBody
+import org.jetbrains.kotlin.ir.expressions.IrCall
+import org.jetbrains.kotlin.ir.expressions.IrStatementContainer
+import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
+import org.jetbrains.kotlin.ir.util.parentClassOrNull
+import org.jetbrains.kotlin.ir.util.primaryConstructor
 import org.jetbrains.kotlin.ir.visitors.IrVisitor
-import org.jetbrains.kotlin.ir.visitors.IrVisitorVoid
-import java.util.*
 
-private class TraceFilterTransformer : IrVisitorVoid() {
-
-}
-
-internal class TraceTransformer : IrVisitor<Unit, Stack<Int>>() {
-    override fun visitElement(element: IrElement, data: Stack<Int>) {
+internal class TraceTransformer : IrVisitor<Unit, TraceContext>() {
+    override fun visitElement(element: IrElement, data: TraceContext) {
         element.acceptChildren(this, data)
     }
 
-    override fun visitClass(declaration: IrClass, data: Stack<Int>) {
+    override fun visitClass(declaration: IrClass, data: TraceContext) {
+        data.pushTraceType(declaration)
         super.visitClass(declaration, data)
+        data.popTraceType()
     }
 
-    override fun visitFunction(declaration: IrFunction, data: Stack<Int>) {
+    override fun visitFunction(declaration: IrFunction, data: TraceContext) {
+        val body = declaration.body
+        val hasScope = body is IrBlockBody
+        if (hasScope) data.containerStack.push(body as IrStatementContainer)
+        data.pushTraceType(declaration)
         super.visitFunction(declaration, data)
+        data.popTraceType()
+        if (hasScope) data.containerStack.pop()
     }
 
-    override fun visitAnonymousInitializer(declaration: IrAnonymousInitializer, data: Stack<Int>) {
+    @OptIn(UnsafeDuringIrConstructionAPI::class)
+    override fun visitAnonymousInitializer(declaration: IrAnonymousInitializer, data: TraceContext) {
+        val body = declaration.body
+        val constructor = declaration.parentClassOrNull?.primaryConstructor
+        val hasConstructor = constructor != null
+        data.containerStack.push(body)
+        if (hasConstructor) data.pushTraceType(constructor!!)
         super.visitAnonymousInitializer(declaration, data)
+        if (hasConstructor) data.popTraceType()
+        data.containerStack.pop()
+    }
+
+    override fun visitCall(expression: IrCall, data: TraceContext) {
+        super.visitCall(expression, data)
     }
 }

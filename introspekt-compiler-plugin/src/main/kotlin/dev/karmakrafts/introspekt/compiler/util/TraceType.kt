@@ -14,25 +14,19 @@
  * limitations under the License.
  */
 
-package dev.karmakrafts.introspekt
+package dev.karmakrafts.introspekt.compiler.util
 
-@Retention(AnnotationRetention.BINARY)
-@Target(AnnotationTarget.FUNCTION)
-annotation class IntrospektIntrinsic(val type: Type) {
-    enum class Type {
-        // @formatter:off
-        SL_HERE,
-        SL_HERE_HASH,
-        SL_CURRENT_FUNCTION,
-        SL_CURRENT_FUNCTION_HASH,
-        SL_CURRENT_CLASS,
-        SL_CURRENT_CLASS_HASH,
-        SL_OF_CLASS,
-        SL_OF_FUNCTION,
-        FI_CURRENT,
-        FI_OF,
-        CI_CURRENT,
-        CI_OF
-        // @formatter:on
-    }
+enum class TraceType {
+    // @formatter:off
+    SPAN_ENTER,
+    SPAN_LEAVE,
+    FUNCTION_ENTER,
+    FUNCTION_LEAVE,
+    PROPERTY_LOAD,
+    PROPERTY_STORE,
+    LOCAL_LOAD,
+    LOCAL_STORE,
+    CALL,
+    EVENT;
+    // @formatter:on
 }

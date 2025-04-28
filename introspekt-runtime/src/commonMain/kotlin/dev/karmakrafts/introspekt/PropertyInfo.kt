@@ -30,7 +30,7 @@ data class PropertyInfo(
     val getter: FunctionInfo,
     val setter: FunctionInfo?,
     override val annotations: Map<KClass<out Annotation>, List<AnnotationUsageInfo>>
-) : DecoratedElementInfo {
+) : AnnotatedElementInfo {
     companion object {
         private val cache: SharedHashMap<Int, PropertyInfo> = SharedHashMap()
 

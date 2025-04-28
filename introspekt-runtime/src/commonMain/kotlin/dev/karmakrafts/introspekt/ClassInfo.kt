@@ -23,6 +23,7 @@ data class ClassInfo(
     override val location: SourceLocation,
     val type: KClass<*>,
     val qualifiedName: String,
+    val name: String,
     val typeParameterNames: List<String>,
     override val annotations: Map<KClass<out Annotation>, List<AnnotationUsageInfo>>,
     val functions: List<FunctionInfo>,
@@ -34,14 +35,14 @@ data class ClassInfo(
     val visibility: VisibilityModifier,
     val modality: ModalityModifier,
     val classModifier: ClassModifier?
-) : DecoratedElementInfo {
+) : AnnotatedElementInfo {
     companion object {
         private val cache: SharedHashMap<KClass<*>, ClassInfo> = SharedHashMap()
 
-        @IntrospektIntrinsic(IntrospektIntrinsic.CI_CURRENT)
+        @IntrospektIntrinsic(IntrospektIntrinsic.Type.CI_CURRENT)
         fun current(): ClassInfo = throw IntrospektPluginNotAppliedException()
 
-        @IntrospektIntrinsic(IntrospektIntrinsic.CI_OF)
+        @IntrospektIntrinsic(IntrospektIntrinsic.Type.CI_OF)
         fun <T : Any> of(): ClassInfo = throw IntrospektPluginNotAppliedException()
 
         @IntrospektCompilerApi
@@ -49,6 +50,7 @@ data class ClassInfo(
             location: SourceLocation,
             type: KClass<*>,
             qualifiedName: String,
+            name: String,
             typeParameterNames: List<String>,
             annotations: Map<KClass<out Annotation>, List<AnnotationUsageInfo>>,
             functions: List<FunctionInfo>,
@@ -66,6 +68,7 @@ data class ClassInfo(
                     location,
                     type,
                     qualifiedName,
+                    name,
                     typeParameterNames,
                     annotations,
                     functions,

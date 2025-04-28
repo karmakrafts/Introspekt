@@ -29,14 +29,14 @@ data class FunctionInfo(
     val parameterTypes: List<KClass<*>>,
     val parameterNames: List<String>,
     override val annotations: Map<KClass<out Annotation>, List<AnnotationUsageInfo>>
-) : DecoratedElementInfo {
+) : AnnotatedElementInfo {
     companion object {
         private val cache: SharedHashMap<Int, FunctionInfo> = SharedHashMap()
 
-        @IntrospektIntrinsic(IntrospektIntrinsic.FI_CURRENT)
+        @IntrospektIntrinsic(IntrospektIntrinsic.Type.FI_CURRENT)
         fun current(): FunctionInfo = throw IntrospektPluginNotAppliedException()
 
-        @IntrospektIntrinsic(IntrospektIntrinsic.FI_OF)
+        @IntrospektIntrinsic(IntrospektIntrinsic.Type.FI_OF)
         fun of(function: KFunction<*>): FunctionInfo = throw IntrospektPluginNotAppliedException()
 
         private fun getCacheKey(

@@ -23,7 +23,6 @@ import org.jetbrains.kotlin.ir.expressions.impl.IrCallImplWithShape
 import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.defaultType
 import org.jetbrains.kotlin.ir.types.starProjectedType
-import org.jetbrains.kotlin.ir.types.typeWith
 import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
 import org.jetbrains.kotlin.ir.util.toIrConst
 import org.jetbrains.kotlin.it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
@@ -36,8 +35,8 @@ internal data class FunctionInfo(
     val returnType: IrType,
     val parameterTypes: List<IrType>,
     val parameterNames: List<String>,
-    var annotations: Map<IrType, List<AnnotationUsageInfo>> = emptyMap()
-) : ElementInfo {
+    override var annotations: Map<IrType, List<AnnotationUsageInfo>> = emptyMap()
+) : ElementInfo, AnnotatedElement {
     companion object {
         private val cache: Int2ObjectOpenHashMap<FunctionInfo> = Int2ObjectOpenHashMap()
 
@@ -100,23 +99,14 @@ internal data class FunctionInfo(
             putValueArgument(
                 index++, createListOf(
                 type = irBuiltIns.kClassClass.starProjectedType,
-                values = parameterTypes.map { it.type.toIrValue()!! }))
+                values = parameterTypes.map { it.type.toIrValue() }))
             // parameterNames
             putValueArgument(
                 index++, createListOf(
                 type = irBuiltIns.stringType,
                 values = parameterNames.map { it.toIrConst(irBuiltIns.stringType) }))
             // annotations
-            putValueArgument(
-                index, createMapOf(
-                keyType = irBuiltIns.kClassClass.typeWith(annotationType.defaultType),
-                valueType = annotationUsageInfoType.defaultType,
-                values = annotations.map { (type, infos) ->
-                    type.toIrValue() to createListOf(
-                        type = annotationUsageInfoType.defaultType,
-                        values = infos.map { it.instantiate(context) }
-                    )
-                }))
+            putValueArgument(index, instantiateAnnotations(context))
             dispatchReceiver = functionInfoCompanionType.getObjectInstance()
         } // @formatter:on
     }

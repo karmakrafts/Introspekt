@@ -21,14 +21,15 @@ import dev.karmakrafts.introspekt.compiler.transformer.CompilerApiTransformer
 import dev.karmakrafts.introspekt.compiler.transformer.FunctionInfoTransformer
 import dev.karmakrafts.introspekt.compiler.transformer.IntrinsicCalleeParameterTransformer
 import dev.karmakrafts.introspekt.compiler.transformer.IntrinsicCallerParameterTransformer
+import dev.karmakrafts.introspekt.compiler.transformer.IntrinsicContext
 import dev.karmakrafts.introspekt.compiler.transformer.SourceLocationTransformer
+import dev.karmakrafts.introspekt.compiler.transformer.TraceContext
 import dev.karmakrafts.introspekt.compiler.transformer.TraceTransformer
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.declarations.path
 import org.jetbrains.kotlin.ir.visitors.acceptVoid
-import java.util.Stack
 import kotlin.io.path.Path
 import kotlin.io.path.readLines
 
@@ -36,17 +37,17 @@ internal class IntrospektIrGenerationExtension : IrGenerationExtension {
     override fun generate(
         moduleFragment: IrModuleFragment, pluginContext: IrPluginContext
     ) {
-        val trakkitContext = IntrospektPluginContext(pluginContext)
+        val introspektContext = IntrospektPluginContext(pluginContext)
         moduleFragment.acceptVoid(CompilerApiTransformer())
         for (file in moduleFragment.files) {
             val source = runCatching { Path(file.path).readLines() }.getOrNull() ?: continue
-            val context = IntrinsicContext(trakkitContext)
-            file.acceptVoid(IntrinsicCalleeParameterTransformer(trakkitContext))
-            file.acceptVoid(IntrinsicCallerParameterTransformer(trakkitContext))
-            file.transform(SourceLocationTransformer(trakkitContext, moduleFragment, file, source), context)
-            file.transform(FunctionInfoTransformer(trakkitContext, moduleFragment, file, source), context)
-            file.transform(ClassInfoTransformer(trakkitContext, moduleFragment, file, source), context)
+            val context = IntrinsicContext(introspektContext)
+            file.acceptVoid(IntrinsicCalleeParameterTransformer(introspektContext))
+            file.acceptVoid(IntrinsicCallerParameterTransformer(introspektContext))
+            file.transform(SourceLocationTransformer(introspektContext, moduleFragment, file, source), context)
+            file.transform(FunctionInfoTransformer(introspektContext, moduleFragment, file, source), context)
+            file.transform(ClassInfoTransformer(introspektContext, moduleFragment, file, source), context)
         }
-        moduleFragment.accept(TraceTransformer(), Stack())
+        moduleFragment.accept(TraceTransformer(), TraceContext(introspektContext))
     }
 }

@@ -22,16 +22,16 @@ import dev.karmakrafts.introspekt.compiler.element.FunctionInfo
 import dev.karmakrafts.introspekt.compiler.element.PropertyInfo
 import dev.karmakrafts.introspekt.compiler.util.ClassModifier
 import dev.karmakrafts.introspekt.compiler.util.IntrinsicResultType
-import dev.karmakrafts.introspekt.compiler.util.SourceLocation
-import dev.karmakrafts.introspekt.compiler.util.TrakkitIntrinsic
+import dev.karmakrafts.introspekt.compiler.util.IntrospektIntrinsic
 import dev.karmakrafts.introspekt.compiler.util.IntrospektNames
+import dev.karmakrafts.introspekt.compiler.util.SourceLocation
 import dev.karmakrafts.introspekt.compiler.util.getFunctionLocation
 import dev.karmakrafts.introspekt.compiler.util.getLocation
+import dev.karmakrafts.introspekt.compiler.util.unwrapAnyAnnotationValue
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.descriptors.Visibilities
 import org.jetbrains.kotlin.descriptors.Visibility
-import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.declarations.IrAnonymousInitializer
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrEnumEntry
@@ -44,11 +44,7 @@ import org.jetbrains.kotlin.ir.declarations.IrProperty
 import org.jetbrains.kotlin.ir.expressions.IrClassReference
 import org.jetbrains.kotlin.ir.expressions.IrConst
 import org.jetbrains.kotlin.ir.expressions.IrConstructorCall
-import org.jetbrains.kotlin.ir.expressions.IrErrorExpression
 import org.jetbrains.kotlin.ir.expressions.IrExpression
-import org.jetbrains.kotlin.ir.expressions.IrExpressionBody
-import org.jetbrains.kotlin.ir.expressions.IrGetField
-import org.jetbrains.kotlin.ir.expressions.IrVararg
 import org.jetbrains.kotlin.ir.expressions.impl.IrCallImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrCallImplWithShape
 import org.jetbrains.kotlin.ir.expressions.impl.IrClassReferenceImpl
@@ -165,22 +161,23 @@ internal data class IntrospektPluginContext(
 
     internal val visibilityModifierType: IrClassSymbol =
         pluginContext.referenceClass(IntrospektNames.VisibilityModifier.id)!!
-    internal val modalityModifierType: IrClassSymbol = pluginContext.referenceClass(IntrospektNames.ModalityModifier.id)!!
+    internal val modalityModifierType: IrClassSymbol =
+        pluginContext.referenceClass(IntrospektNames.ModalityModifier.id)!!
     internal val classModifierType: IrClassSymbol = pluginContext.referenceClass(IntrospektNames.ClassModifier.id)!!
 
-    private fun TrakkitIntrinsic.getType(): IrType = when (resultType) {
+    private fun IntrospektIntrinsic.getType(): IrType = when (resultType) {
         IntrinsicResultType.SOURCE_LOCATION -> sourceLocationType.defaultType
         IntrinsicResultType.FUNCTION_INFO -> functionInfoType.defaultType
         IntrinsicResultType.CLASS_INFO -> classInfoType.defaultType
         IntrinsicResultType.INT -> irBuiltIns.intType
     }
 
-    private fun TrakkitIntrinsic.getSymbol(): IrSimpleFunctionSymbol {
+    private fun IntrospektIntrinsic.getSymbol(): IrSimpleFunctionSymbol {
         return pluginContext.referenceFunctions(functionId).first()
     }
 
     @OptIn(UnsafeDuringIrConstructionAPI::class)
-    fun TrakkitIntrinsic.createCall(
+    fun IntrospektIntrinsic.createCall(
         startOffset: Int = SYNTHETIC_OFFSET, endOffset: Int = SYNTHETIC_OFFSET
     ): IrCallImpl = IrCallImpl( // @formatter:off
         startOffset = startOffset,
@@ -228,23 +225,6 @@ internal data class IntrospektPluginContext(
     }
 
     @OptIn(UnsafeDuringIrConstructionAPI::class)
-    private fun IrElement?.unwrapAnnotationValue(): Any? {
-        return when (this) {
-            is IrErrorExpression -> error("Got IrErrorExpression in getConstType: $description")
-            is IrExpressionBody -> expression
-            is IrGetField -> symbol.owner.initializer
-            is IrClassReference -> type
-            is IrConst -> value
-            is IrVararg -> elements.map { element ->
-                check(element is IrExpression) { "Annotation vararg element must be an expression" }
-                element.unwrapAnnotationValue()
-            }.toList()
-
-            else -> null
-        }
-    }
-
-    @OptIn(UnsafeDuringIrConstructionAPI::class)
     fun IrConstructorCall.getAnnotationValues(): Map<String, Any?> {
         val constructor = symbol.owner
         val parameters = constructor.parameters.filter { it.kind == IrParameterKind.Regular }
@@ -257,7 +237,7 @@ internal data class IntrospektPluginContext(
         var paramIndex = 0
         for (index in firstParamIndex..<lastParamIndex) {
             val value = getValueArgument(index)
-            values[parameterNames[paramIndex]] = value.unwrapAnnotationValue()
+            values[parameterNames[paramIndex]] = value.unwrapAnyAnnotationValue()
             paramIndex++
         }
         return values

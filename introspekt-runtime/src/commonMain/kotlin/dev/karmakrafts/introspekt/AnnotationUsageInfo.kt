@@ -22,10 +22,10 @@ import kotlin.reflect.KClass
 data class AnnotationUsageInfo @IntrospektCompilerApi internal constructor( // @formatter:off
     val location: SourceLocation,
     val type: KClass<out Annotation>,
-    val values: Map<String, Any>
+    val values: Map<String, Any?>
 ) { // @formatter:on
     @Suppress("UNCHECKED_CAST")
-    fun <V> getValue(name: String): V = values[name] as V
+    fun <V> getValue(name: String): V = values[name]!! as V
 
     @Suppress("UNCHECKED_CAST")
     fun <V> getValueOrNull(name: String): V? = values[name] as? V
