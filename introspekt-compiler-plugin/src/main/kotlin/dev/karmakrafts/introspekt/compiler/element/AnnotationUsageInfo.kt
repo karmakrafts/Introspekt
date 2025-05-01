@@ -18,10 +18,18 @@ package dev.karmakrafts.introspekt.compiler.element
 
 import dev.karmakrafts.introspekt.compiler.IntrospektPluginContext
 import dev.karmakrafts.introspekt.compiler.util.SourceLocation
+import dev.karmakrafts.introspekt.compiler.util.getAnnotationValues
+import dev.karmakrafts.introspekt.compiler.util.getLocation
+import dev.karmakrafts.introspekt.compiler.util.toClassReference
+import org.jetbrains.kotlin.ir.declarations.IrFile
+import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
+import org.jetbrains.kotlin.ir.expressions.IrConstructorCall
 import org.jetbrains.kotlin.ir.expressions.impl.IrConstructorCallImpl
+import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.defaultType
 import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
+import org.jetbrains.kotlin.ir.util.constructedClassType
 import org.jetbrains.kotlin.ir.util.toIrConst
 
 internal data class AnnotationUsageInfo( // @formatter:off
@@ -39,8 +47,8 @@ internal data class AnnotationUsageInfo( // @formatter:off
             constructorTypeArgumentsCount = 0
         ).apply {
             var index = 0
-            putValueArgument(index++, location.instantiateCached())
-            putValueArgument(index++, this@AnnotationUsageInfo.type.toClassReference())
+            putValueArgument(index++, location.instantiateCached(context))
+            putValueArgument(index++, this@AnnotationUsageInfo.type.toClassReference(context))
             putValueArgument(
                 index, createMapOf(
                     keyType = irBuiltIns.stringType,
@@ -52,3 +60,15 @@ internal data class AnnotationUsageInfo( // @formatter:off
         }
     }
 }
+
+@OptIn(UnsafeDuringIrConstructionAPI::class)
+internal fun IrConstructorCall.getAnnotationUsageInfo( // @formatter:off
+    module: IrModuleFragment,
+    file: IrFile,
+    source: List<String>,
+): AnnotationUsageInfo = AnnotationUsageInfo(
+    // @formatter:on
+    location = getLocation(module, file, source),
+    type = symbol.owner.constructedClassType,
+    values = getAnnotationValues(),
+)

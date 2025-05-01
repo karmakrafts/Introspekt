@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 
-package dev.karmakrafts.introspekt
+package dev.karmakrafts.introspekt.compiler.transformer
 
-sealed interface ElementInfo {
-    val location: SourceLocation
-    val qualifiedName: String
-    val name: String
+import org.jetbrains.kotlin.ir.expressions.IrCall
 
-    val packageName: String
-        get() = qualifiedName.substring(0..<qualifiedName.lastIndexOf(name) - 1)
+internal class TraceInjectionTransformer : TraceTransformer() {
+    override fun visitCall(expression: IrCall, data: TraceContext) {
+        super.visitCall(expression, data)
+    }
 }

@@ -16,7 +16,14 @@
 
 package dev.karmakrafts.introspekt.compiler.util
 
+import dev.karmakrafts.introspekt.compiler.IntrospektPluginContext
+import org.jetbrains.kotlin.ir.expressions.IrConst
+import org.jetbrains.kotlin.ir.expressions.impl.IrCallImpl
+import org.jetbrains.kotlin.ir.expressions.impl.IrCallImplWithShape
+import org.jetbrains.kotlin.ir.types.defaultType
+import org.jetbrains.kotlin.ir.util.toIrConst
 import org.jetbrains.kotlin.it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
+import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET as KOTLIN_SYNTHETIC_OFFSET
 
 internal data class SourceLocation( // @formatter:off
     val module: String,
@@ -45,5 +52,30 @@ internal data class SourceLocation( // @formatter:off
         ): SourceLocation = cache.getOrPut(getCacheKey(module, file, line, column)) {
             SourceLocation(module, file, line, column)
         }
+    }
+
+    fun instantiateCached(context: IntrospektPluginContext): IrCallImpl = with(context) {
+        IrCallImplWithShape(
+            startOffset = KOTLIN_SYNTHETIC_OFFSET,
+            endOffset = KOTLIN_SYNTHETIC_OFFSET,
+            type = sourceLocationType.defaultType,
+            symbol = sourceLocationGetOrCreate,
+            typeArgumentsCount = 0,
+            valueArgumentsCount = 4,
+            contextParameterCount = 0,
+            hasDispatchReceiver = true,
+            hasExtensionReceiver = false
+        ).apply {
+            var index = 0
+            putValueArgument(index++, module.toIrConst(irBuiltIns.stringType))
+            putValueArgument(index++, file.toIrConst(irBuiltIns.stringType))
+            putValueArgument(index++, line.toIrConst(irBuiltIns.intType))
+            putValueArgument(index, column.toIrConst(irBuiltIns.intType))
+            dispatchReceiver = sourcLocationCompanionType.getObjectInstance()
+        }
+    }
+
+    fun createHashSum(context: IntrospektPluginContext): IrConst {
+        return hashCode().toIrConst(context.irBuiltIns.intType)
     }
 }

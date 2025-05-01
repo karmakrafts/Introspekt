@@ -42,9 +42,9 @@ interface TraceCollector {
             }
         }
 
-        internal fun onEvent(event: TraceEvent) {
+        internal fun event(event: TraceEvent) {
             for(collector in collectors) {
-                collector.onEvent(event)
+                collector.event(event)
             }
         }
 
@@ -63,37 +63,37 @@ interface TraceCollector {
         }
 
         @IntrospektCompilerApi
-        internal fun onCall(callSite: CallInfo) {
+        internal fun call(callSite: CallInfo) {
             for(collector in collectors) {
-                collector.onCall(callSite)
+                collector.call(callSite)
             }
         }
 
         @IntrospektCompilerApi
-        internal fun onPropertyLoad(property: PropertyInfo) {
+        internal fun loadProperty(property: PropertyInfo) {
             for(collector in collectors) {
-                collector.onPropertyLoad(property)
+                collector.loadProperty(property)
             }
         }
 
         @IntrospektCompilerApi
-        internal fun onPropertyStore(property: PropertyInfo) {
+        internal fun storeProperty(property: PropertyInfo) {
             for(collector in collectors) {
-                collector.onPropertyStore(property)
+                collector.storeProperty(property)
             }
         }
 
         @IntrospektCompilerApi
-        internal fun onLocalLoad(local: LocalInfo) {
+        internal fun loadLocal(local: LocalInfo) {
             for(collector in collectors) {
-                collector.onLocalLoad(local)
+                collector.loadLocal(local)
             }
         }
 
         @IntrospektCompilerApi
-        internal fun onLocalStore(local: LocalInfo) {
+        internal fun storeLocal(local: LocalInfo) {
             for(collector in collectors) {
-                collector.onLocalStore(local)
+                collector.storeLocal(local)
             }
         }
     }
@@ -106,15 +106,15 @@ interface TraceCollector {
 
     fun leaveFunction(function: FunctionInfo)
 
-    fun onCall(call: CallInfo)
+    fun call(call: CallInfo)
 
-    fun onEvent(event: TraceEvent)
+    fun event(event: TraceEvent)
 
-    fun onPropertyLoad(property: PropertyInfo)
+    fun loadProperty(property: PropertyInfo)
 
-    fun onPropertyStore(property: PropertyInfo)
+    fun storeProperty(property: PropertyInfo)
 
-    fun onLocalLoad(local: LocalInfo)
+    fun loadLocal(local: LocalInfo)
 
-    fun onLocalStore(local: LocalInfo)
+    fun storeLocal(local: LocalInfo)
 }

@@ -22,14 +22,18 @@ import kotlin.reflect.KFunction
 
 data class FunctionInfo(
     override val location: SourceLocation,
-    val qualifiedName: String,
-    val name: String,
+    override val qualifiedName: String,
+    override val name: String,
     val typeParameterNames: List<String>,
     val returnType: KClass<*>,
     val parameterTypes: List<KClass<*>>,
     val parameterNames: List<String>,
+    val visibility: VisibilityModifier,
+    val modality: ModalityModifier,
+    val locals: List<LocalInfo>,
+    override val isExpect: Boolean,
     override val annotations: Map<KClass<out Annotation>, List<AnnotationUsageInfo>>
-) : AnnotatedElementInfo {
+) : AnnotatedElementInfo, ExpectableElementInfo {
     companion object {
         private val cache: SharedHashMap<Int, FunctionInfo> = SharedHashMap()
 
@@ -57,18 +61,26 @@ data class FunctionInfo(
             returnType: KClass<*>,
             parameterTypes: List<KClass<*>>,
             parameterNames: List<String>,
+            visibility: VisibilityModifier,
+            modality: ModalityModifier,
+            locals: List<LocalInfo>,
+            isExpect: Boolean,
             annotations: Map<KClass<out Annotation>, List<AnnotationUsageInfo>>
         ): FunctionInfo {
             return cache.getOrPut(getCacheKey(qualifiedName, returnType, parameterTypes)) {
                 FunctionInfo(
-                    location,
-                    qualifiedName,
-                    name,
-                    typeParameterNames,
-                    returnType,
-                    parameterTypes,
-                    parameterNames,
-                    annotations
+                    location = location,
+                    qualifiedName = qualifiedName,
+                    name = name,
+                    typeParameterNames = typeParameterNames,
+                    returnType = returnType,
+                    parameterTypes = parameterTypes,
+                    parameterNames = parameterNames,
+                    visibility = visibility,
+                    modality = modality,
+                    locals = locals,
+                    isExpect = isExpect,
+                    annotations = annotations
                 )
             }
         }
@@ -90,6 +102,11 @@ data class FunctionInfo(
         }
         val escapedName = if (' ' in name) "`$name`" else name
         result += "$escapedName($parameters): ${returnType.getQualifiedName()}"
+        if(locals.isNotEmpty()) {
+            for(local in locals) {
+                result += "\n${local.toFormattedString(indent + 1)}"
+            }
+        }
         return result
     }
 }

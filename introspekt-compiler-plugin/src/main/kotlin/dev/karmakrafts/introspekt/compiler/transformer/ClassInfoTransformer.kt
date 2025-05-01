@@ -18,6 +18,7 @@ package dev.karmakrafts.introspekt.compiler.transformer
 
 import dev.karmakrafts.introspekt.compiler.util.IntrospektIntrinsic
 import dev.karmakrafts.introspekt.compiler.IntrospektPluginContext
+import dev.karmakrafts.introspekt.compiler.element.getClassInfo
 import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.declarations.IrFile
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
@@ -35,7 +36,7 @@ internal class ClassInfoTransformer(
         IntrospektIntrinsic.CI_OF
     ) // @formatter:on
 ) {
-    private fun IntrospektPluginContext.emitOf(expression: IrCall): IrElement {
+    private fun emitOf(expression: IrCall): IrElement {
         return requireNotNull(expression.typeArguments.first()?.getClass()) {
             "Missing class type parameter"
         }.getClassInfo(moduleFragment, file, source).instantiateCached(pluginContext)
@@ -43,11 +44,9 @@ internal class ClassInfoTransformer(
 
     override fun visitIntrinsic(
         type: IntrospektIntrinsic, expression: IrCall, context: IntrinsicContext
-    ): IrElement = with(pluginContext) {
-        when (type) {
-            IntrospektIntrinsic.CI_CURRENT -> context.`class`.getClassInfo(moduleFragment, file, source).instantiateCached(pluginContext)
-            IntrospektIntrinsic.CI_OF -> emitOf(expression)
-            else -> error("Unsupported intrinsic for ClassInfoTransformer")
-        }
+    ): IrElement = when (type) {
+        IntrospektIntrinsic.CI_CURRENT -> context.`class`.getClassInfo(moduleFragment, file, source).instantiateCached(pluginContext)
+        IntrospektIntrinsic.CI_OF -> emitOf(expression)
+        else -> error("Unsupported intrinsic for ClassInfoTransformer")
     }
 }

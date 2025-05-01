@@ -47,11 +47,10 @@ data class TraceSpan private constructor( // @formatter:off
         }
 
         @OptIn(GeneratedIntrospektApi::class)
-        @CaptureCaller("0:SL_HERE", "1:FI_CURRENT")
+        @CaptureCaller("0:SL_HERE")
         @IntrospektCompilerApi
         fun leave( // @formatter:off
-            end: SourceLocation = SourceLocation.here(),
-            function: FunctionInfo = FunctionInfo.current()
+            end: SourceLocation = SourceLocation.here()
         ) { // @formatter:on
             TraceCollector.leaveSpan(popTraceSpan(), end)
         }

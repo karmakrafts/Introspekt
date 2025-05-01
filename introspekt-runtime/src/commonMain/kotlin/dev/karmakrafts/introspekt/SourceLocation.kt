@@ -39,7 +39,12 @@ data class SourceLocation( // @formatter:off
         @IntrospektCompilerApi
         internal fun getOrCreate(module: String, file: String, line: Int, column: Int): SourceLocation {
             return cache.getOrPut(hash(module, file, line, column)) {
-                SourceLocation(module, file, line, column)
+                SourceLocation( // @formatter:off
+                    module = module,
+                    file = file,
+                    line = line,
+                    column = column
+                ) // @formatter:on
             }
         }
 
@@ -100,7 +105,7 @@ data class SourceLocation( // @formatter:off
     override fun toString(): String = when {
         isFakeOverride -> "$file (FAKE OVERRIDE)"
         isSynthetic -> "$file (GENERATED)"
-        isUndefined -> "(UNDEFINED/EXTERNAL)"
+        isUndefined -> "(UNDEFINED)"
         else -> "$file:$line:$column"
     }
 }

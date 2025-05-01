@@ -20,8 +20,8 @@ import kotlin.reflect.KClass
 
 data class ParameterInfo(
     override val location: SourceLocation,
-    val qualifiedName: String,
-    val name: String,
+    override val qualifiedName: String,
+    override val name: String,
     val type: KClass<*>,
     val annotations: Map<KClass<out Annotation>, List<AnnotationUsageInfo>>
 ) : ElementInfo {

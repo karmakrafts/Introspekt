@@ -50,7 +50,7 @@ internal class SourceLocationTransformer( // @formatter:off
     private fun IntrospektPluginContext.emitOfClass(expression: IrCall): IrElement {
         return requireNotNull(expression.typeArguments.first()?.getClass()) {
             "Missing class type parameter"
-        }.getLocation(moduleFragment, file, source).instantiateCached()
+        }.getLocation(moduleFragment, file, source).instantiateCached(this)
     }
 
     @OptIn(UnsafeDuringIrConstructionAPI::class)
@@ -60,19 +60,19 @@ internal class SourceLocationTransformer( // @formatter:off
         check(argument is IrFunctionReference) { "Parameter must be a function reference" }
         return requireNotNull(argument.reflectionTarget) {
             "Parameter reference must have a reflection target"
-        }.owner.getFunctionLocation(moduleFragment, file, source).instantiateCached()
+        }.owner.getFunctionLocation(moduleFragment, file, source).instantiateCached(this)
     }
 
     override fun visitIntrinsic(
         type: IntrospektIntrinsic, expression: IrCall, context: IntrinsicContext
     ): IrElement = with(pluginContext) {
         when (type) { // @formatter:off
-            IntrospektIntrinsic.SL_HERE -> expression.getLocation(moduleFragment, file, source).instantiateCached()
-            IntrospektIntrinsic.SL_HERE_HASH -> expression.getLocation(moduleFragment, file, source).createHashSum()
-            IntrospektIntrinsic.SL_CURRENT_FUNCTION -> context.getFunctionLocation(moduleFragment, file, source).instantiateCached()
-            IntrospektIntrinsic.SL_CURRENT_FUNCTION_HASH -> context.getFunctionLocation(moduleFragment, file, source).createHashSum()
-            IntrospektIntrinsic.SL_CURRENT_CLASS -> context.`class`.getLocation(moduleFragment, file, source).instantiateCached()
-            IntrospektIntrinsic.SL_CURRENT_CLASS_HASH -> context.`class`.getLocation(moduleFragment, file, source).createHashSum()
+            IntrospektIntrinsic.SL_HERE -> expression.getLocation(moduleFragment, file, source).instantiateCached(this)
+            IntrospektIntrinsic.SL_HERE_HASH -> expression.getLocation(moduleFragment, file, source).createHashSum(this)
+            IntrospektIntrinsic.SL_CURRENT_FUNCTION -> context.getFunctionLocation(moduleFragment, file, source).instantiateCached(this)
+            IntrospektIntrinsic.SL_CURRENT_FUNCTION_HASH -> context.getFunctionLocation(moduleFragment, file, source).createHashSum(this)
+            IntrospektIntrinsic.SL_CURRENT_CLASS -> context.`class`.getLocation(moduleFragment, file, source).instantiateCached(this)
+            IntrospektIntrinsic.SL_CURRENT_CLASS_HASH -> context.`class`.getLocation(moduleFragment, file, source).createHashSum(this)
             IntrospektIntrinsic.SL_OF_CLASS -> emitOfClass(expression)
             IntrospektIntrinsic.SL_OF_FUNCTION -> emitOfFunction(expression)
             else -> error("Unsupported intrinsic for SourceLocationTransformer")

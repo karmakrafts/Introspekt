@@ -18,12 +18,13 @@ package dev.karmakrafts.introspekt
 
 import co.touchlab.stately.collections.SharedHashMap
 import kotlin.reflect.KClass
+import kotlin.reflect.KFunction
 
 data class ClassInfo(
     override val location: SourceLocation,
+    override val qualifiedName: String,
+    override val name: String,
     val type: KClass<*>,
-    val qualifiedName: String,
-    val name: String,
     val typeParameterNames: List<String>,
     override val annotations: Map<KClass<out Annotation>, List<AnnotationUsageInfo>>,
     val functions: List<FunctionInfo>,
@@ -32,10 +33,11 @@ data class ClassInfo(
     val isInterface: Boolean,
     val isObject: Boolean,
     val isCompanionObject: Boolean,
+    override val isExpect: Boolean,
     val visibility: VisibilityModifier,
     val modality: ModalityModifier,
     val classModifier: ClassModifier?
-) : AnnotatedElementInfo {
+) : AnnotatedElementInfo, ExpectableElementInfo {
     companion object {
         private val cache: SharedHashMap<KClass<*>, ClassInfo> = SharedHashMap()
 
@@ -48,9 +50,9 @@ data class ClassInfo(
         @IntrospektCompilerApi
         internal fun getOrCreate(
             location: SourceLocation,
-            type: KClass<*>,
             qualifiedName: String,
             name: String,
+            type: KClass<*>,
             typeParameterNames: List<String>,
             annotations: Map<KClass<out Annotation>, List<AnnotationUsageInfo>>,
             functions: List<FunctionInfo>,
@@ -59,27 +61,29 @@ data class ClassInfo(
             isInterface: Boolean,
             isObject: Boolean,
             isCompanionObject: Boolean,
+            isExpect: Boolean,
             visibility: VisibilityModifier,
             modality: ModalityModifier,
             classModifier: ClassModifier?
         ): ClassInfo {
             return cache.getOrPut(type) {
                 ClassInfo(
-                    location,
-                    type,
-                    qualifiedName,
-                    name,
-                    typeParameterNames,
-                    annotations,
-                    functions,
-                    properties,
-                    companionObjects,
-                    isInterface,
-                    isObject,
-                    isCompanionObject,
-                    visibility,
-                    modality,
-                    classModifier
+                    location = location,
+                    qualifiedName = qualifiedName,
+                    name = name,
+                    type = type,
+                    typeParameterNames = typeParameterNames,
+                    annotations = annotations,
+                    functions = functions,
+                    properties = properties,
+                    companionObjects = companionObjects,
+                    isInterface = isInterface,
+                    isObject = isObject,
+                    isCompanionObject = isCompanionObject,
+                    isExpect = isExpect,
+                    visibility = visibility,
+                    modality = modality,
+                    classModifier = classModifier
                 )
             }
         }

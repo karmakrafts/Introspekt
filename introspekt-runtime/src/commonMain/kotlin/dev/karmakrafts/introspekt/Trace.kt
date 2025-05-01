@@ -18,33 +18,15 @@ package dev.karmakrafts.introspekt
 
 import kotlin.uuid.Uuid
 
-enum class TraceTarget {
-    // @formatter:off
-    SPAN_ENTER,
-    SPAN_LEAVE,
-    FUNCTION_ENTER,
-    FUNCTION_LEAVE,
-    PROPERTY_LOAD,
-    PROPERTY_STORE,
-    LOCAL_LOAD,
-    LOCAL_STORE,
-    CALL,
-    EVENT;
-    // @formatter:on
-}
-
 /**
  * Injects trace callbacks for [TraceCollector] into the annotated function or the constructors associated initializers.
  */
 @Retention(AnnotationRetention.BINARY)
 @Target(AnnotationTarget.FUNCTION, AnnotationTarget.CONSTRUCTOR, AnnotationTarget.CLASS)
 annotation class Trace( // @formatter:off
-    vararg val targets: TraceTarget,
-    val depth: Int = RECURSIVE_DEPTH
+    vararg val targets: Target
 ) { // @formatter:on
     companion object {
-        const val RECURSIVE_DEPTH: Int = -1
-
         @OptIn(GeneratedIntrospektApi::class)
         @CaptureCaller("3:SL_HERE", "4:FI_CURRENT")
         @IntrospektCompilerApi
@@ -55,7 +37,7 @@ annotation class Trace( // @formatter:off
             location: SourceLocation = SourceLocation.here(),
             caller: FunctionInfo = FunctionInfo.current()
         ) {
-            TraceCollector.onEvent(TraceEvent( // @formatter:off
+            TraceCollector.event(TraceEvent( // @formatter:off
                 location = location,
                 id = id,
                 message = message,
@@ -63,5 +45,20 @@ annotation class Trace( // @formatter:off
             )
             ) // @formatter:on
         }
+    }
+
+    enum class Target {
+        // @formatter:off
+        SPAN_ENTER,
+        SPAN_LEAVE,
+        FUNCTION_ENTER,
+        FUNCTION_LEAVE,
+        PROPERTY_LOAD,
+        PROPERTY_STORE,
+        LOCAL_LOAD,
+        LOCAL_STORE,
+        CALL,
+        EVENT;
+        // @formatter:on
     }
 }

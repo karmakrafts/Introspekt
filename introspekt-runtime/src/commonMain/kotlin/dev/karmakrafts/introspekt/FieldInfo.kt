@@ -19,41 +19,52 @@ package dev.karmakrafts.introspekt
 import co.touchlab.stately.collections.SharedHashMap
 import kotlin.reflect.KClass
 
-class LocalInfo(
+class FieldInfo(
     override val location: SourceLocation,
     override val qualifiedName: String,
     override val name: String,
     val type: KClass<*>,
-    val isMutable: Boolean,
+    val visibility: VisibilityModifier,
+    val isStatic: Boolean,
+    val isExternal: Boolean,
+    val isFinal: Boolean,
     override val annotations: Map<KClass<out Annotation>, List<AnnotationUsageInfo>>
 ) : AnnotatedElementInfo {
     companion object {
-        private val cache: SharedHashMap<String, LocalInfo> = SharedHashMap()
+        private val cache: SharedHashMap<String, FieldInfo> = SharedHashMap()
 
         @IntrospektCompilerApi
-        internal fun getOrCreate( // @formatter:off
+        internal fun getOrCreate(
             location: SourceLocation,
             qualifiedName: String,
             name: String,
             type: KClass<*>,
-            isMutable: Boolean,
+            visibility: VisibilityModifier,
+            isStatic: Boolean,
+            isExternal: Boolean,
+            isFinal: Boolean,
             annotations: Map<KClass<out Annotation>, List<AnnotationUsageInfo>>
-        ): LocalInfo = cache.getOrPut(qualifiedName) {
-            LocalInfo(
-                location = location,
-                qualifiedName = qualifiedName,
-                name = name,
-                type = type,
-                isMutable = isMutable,
-                annotations = annotations
-            )
-        } // @formatter:on
+        ): FieldInfo {
+            return cache.getOrPut(qualifiedName) {
+                FieldInfo(
+                    location = location,
+                    qualifiedName = qualifiedName,
+                    name = name,
+                    type = type,
+                    visibility = visibility,
+                    isStatic = isStatic,
+                    isExternal = isExternal,
+                    isFinal = isFinal,
+                    annotations = annotations
+                )
+            }
+        }
     }
 
-    fun toFormattedString(indent: Int = 0): String {
-        var result = "\t".repeat(indent)
-        result += if(isMutable) "var " else "val "
-        result += "$name: ${type.getQualifiedName()}"
-        return result
+    override fun equals(other: Any?): Boolean {
+        return if (other !is FieldInfo) false
+        else qualifiedName == other.qualifiedName
     }
+
+    override fun hashCode(): Int = qualifiedName.hashCode()
 }

@@ -24,7 +24,8 @@ import dev.karmakrafts.introspekt.compiler.transformer.IntrinsicCallerParameterT
 import dev.karmakrafts.introspekt.compiler.transformer.IntrinsicContext
 import dev.karmakrafts.introspekt.compiler.transformer.SourceLocationTransformer
 import dev.karmakrafts.introspekt.compiler.transformer.TraceContext
-import dev.karmakrafts.introspekt.compiler.transformer.TraceTransformer
+import dev.karmakrafts.introspekt.compiler.transformer.TraceInjectionTransformer
+import dev.karmakrafts.introspekt.compiler.transformer.TraceRemovalTransformer
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
@@ -48,6 +49,8 @@ internal class IntrospektIrGenerationExtension : IrGenerationExtension {
             file.transform(FunctionInfoTransformer(introspektContext, moduleFragment, file, source), context)
             file.transform(ClassInfoTransformer(introspektContext, moduleFragment, file, source), context)
         }
-        moduleFragment.accept(TraceTransformer(), TraceContext(introspektContext))
+        val traceContext = TraceContext(introspektContext)
+        moduleFragment.accept(TraceInjectionTransformer(), traceContext)
+        moduleFragment.accept(TraceRemovalTransformer(), traceContext)
     }
 }

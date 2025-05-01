@@ -16,14 +16,14 @@
 
 package dev.karmakrafts.introspekt.compiler.transformer
 
+import dev.karmakrafts.introspekt.compiler.IntrospektPluginContext
 import dev.karmakrafts.introspekt.compiler.util.IntrospektIntrinsic
 import dev.karmakrafts.introspekt.compiler.util.IntrospektNames
-import dev.karmakrafts.introspekt.compiler.IntrospektPluginContext
+import dev.karmakrafts.introspekt.compiler.util.getAnnotationValues
 import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.IrConstructorCall
 import org.jetbrains.kotlin.ir.expressions.IrFunctionAccessExpression
-import org.jetbrains.kotlin.ir.util.getAnnotation
 import org.jetbrains.kotlin.ir.util.hasAnnotation
 import org.jetbrains.kotlin.ir.util.target
 import org.jetbrains.kotlin.ir.visitors.IrVisitorVoid
@@ -40,26 +40,23 @@ internal class IntrinsicCallerParameterTransformer(
         element.acceptChildrenVoid(this)
     }
 
-    @Suppress("UNCHECKED_CAST")
     private fun transformCall(expression: IrFunctionAccessExpression) {
         val function = expression.target
         if (!function.hasAnnotation(IntrospektNames.CaptureCaller.id)) return
-        with(pluginContext) {
-            val annotationValues = function.getAnnotation(IntrospektNames.CaptureCaller.fqName)!!.getAnnotationValues()
-            val intrinsicStrings = annotationValues["intrinsics"] as? List<String> ?: return@with
-            val valueArgumentsCount = expression.valueArgumentsCount
-            intrinsicStrings.map { stringValue ->
-                val (index, name) = stringValue.split(":")
-                Pair(index.toInt(), IntrospektIntrinsic.valueOf(name))
-            }.forEach { (index, type) ->
-                if (index < valueArgumentsCount && expression.getValueArgument(index) != null) return@forEach
-                expression.putValueArgument(
-                    index, type.createCall(
-                        startOffset = expression.startOffset,
-                        endOffset = expression.endOffset,
-                    )
+        val intrinsicStrings = function.getAnnotationValues<String>(IntrospektNames.CaptureCaller.fqName, "intrinsics")
+        val valueArgumentsCount = expression.valueArgumentsCount
+        intrinsicStrings.filterNotNull().map { stringValue ->
+            val (index, name) = stringValue.split(":")
+            Pair(index.toInt(), IntrospektIntrinsic.valueOf(name))
+        }.forEach { (index, type) ->
+            if (index < valueArgumentsCount && expression.getValueArgument(index) != null) return@forEach
+            expression.putValueArgument(
+                index, type.createCall(
+                    context = pluginContext,
+                    startOffset = expression.startOffset,
+                    endOffset = expression.endOffset,
                 )
-            }
+            )
         }
     }
 

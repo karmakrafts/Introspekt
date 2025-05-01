@@ -17,24 +17,48 @@
 package dev.karmakrafts.introspekt.compiler.element
 
 import dev.karmakrafts.introspekt.compiler.IntrospektPluginContext
+import dev.karmakrafts.introspekt.compiler.transformer.VariableDiscoveryVisitor
 import dev.karmakrafts.introspekt.compiler.util.SourceLocation
+import dev.karmakrafts.introspekt.compiler.util.getFunctionLocation
+import dev.karmakrafts.introspekt.compiler.util.getLocation
+import dev.karmakrafts.introspekt.compiler.util.getModality
+import dev.karmakrafts.introspekt.compiler.util.getModalityName
+import dev.karmakrafts.introspekt.compiler.util.getVisibilityName
+import dev.karmakrafts.introspekt.compiler.util.toAnnotationMap
+import dev.karmakrafts.introspekt.compiler.util.toClassReference
+import org.jetbrains.kotlin.descriptors.Modality
+import org.jetbrains.kotlin.descriptors.Visibility
+import org.jetbrains.kotlin.ir.declarations.IrAnonymousInitializer
+import org.jetbrains.kotlin.ir.declarations.IrFile
+import org.jetbrains.kotlin.ir.declarations.IrFunction
+import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
+import org.jetbrains.kotlin.ir.declarations.IrParameterKind.Regular
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.impl.IrCallImplWithShape
+import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.defaultType
 import org.jetbrains.kotlin.ir.types.starProjectedType
 import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
+import org.jetbrains.kotlin.ir.util.kotlinFqName
+import org.jetbrains.kotlin.ir.util.parentAsClass
+import org.jetbrains.kotlin.ir.util.primaryConstructor
 import org.jetbrains.kotlin.ir.util.toIrConst
+import org.jetbrains.kotlin.ir.visitors.acceptVoid
 import org.jetbrains.kotlin.it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
 
 internal data class FunctionInfo(
     val location: SourceLocation,
-    override val qualifiedName: String,
-    override val name: String,
+    val qualifiedName: String,
+    val name: String,
     val typeParameterNames: List<String>,
     val returnType: IrType,
     val parameterTypes: List<IrType>,
     val parameterNames: List<String>,
+    val visibility: Visibility,
+    val modality: Modality,
+    val isExpect: Boolean,
+    var locals: List<LocalInfo> = emptyList(),
     override var annotations: Map<IrType, List<AnnotationUsageInfo>> = emptyMap()
 ) : ElementInfo, AnnotatedElement {
     companion object {
@@ -60,11 +84,23 @@ internal data class FunctionInfo(
             returnType: IrType,
             parameterTypes: List<IrType>,
             parameterNames: List<String>,
+            visibility: Visibility,
+            modality: Modality,
+            isExpect: Boolean,
             hashTransform: (Int) -> Int = { it },
             createCallback: FunctionInfo.() -> Unit = {}
         ): FunctionInfo = cache.getOrPut(hashTransform(getCacheKey(qualifiedName, returnType, parameterTypes))) {
             FunctionInfo(
-                location, qualifiedName, name, typeParameterNames, returnType, parameterTypes, parameterNames
+                location = location,
+                qualifiedName = qualifiedName,
+                name = name,
+                typeParameterNames = typeParameterNames,
+                returnType = returnType,
+                parameterTypes = parameterTypes,
+                parameterNames = parameterNames,
+                visibility = visibility,
+                modality = modality,
+                isExpect = isExpect
             ).apply(createCallback)
         }
     }
@@ -75,7 +111,7 @@ internal data class FunctionInfo(
             endOffset = SYNTHETIC_OFFSET,
             type = functionInfoType.defaultType,
             symbol = functionInfoGetOrCreate,
-            valueArgumentsCount = 8,
+            valueArgumentsCount = 12,
             typeArgumentsCount = 0,
             contextParameterCount = 0,
             hasDispatchReceiver = true,
@@ -83,28 +119,39 @@ internal data class FunctionInfo(
         ).apply { // @formatter:off
             var index = 0
             // location
-            putValueArgument(index++, location.instantiateCached())
+            putValueArgument(index++, location.instantiateCached(context))
             // qualifiedName
             putValueArgument(index++, qualifiedName.toIrConst(irBuiltIns.stringType))
             // name
             putValueArgument(index++, name.toIrConst(irBuiltIns.stringType))
             // typeParameterNames
-            putValueArgument(
-                index++, createListOf(
+            putValueArgument(index++, createListOf(
                 type = irBuiltIns.stringType,
-                values = typeParameterNames.map { it.toIrConst(irBuiltIns.stringType) }))
+                values = typeParameterNames.map { it.toIrConst(irBuiltIns.stringType) })
+            )
             // returnType
-            putValueArgument(index++, returnType.toClassReference())
+            putValueArgument(index++, returnType.toClassReference(context))
             // parameterTypes
-            putValueArgument(
-                index++, createListOf(
+            putValueArgument(index++, createListOf(
                 type = irBuiltIns.kClassClass.starProjectedType,
-                values = parameterTypes.map { it.type.toIrValue() }))
+                values = parameterTypes.map { it.type.toIrValue() })
+            )
             // parameterNames
-            putValueArgument(
-                index++, createListOf(
+            putValueArgument(index++, createListOf(
                 type = irBuiltIns.stringType,
-                values = parameterNames.map { it.toIrConst(irBuiltIns.stringType) }))
+                values = parameterNames.map { it.toIrConst(irBuiltIns.stringType) })
+            )
+            // visibility
+            putValueArgument(index++, visibility.getEnumValue(visibilityModifierType) { getVisibilityName() })
+            // modality
+            putValueArgument(index++, modality.getEnumValue(modalityModifierType) { getModalityName() })
+            // locals
+            putValueArgument(index++, createListOf(
+                type = localInfoType.defaultType,
+                values = locals.map { it.instantiateCached(context) }
+            ))
+            // isExpect
+            putValueArgument(index++, isExpect.toIrConst(irBuiltIns.booleanType))
             // annotations
             putValueArgument(index, instantiateAnnotations(context))
             dispatchReceiver = functionInfoCompanionType.getObjectInstance()
@@ -128,4 +175,64 @@ internal data class FunctionInfo(
             && returnType == other.returnType
             && parameterTypes == other.parameterTypes
     } // @formatter:on
+}
+
+internal fun IrFunction.getFunctionInfo( // @formatter:off
+    module: IrModuleFragment,
+    file: IrFile,
+    source: List<String>,
+): FunctionInfo {
+    val regularParams = valueParameters.filter { it.kind == Regular }
+    return FunctionInfo.getOrCreate(
+        location = getFunctionLocation(module, file, source),
+        qualifiedName = kotlinFqName.asString(),
+        name = name.asString(),
+        typeParameterNames = typeParameters.map { it.name.asString() },
+        returnType = returnType,
+        parameterTypes = regularParams.map { it.type },
+        parameterNames = regularParams.map { it.name.asString() },
+        visibility = visibility.delegate,
+        modality = getModality(),
+        isExpect = isExpect,
+        hashTransform = { hash -> 31 * hash + parent.hashCode() }
+    ) { // @formatter:on
+        annotations = this@getFunctionInfo.annotations.toAnnotationMap(module, file, source)
+        this@getFunctionInfo.body?.let { body ->
+            val visitor = VariableDiscoveryVisitor()
+            body.acceptVoid(visitor)
+            locals = visitor.variables.map { variable ->
+                variable.getLocalInfo(module, file, source, this@getFunctionInfo)
+            }
+        }
+    }
+}
+
+@OptIn(UnsafeDuringIrConstructionAPI::class)
+internal fun IrAnonymousInitializer.getFunctionInfo( // @formatter:off
+    module: IrModuleFragment,
+    file: IrFile,
+    source: List<String>
+): FunctionInfo { // @formatter:on
+    val constructor = requireNotNull(parentAsClass.primaryConstructor) { "Missing primary class constructor" }
+    val regularParams = constructor.valueParameters.filter { it.kind == Regular }
+    return FunctionInfo.getOrCreate( // @formatter:off
+        location = getLocation(module, file, source),
+        qualifiedName = constructor.kotlinFqName.asString(),
+        name = constructor.name.asString(),
+        typeParameterNames = constructor.typeParameters.map { it.name.asString() },
+        returnType = constructor.returnType,
+        parameterTypes = regularParams.map { it.type },
+        parameterNames = regularParams.map { it.name.asString() },
+        visibility = constructor.visibility.delegate,
+        modality = constructor.getModality(),
+        isExpect = false,
+        hashTransform = { hash -> 31 * hash + parent.hashCode() }
+    ) { // @formatter:on
+        annotations = constructor.annotations.toAnnotationMap(module, file, source)
+        val visitor = VariableDiscoveryVisitor()
+        body.acceptVoid(visitor)
+        locals = visitor.variables.map { variable ->
+            variable.getLocalInfo(module, file, source, this@getFunctionInfo)
+        }
+    }
 }

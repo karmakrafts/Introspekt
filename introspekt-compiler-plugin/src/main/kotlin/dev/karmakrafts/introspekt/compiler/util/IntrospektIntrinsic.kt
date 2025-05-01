@@ -16,6 +16,13 @@
 
 package dev.karmakrafts.introspekt.compiler.util
 
+import dev.karmakrafts.introspekt.compiler.IntrospektPluginContext
+import org.jetbrains.kotlin.ir.expressions.impl.IrCallImpl
+import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
+import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
+import org.jetbrains.kotlin.ir.types.IrType
+import org.jetbrains.kotlin.ir.types.defaultType
+import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
 import org.jetbrains.kotlin.name.CallableId
 
 internal enum class IntrinsicResultType {
@@ -46,4 +53,34 @@ internal enum class IntrospektIntrinsic( // @formatter:off
     CI_CURRENT              (true,  IntrinsicResultType.CLASS_INFO,         IntrospektNames.ClassInfo.Companion.current),
     CI_OF                   (false, IntrinsicResultType.CLASS_INFO,         IntrospektNames.ClassInfo.Companion.of);
     // @formatter:on
+
+    private fun IntrospektPluginContext.getType(): IrType = when (resultType) {
+        IntrinsicResultType.SOURCE_LOCATION -> sourceLocationType.defaultType
+        IntrinsicResultType.FUNCTION_INFO -> functionInfoType.defaultType
+        IntrinsicResultType.CLASS_INFO -> classInfoType.defaultType
+        IntrinsicResultType.INT -> irBuiltIns.intType
+    }
+
+    private fun IntrospektPluginContext.getSymbol(): IrSimpleFunctionSymbol {
+        return referenceFunctions(functionId).first()
+    }
+
+    @OptIn(UnsafeDuringIrConstructionAPI::class)
+    fun createCall( // @formatter:off
+        context: IntrospektPluginContext,
+        startOffset: Int = SYNTHETIC_OFFSET,
+        endOffset: Int = SYNTHETIC_OFFSET
+    ): IrCallImpl = with(context) { // @formatter:on
+        IrCallImpl( // @formatter:off
+            startOffset = startOffset,
+            endOffset = endOffset,
+            type = getType(),
+            symbol = getSymbol()
+        ).apply { // @formatter:on
+            functionId.classId?.let(::referenceClass)?.let { classSymbol ->
+                check(classSymbol.owner.isCompanion) { "Intrinsic parent must be a companion object or the top level scope" }
+                dispatchReceiver = classSymbol.getObjectInstance()
+            }
+        }
+    }
 }

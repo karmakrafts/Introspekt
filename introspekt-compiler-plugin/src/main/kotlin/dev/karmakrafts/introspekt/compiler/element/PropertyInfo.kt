@@ -18,54 +18,67 @@ package dev.karmakrafts.introspekt.compiler.element
 
 import dev.karmakrafts.introspekt.compiler.IntrospektPluginContext
 import dev.karmakrafts.introspekt.compiler.util.SourceLocation
+import dev.karmakrafts.introspekt.compiler.util.getLocation
+import dev.karmakrafts.introspekt.compiler.util.getModalityName
+import dev.karmakrafts.introspekt.compiler.util.getVisibilityName
+import dev.karmakrafts.introspekt.compiler.util.toClassReference
 import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.descriptors.Visibility
+import org.jetbrains.kotlin.ir.declarations.IrFile
+import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
+import org.jetbrains.kotlin.ir.declarations.IrProperty
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.impl.IrCallImplWithShape
 import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.defaultType
 import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
+import org.jetbrains.kotlin.ir.util.fqNameWhenAvailable
 import org.jetbrains.kotlin.ir.util.toIrConst
-import org.jetbrains.kotlin.it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
 
 internal data class PropertyInfo(
     val location: SourceLocation,
-    override val qualifiedName: String,
-    override val name: String,
-    val type: IrType,
+    val qualifiedName: String,
+    val name: String,
     val isMutable: Boolean,
     val visibility: Visibility,
     val modality: Modality,
-    val getter: FunctionInfo,
+    val isExpect: Boolean,
+    val isDelegated: Boolean,
+    val backingField: FieldInfo?,
+    val getter: FunctionInfo?,
     val setter: FunctionInfo?,
     override var annotations: Map<IrType, List<AnnotationUsageInfo>> = emptyMap()
 ) : ElementInfo, AnnotatedElement {
     companion object {
-        private val cache: Int2ObjectOpenHashMap<PropertyInfo> = Int2ObjectOpenHashMap()
-
-        private fun getCacheKey(
-            qualifiedName: String, type: IrType
-        ): Int {
-            var result = qualifiedName.hashCode()
-            result = 31 * result + type.hashCode()
-            return result
-        }
+        private val cache: HashMap<String, PropertyInfo> = HashMap()
 
         inline fun getOrCreate(
             location: SourceLocation,
             qualifiedName: String,
             name: String,
-            type: IrType,
             isMutable: Boolean,
             visibility: Visibility,
             modality: Modality,
-            getter: FunctionInfo,
+            isExpect: Boolean,
+            isDelegated: Boolean,
+            backingField: FieldInfo?,
+            getter: FunctionInfo?,
             setter: FunctionInfo?,
             createCallback: PropertyInfo.() -> Unit = {}
-        ): PropertyInfo = cache.getOrPut(getCacheKey(qualifiedName, type)) {
-            PropertyInfo(location, qualifiedName, name, type, isMutable, visibility, modality, getter, setter).apply(
-                createCallback
-            )
+        ): PropertyInfo = cache.getOrPut(qualifiedName) {
+            PropertyInfo(
+                location = location,
+                qualifiedName = qualifiedName,
+                name = name,
+                isMutable = isMutable,
+                visibility = visibility,
+                modality = modality,
+                isExpect = isExpect,
+                isDelegated = isDelegated,
+                backingField = backingField,
+                getter = getter,
+                setter = setter
+            ).apply(createCallback)
         }
     }
 
@@ -76,28 +89,32 @@ internal data class PropertyInfo(
             type = propertyInfoType.defaultType,
             symbol = propertyInfoGetOrCreate,
             typeArgumentsCount = 0,
-            valueArgumentsCount = 10,
+            valueArgumentsCount = 12,
             contextParameterCount = 0,
             hasDispatchReceiver = true,
             hasExtensionReceiver = false
         ).apply { // @formatter:off
             var index = 0
             // location
-            putValueArgument(index++, location.instantiateCached())
+            putValueArgument(index++, location.instantiateCached(context))
             // qualifiedName
             putValueArgument(index++, qualifiedName.toIrConst(irBuiltIns.stringType))
             // name
             putValueArgument(index++, name.toIrConst(irBuiltIns.stringType))
-            // type
-            putValueArgument(index++, this@PropertyInfo.type.toClassReference())
             // isMutable
             putValueArgument(index++, isMutable.toIrConst(irBuiltIns.booleanType))
             // visibility
             putValueArgument(index++, visibility.getEnumValue(visibilityModifierType) { getVisibilityName() })
             // modality
             putValueArgument(index++, modality.getEnumValue(modalityModifierType) { getModalityName() })
+            // isExpect
+            putValueArgument(index++, isExpect.toIrConst(irBuiltIns.booleanType))
+            // isDelegated
+            putValueArgument(index++, isDelegated.toIrConst(irBuiltIns.booleanType))
+            // backingField
+            putValueArgument(index++, backingField?.instantiateCached(context) ?: null.toIrConst(fieldInfoType.defaultType))
             // getter
-            putValueArgument(index++, getter.instantiateCached(context))
+            putValueArgument(index++, getter?.instantiateCached(context) ?: null.toIrConst(functionInfoType.defaultType))
             // setter
             putValueArgument(index++, setter?.instantiateCached(context) ?: null.toIrConst(functionInfoType.defaultType))
             // annotations
@@ -107,15 +124,31 @@ internal data class PropertyInfo(
     }
 
     // Modifiers are not relevant to identity hash
-    override fun hashCode(): Int {
-        var result = qualifiedName.hashCode()
-        result = 31 * result + type.hashCode()
-        return result
-    }
+    override fun hashCode(): Int = qualifiedName.hashCode()
 
     // Modifiers are not relevant to value equality
     override fun equals(other: Any?): Boolean {
         return if (other !is PropertyInfo) false
-        else qualifiedName == other.qualifiedName && type == other.type
+        else qualifiedName == other.qualifiedName
     }
 }
+
+internal fun IrProperty.getPropertyInfo( // @formatter:off
+    module: IrModuleFragment,
+    file: IrFile,
+    source: List<String>
+): PropertyInfo = PropertyInfo.getOrCreate(
+    location = getLocation(module, file, source),
+    qualifiedName = requireNotNull(fqNameWhenAvailable) {
+        "Could not obtain fully qualified name of property ${this@getPropertyInfo}"
+    }.asString(),
+    name = name.asString(),
+    isMutable = isVar,
+    visibility = visibility.delegate,
+    modality = modality,
+    isExpect = isExpect,
+    isDelegated = isDelegated,
+    backingField = backingField?.getFieldInfo(module, file, source),
+    getter = getter?.getFunctionInfo(module, file, source),
+    setter = setter?.getFunctionInfo(module, file, source)
+) // @formatter:on

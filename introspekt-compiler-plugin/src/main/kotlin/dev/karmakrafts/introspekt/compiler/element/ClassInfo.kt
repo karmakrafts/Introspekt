@@ -19,15 +19,29 @@ package dev.karmakrafts.introspekt.compiler.element
 import dev.karmakrafts.introspekt.compiler.IntrospektPluginContext
 import dev.karmakrafts.introspekt.compiler.util.ClassModifier
 import dev.karmakrafts.introspekt.compiler.util.SourceLocation
+import dev.karmakrafts.introspekt.compiler.util.getClassModifier
+import dev.karmakrafts.introspekt.compiler.util.getCompanionObjects
+import dev.karmakrafts.introspekt.compiler.util.getLocation
+import dev.karmakrafts.introspekt.compiler.util.getModalityName
+import dev.karmakrafts.introspekt.compiler.util.getVisibilityName
+import dev.karmakrafts.introspekt.compiler.util.toAnnotationMap
+import dev.karmakrafts.introspekt.compiler.util.toClassReference
 import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.descriptors.Visibility
+import org.jetbrains.kotlin.ir.declarations.IrClass
+import org.jetbrains.kotlin.ir.declarations.IrFile
+import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.impl.IrCallImplWithShape
+import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.classFqName
 import org.jetbrains.kotlin.ir.types.defaultType
-import org.jetbrains.kotlin.ir.types.typeWith
 import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
+import org.jetbrains.kotlin.ir.util.functions
+import org.jetbrains.kotlin.ir.util.isInterface
+import org.jetbrains.kotlin.ir.util.isObject
+import org.jetbrains.kotlin.ir.util.properties
 import org.jetbrains.kotlin.ir.util.toIrConst
 
 internal data class ClassInfo(
@@ -38,6 +52,7 @@ internal data class ClassInfo(
     val isInterface: Boolean,
     val isObject: Boolean,
     val isCompanionObject: Boolean,
+    val isExpect: Boolean,
     val visibility: Visibility,
     val modality: Modality,
     val classType: ClassModifier?,
@@ -56,31 +71,35 @@ internal data class ClassInfo(
             isInterface: Boolean,
             isObject: Boolean,
             isCompanionObject: Boolean,
+            isExpect: Boolean,
             visibility: Visibility,
             modality: Modality,
             classType: ClassModifier?,
             createCallback: ClassInfo.() -> Unit = {}
         ): ClassInfo = cache.getOrPut(type) {
             ClassInfo(
-                location,
-                type,
-                typeParameterNames,
-                companionObjects,
-                isInterface,
-                isObject,
-                isCompanionObject,
-                visibility,
-                modality,
-                classType
+                location = location,
+                type = type,
+                typeParameterNames = typeParameterNames,
+                companionObjects = companionObjects,
+                isInterface = isInterface,
+                isObject = isObject,
+                isCompanionObject = isCompanionObject,
+                isExpect = isExpect,
+                visibility = visibility,
+                modality = modality,
+                classType = classType
             ).apply(createCallback)
         }
     }
 
-    override val name: String
+    inline val name: String
         get() = type.classFqName?.shortName()?.asString() ?: "n/a"
-    override val qualifiedName: String
+
+    inline val qualifiedName: String
         get() = type.classFqName?.asString() ?: "n/a"
 
+    @OptIn(UnsafeDuringIrConstructionAPI::class)
     override fun instantiateCached(context: IntrospektPluginContext): IrCall = with(context) {
         return IrCallImplWithShape(
             startOffset = SYNTHETIC_OFFSET,
@@ -88,20 +107,20 @@ internal data class ClassInfo(
             type = classInfoType.defaultType,
             symbol = classInfoGetOrCreate,
             typeArgumentsCount = 0,
-            valueArgumentsCount = 15,
+            valueArgumentsCount = 16,
             contextParameterCount = 0,
             hasDispatchReceiver = true,
             hasExtensionReceiver = false
         ).apply { // @formatter:off
             var index = 0
             // location
-            putValueArgument(index++, location.instantiateCached())
-            // type
-            putValueArgument(index++, this@ClassInfo.type.toClassReference())
+            putValueArgument(index++, location.instantiateCached(context))
             // qualifiedName
             putValueArgument(index++, qualifiedName.toIrConst(irBuiltIns.stringType))
             // name
             putValueArgument(index++, name.toIrConst(irBuiltIns.stringType))
+            // type
+            putValueArgument(index++, this@ClassInfo.type.toClassReference(context))
             // typeParameterNames
             putValueArgument(index++, createListOf(
                 type = irBuiltIns.stringType,
@@ -130,6 +149,8 @@ internal data class ClassInfo(
             putValueArgument(index++, isObject.toIrConst(irBuiltIns.booleanType))
             // isCompanionObject
             putValueArgument(index++, isCompanionObject.toIrConst(irBuiltIns.booleanType))
+            // isExpect
+            putValueArgument(index++, isExpect.toIrConst(irBuiltIns.booleanType))
             // visibility
             putValueArgument(index++, visibility.getEnumValue(visibilityModifierType) { getVisibilityName() })
             // modality
@@ -149,4 +170,27 @@ internal data class ClassInfo(
         return if (other !is ClassInfo) false
         else type === other.type // Use type identity
     }
+}
+
+@OptIn(UnsafeDuringIrConstructionAPI::class)
+internal fun IrClass.getClassInfo( // @formatter:off
+    module: IrModuleFragment,
+    file: IrFile,
+    source: List<String>
+): ClassInfo = ClassInfo.getOrCreate(
+    location = getLocation(module, file, source),
+    type = symbol.defaultType,
+    typeParameterNames = typeParameters.map { it.name.asString() },
+    companionObjects = getCompanionObjects().map { it.getClassInfo(module, file, source) },
+    isInterface = isInterface,
+    isObject = isObject,
+    isCompanionObject = isCompanion,
+    isExpect = isExpect,
+    visibility = visibility.delegate,
+    modality = modality,
+    classType = getClassModifier()
+) {
+    functions = this@getClassInfo.functions.map { it.getFunctionInfo(module, file, source) }.toList()
+    properties = this@getClassInfo.properties.map { it.getPropertyInfo(module, file, source) }.toList()
+    annotations = this@getClassInfo.annotations.toAnnotationMap(module, file, source)
 }

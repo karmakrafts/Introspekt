@@ -28,18 +28,32 @@ internal object IntrospektNames {
         val listOf: Name = Name.identifier("listOf")
         val mapOf: Name = Name.identifier("mapOf")
         val of: Name = Name.identifier("of")
+        val getOrCreate: Name = Name.identifier("getOrCreate")
+        val current: Name = Name.identifier("current")
+
         val ofClass: Name = Name.identifier("ofClass")
         val ofFunction: Name = Name.identifier("ofFunction")
         val here: Name = Name.identifier("here")
         val hereHash: Name = Name.identifier("hereHash")
-        val current: Name = Name.identifier("current")
+
         val currentFunction: Name = Name.identifier("currentFunction")
         val currentFunctionHash: Name = Name.identifier("currentFunctionHash")
+
         val currentClass: Name = Name.identifier("currentClass")
         val currentClassHash: Name = Name.identifier("currentClassHash")
-        val getOrCreate: Name = Name.identifier("getOrCreate")
-        val push: Name = Name.identifier("push")
-        val pop: Name = Name.identifier("pop")
+
+        val enter: Name = Name.identifier("enter")
+        val leave: Name = Name.identifier("leave")
+
+        val event: Name = Name.identifier("event")
+
+        val call: Name = Name.identifier("call")
+        val enterFunction: Name = Name.identifier("enterFunction")
+        val leaveFunction: Name = Name.identifier("leaveFunction")
+        val loadProperty: Name = Name.identifier("loadProperty")
+        val storeProperty: Name = Name.identifier("storeProperty")
+        val loadLocal: Name = Name.identifier("loadLocal")
+        val storeLocal: Name = Name.identifier("storeLocal")
     }
 
     object Kotlin {
@@ -112,12 +126,6 @@ internal object IntrospektNames {
         }
     }
 
-    object ElementInfo {
-        val name: Name = Name.identifier("ElementInfo")
-        val id: ClassId = ClassId(packageName, name)
-        val fqName: FqName = id.asSingleFqName()
-    }
-
     object FunctionInfo {
         val name: Name = Name.identifier("FunctionInfo")
         val id: ClassId = ClassId(packageName, name)
@@ -167,6 +175,32 @@ internal object IntrospektNames {
         }
     }
 
+    object FieldInfo {
+        val name: Name = Name.identifier("FieldInfo")
+        val id: ClassId = ClassId(packageName, name)
+        val fqName: FqName = id.asSingleFqName()
+
+        object Companion {
+            val fqName: FqName = FqName("FieldInfo.Companion")
+            val id: ClassId = ClassId(packageName, fqName, false)
+
+            val getOrCreate: CallableId = CallableId(packageName, fqName, Functions.getOrCreate)
+        }
+    }
+
+    object LocalInfo {
+        val name: Name = Name.identifier("LocalInfo")
+        val id: ClassId = ClassId(packageName, name)
+        val fqName: FqName = id.asSingleFqName()
+
+        object Companion {
+            val fqName: FqName = FqName("LocalInfo.Companion")
+            val id: ClassId = ClassId(packageName, fqName, false)
+
+            val getOrCreate: CallableId = CallableId(packageName, fqName, Functions.getOrCreate)
+        }
+    }
+
     object IntrospektIntrinsic {
         val name: Name = Name.identifier("IntrospektIntrinsic")
         val id: ClassId = ClassId(packageName, name)
@@ -185,6 +219,39 @@ internal object IntrospektNames {
         val fqName: FqName = id.asSingleFqName()
     }
 
+    object TraceCollector {
+        val name: Name = Name.identifier("TraceCollector")
+        val id: ClassId = ClassId(packageName, name)
+        val fqName: FqName = id.asSingleFqName()
+
+        object Companion {
+            val fqName: FqName = FqName("TraceCollector.Companion")
+            val id: ClassId = ClassId(packageName, fqName, false)
+
+            val enterFunction: CallableId = CallableId(packageName, fqName, Functions.enterFunction)
+            val leaveFunction: CallableId = CallableId(packageName, fqName, Functions.leaveFunction)
+            val call: CallableId = CallableId(packageName, fqName, Functions.call)
+            val loadProperty: CallableId = CallableId(packageName, fqName, Functions.loadProperty)
+            val storeProperty: CallableId = CallableId(packageName, fqName, Functions.storeProperty)
+            val loadLocal: CallableId = CallableId(packageName, fqName, Functions.loadLocal)
+            val storeLocal: CallableId = CallableId(packageName, fqName, Functions.storeLocal)
+        }
+    }
+
+    object TraceSpan {
+        val name: Name = Name.identifier("TraceSpan")
+        val id: ClassId = ClassId(packageName, name)
+        val fqName: FqName = id.asSingleFqName()
+
+        object Companion {
+            val fqName: FqName = FqName("TraceSpan.Companion")
+            val id: ClassId = ClassId(packageName, fqName, false)
+
+            val enter: CallableId = CallableId(packageName, fqName, Functions.enter)
+            val leave: CallableId = CallableId(packageName, fqName, Functions.leave)
+        }
+    }
+
     object Trace {
         val name: Name = Name.identifier("Trace")
         val id: ClassId = ClassId(packageName, name)
@@ -193,6 +260,8 @@ internal object IntrospektNames {
         object Companion {
             val fqName: FqName = FqName("Trace.Companion")
             val id: ClassId = ClassId(packageName, fqName, false)
+
+            val event: CallableId = CallableId(packageName, fqName, Functions.event)
         }
     }
 }

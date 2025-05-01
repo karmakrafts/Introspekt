@@ -16,17 +16,23 @@
 
 package dev.karmakrafts.introspekt.compiler.util
 
-enum class TraceType {
+import org.jetbrains.kotlin.name.FqName
+import org.jetbrains.kotlin.name.Name
+
+internal enum class TraceType(
+    val className: FqName,
+    val functionName: Name
+) {
     // @formatter:off
-    SPAN_ENTER,
-    SPAN_LEAVE,
-    FUNCTION_ENTER,
-    FUNCTION_LEAVE,
-    PROPERTY_LOAD,
-    PROPERTY_STORE,
-    LOCAL_LOAD,
-    LOCAL_STORE,
-    CALL,
-    EVENT;
+    SPAN_ENTER      (IntrospektNames.TraceSpan.Companion.fqName,        IntrospektNames.Functions.enter),
+    SPAN_LEAVE      (IntrospektNames.TraceSpan.Companion.fqName,        IntrospektNames.Functions.leave),
+    FUNCTION_ENTER  (IntrospektNames.TraceCollector.Companion.fqName,   IntrospektNames.Functions.enterFunction),
+    FUNCTION_LEAVE  (IntrospektNames.TraceCollector.Companion.fqName,   IntrospektNames.Functions.leaveFunction),
+    PROPERTY_LOAD   (IntrospektNames.TraceCollector.Companion.fqName,   IntrospektNames.Functions.loadProperty),
+    PROPERTY_STORE  (IntrospektNames.TraceCollector.Companion.fqName,   IntrospektNames.Functions.storeProperty),
+    LOCAL_LOAD      (IntrospektNames.TraceCollector.Companion.fqName,   IntrospektNames.Functions.loadLocal),
+    LOCAL_STORE     (IntrospektNames.TraceCollector.Companion.fqName,   IntrospektNames.Functions.storeLocal),
+    CALL            (IntrospektNames.TraceCollector.Companion.fqName,   IntrospektNames.Functions.call),
+    EVENT           (IntrospektNames.Trace.Companion.fqName,            IntrospektNames.Functions.event);
     // @formatter:on
 }

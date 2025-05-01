@@ -16,11 +16,6 @@
 
 package dev.karmakrafts.introspekt
 
-sealed interface ElementInfo {
-    val location: SourceLocation
-    val qualifiedName: String
-    val name: String
-
-    val packageName: String
-        get() = qualifiedName.substring(0..<qualifiedName.lastIndexOf(name) - 1)
+sealed interface ExpectableElementInfo : ElementInfo {
+    val isExpect: Boolean
 }

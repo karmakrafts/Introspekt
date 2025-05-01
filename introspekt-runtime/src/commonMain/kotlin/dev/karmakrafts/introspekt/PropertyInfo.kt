@@ -21,45 +21,62 @@ import kotlin.reflect.KClass
 
 data class PropertyInfo(
     override val location: SourceLocation,
-    val qualifiedName: String,
-    val name: String,
-    val type: KClass<*>,
+    override val qualifiedName: String,
+    override val name: String,
     val isMutable: Boolean,
     val visibility: VisibilityModifier,
     val modality: ModalityModifier,
-    val getter: FunctionInfo,
+    val isExpect: Boolean,
+    val isDelegated: Boolean,
+    val backingField: FieldInfo?,
+    val getter: FunctionInfo?,
     val setter: FunctionInfo?,
     override val annotations: Map<KClass<out Annotation>, List<AnnotationUsageInfo>>
 ) : AnnotatedElementInfo {
     companion object {
-        private val cache: SharedHashMap<Int, PropertyInfo> = SharedHashMap()
-
-        private fun getCacheKey(
-            qualifiedName: String, type: KClass<*>
-        ): Int {
-            var result = qualifiedName.hashCode()
-            result = 31 * result + type.hashCode()
-            return result
-        }
+        private val cache: SharedHashMap<String, PropertyInfo> = SharedHashMap()
 
         @IntrospektCompilerApi
         internal fun getOrCreate(
             location: SourceLocation,
             qualifiedName: String,
             name: String,
-            type: KClass<*>,
             isMutable: Boolean,
             visibility: VisibilityModifier,
             modality: ModalityModifier,
-            getter: FunctionInfo,
+            isExpect: Boolean,
+            isDelegated: Boolean,
+            backingField: FieldInfo?,
+            getter: FunctionInfo?,
             setter: FunctionInfo?,
             annotations: Map<KClass<out Annotation>, List<AnnotationUsageInfo>>
         ): PropertyInfo {
-            return cache.getOrPut(getCacheKey(qualifiedName, type)) {
-                PropertyInfo(location, qualifiedName, name, type, isMutable, visibility, modality, getter, setter, annotations)
+            return cache.getOrPut(qualifiedName) {
+                PropertyInfo(
+                    location = location,
+                    qualifiedName = qualifiedName,
+                    name = name,
+                    isMutable = isMutable,
+                    visibility = visibility,
+                    modality = modality,
+                    isExpect = isExpect,
+                    isDelegated = isDelegated,
+                    backingField = backingField,
+                    getter = getter,
+                    setter = setter,
+                    annotations = annotations
+                )
             }
         }
     }
+
+    inline val typeOrNull: KClass<*>?
+        get() = getter?.returnType // @formatter:off
+            ?: setter?.parameterTypes?.first()
+            ?: backingField?.type // @formatter:on
+
+    inline val type: KClass<*>
+        get() = typeOrNull ?: throw IllegalStateException("Could not determine type of property $qualifiedName")
 
     fun toFormattedString(indent: Int = 0): String {
         val indentString = "\t".repeat(indent)

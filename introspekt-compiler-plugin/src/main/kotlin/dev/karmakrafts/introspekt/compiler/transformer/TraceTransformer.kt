@@ -21,14 +21,13 @@ import org.jetbrains.kotlin.ir.declarations.IrAnonymousInitializer
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrFunction
 import org.jetbrains.kotlin.ir.expressions.IrBlockBody
-import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.IrStatementContainer
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.util.parentClassOrNull
 import org.jetbrains.kotlin.ir.util.primaryConstructor
 import org.jetbrains.kotlin.ir.visitors.IrVisitor
 
-internal class TraceTransformer : IrVisitor<Unit, TraceContext>() {
+internal abstract class TraceTransformer : IrVisitor<Unit, TraceContext>() {
     override fun visitElement(element: IrElement, data: TraceContext) {
         element.acceptChildren(this, data)
     }
@@ -59,9 +58,5 @@ internal class TraceTransformer : IrVisitor<Unit, TraceContext>() {
         super.visitAnonymousInitializer(declaration, data)
         if (hasConstructor) data.popTraceType()
         data.containerStack.pop()
-    }
-
-    override fun visitCall(expression: IrCall, data: TraceContext) {
-        super.visitCall(expression, data)
     }
 }

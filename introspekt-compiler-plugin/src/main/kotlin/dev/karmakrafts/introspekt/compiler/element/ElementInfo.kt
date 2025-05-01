@@ -20,7 +20,5 @@ import dev.karmakrafts.introspekt.compiler.IntrospektPluginContext
 import org.jetbrains.kotlin.ir.expressions.IrCall
 
 internal sealed interface ElementInfo {
-    val name: String
-    val qualifiedName: String
     fun instantiateCached(context: IntrospektPluginContext): IrCall
 }

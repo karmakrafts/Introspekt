@@ -18,6 +18,7 @@ package dev.karmakrafts.introspekt.compiler.transformer
 
 import dev.karmakrafts.introspekt.compiler.IntrospektPluginContext
 import dev.karmakrafts.introspekt.compiler.element.FunctionInfo
+import dev.karmakrafts.introspekt.compiler.element.getFunctionInfo
 import dev.karmakrafts.introspekt.compiler.util.SourceLocation
 import dev.karmakrafts.introspekt.compiler.util.getFunctionLocation
 import dev.karmakrafts.introspekt.compiler.util.getLocation
