@@ -16,9 +16,9 @@
 
 package dev.karmakrafts.introspekt.compiler.transformer
 
-import dev.karmakrafts.introspekt.compiler.util.IntrospektIntrinsic
 import dev.karmakrafts.introspekt.compiler.IntrospektPluginContext
 import dev.karmakrafts.introspekt.compiler.element.getClassInfo
+import dev.karmakrafts.introspekt.compiler.util.IntrospektIntrinsic
 import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.declarations.IrFile
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
@@ -45,7 +45,9 @@ internal class ClassInfoTransformer(
     override fun visitIntrinsic(
         type: IntrospektIntrinsic, expression: IrCall, context: IntrinsicContext
     ): IrElement = when (type) {
-        IntrospektIntrinsic.CI_CURRENT -> context.`class`.getClassInfo(moduleFragment, file, source).instantiateCached(pluginContext)
+        IntrospektIntrinsic.CI_CURRENT -> context.`class`.getClassInfo(moduleFragment, file, source)
+            .instantiateCached(pluginContext)
+
         IntrospektIntrinsic.CI_OF -> emitOf(expression)
         else -> error("Unsupported intrinsic for ClassInfoTransformer")
     }

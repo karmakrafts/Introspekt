@@ -52,7 +52,7 @@ class LocalInfo(
 
     fun toFormattedString(indent: Int = 0): String {
         var result = "\t".repeat(indent)
-        result += if(isMutable) "var " else "val "
+        result += if (isMutable) "var " else "val "
         result += "$name: ${type.getQualifiedName()}"
         return result
     }

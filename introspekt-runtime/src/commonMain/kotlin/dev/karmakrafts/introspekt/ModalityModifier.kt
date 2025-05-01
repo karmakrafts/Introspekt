@@ -17,10 +17,7 @@
 package dev.karmakrafts.introspekt
 
 enum class ModalityModifier {
-    ABSTRACT,
-    OPEN,
-    SEALED,
-    FINAL;
+    ABSTRACT, OPEN, SEALED, FINAL;
 
     override fun toString(): String = name.lowercase()
 }

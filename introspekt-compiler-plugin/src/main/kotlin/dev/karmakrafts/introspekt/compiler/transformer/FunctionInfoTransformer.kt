@@ -16,9 +16,9 @@
 
 package dev.karmakrafts.introspekt.compiler.transformer
 
-import dev.karmakrafts.introspekt.compiler.util.IntrospektIntrinsic
 import dev.karmakrafts.introspekt.compiler.IntrospektPluginContext
 import dev.karmakrafts.introspekt.compiler.element.getFunctionInfo
+import dev.karmakrafts.introspekt.compiler.util.IntrospektIntrinsic
 import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.declarations.IrFile
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment

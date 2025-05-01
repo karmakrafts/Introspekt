@@ -31,68 +31,68 @@ interface TraceCollector {
         }
 
         internal fun enterSpan(span: TraceSpan) {
-            for(collector in collectors) {
+            for (collector in collectors) {
                 collector.enterSpan(span)
             }
         }
 
         internal fun leaveSpan(span: TraceSpan, end: SourceLocation) {
-            for(collector in collectors) {
+            for (collector in collectors) {
                 collector.leaveSpan(span, end)
             }
         }
 
         internal fun event(event: TraceEvent) {
-            for(collector in collectors) {
+            for (collector in collectors) {
                 collector.event(event)
             }
         }
 
         @IntrospektCompilerApi
         internal fun enterFunction(function: FunctionInfo) {
-            for(collector in collectors) {
+            for (collector in collectors) {
                 collector.enterFunction(function)
             }
         }
 
         @IntrospektCompilerApi
         internal fun leaveFunction(function: FunctionInfo) {
-            for(collector in collectors) {
+            for (collector in collectors) {
                 collector.leaveFunction(function)
             }
         }
 
         @IntrospektCompilerApi
         internal fun call(callSite: CallInfo) {
-            for(collector in collectors) {
+            for (collector in collectors) {
                 collector.call(callSite)
             }
         }
 
         @IntrospektCompilerApi
         internal fun loadProperty(property: PropertyInfo) {
-            for(collector in collectors) {
+            for (collector in collectors) {
                 collector.loadProperty(property)
             }
         }
 
         @IntrospektCompilerApi
         internal fun storeProperty(property: PropertyInfo) {
-            for(collector in collectors) {
+            for (collector in collectors) {
                 collector.storeProperty(property)
             }
         }
 
         @IntrospektCompilerApi
         internal fun loadLocal(local: LocalInfo) {
-            for(collector in collectors) {
+            for (collector in collectors) {
                 collector.loadLocal(local)
             }
         }
 
         @IntrospektCompilerApi
         internal fun storeLocal(local: LocalInfo) {
-            for(collector in collectors) {
+            for (collector in collectors) {
                 collector.storeLocal(local)
             }
         }

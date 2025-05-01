@@ -18,7 +18,6 @@ package dev.karmakrafts.introspekt
 
 import co.touchlab.stately.collections.SharedHashMap
 import kotlin.reflect.KClass
-import kotlin.reflect.KFunction
 
 data class ClassInfo(
     override val location: SourceLocation,

@@ -17,7 +17,5 @@
 package dev.karmakrafts.introspekt.compiler.util
 
 enum class ClassModifier {
-    DATA,
-    VALUE,
-    ENUM
+    DATA, VALUE, ENUM
 }

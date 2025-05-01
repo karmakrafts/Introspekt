@@ -21,7 +21,6 @@ import dev.karmakrafts.introspekt.compiler.util.SourceLocation
 import dev.karmakrafts.introspekt.compiler.util.getLocation
 import dev.karmakrafts.introspekt.compiler.util.getModalityName
 import dev.karmakrafts.introspekt.compiler.util.getVisibilityName
-import dev.karmakrafts.introspekt.compiler.util.toClassReference
 import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.descriptors.Visibility
 import org.jetbrains.kotlin.ir.declarations.IrFile

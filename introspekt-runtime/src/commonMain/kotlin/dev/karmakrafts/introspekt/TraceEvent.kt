@@ -20,8 +20,5 @@ import kotlin.uuid.Uuid
 
 @ConsistentCopyVisibility
 data class TraceEvent internal constructor(
-    val location: SourceLocation,
-    val id: Uuid,
-    val message: String,
-    val data: Map<String, Any>
+    val location: SourceLocation, val id: Uuid, val message: String, val data: Map<String, Any>
 )

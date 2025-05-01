@@ -17,7 +17,5 @@
 package dev.karmakrafts.introspekt
 
 data class CallInfo(
-    val location: SourceLocation,
-    val caller: FunctionInfo,
-    val callee: FunctionInfo
+    val location: SourceLocation, val caller: FunctionInfo, val callee: FunctionInfo
 )

@@ -102,10 +102,8 @@ data class FunctionInfo(
         }
         val escapedName = if (' ' in name) "`$name`" else name
         result += "$escapedName($parameters): ${returnType.getQualifiedName()}"
-        if(locals.isNotEmpty()) {
-            for(local in locals) {
-                result += "\n${local.toFormattedString(indent + 1)}"
-            }
+        for (local in locals) {
+            result += "\n${local.toFormattedString(indent + 1)}"
         }
         return result
     }

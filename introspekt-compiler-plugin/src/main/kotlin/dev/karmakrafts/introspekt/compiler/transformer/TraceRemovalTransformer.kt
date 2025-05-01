@@ -34,10 +34,10 @@ internal class TraceRemovalTransformer : TraceTransformer() {
         // Find out if the target function is a trace function and if so, which type
         val callTraceType = expression.getTraceType() ?: return
         // If the called trace function isn't supposed to be handled by this transformer, we return early
-        if(callTraceType !in types) return
+        if (callTraceType !in types) return
         // Find out the trace types of the current parent scope (function or constructor)
         val parentTraceType = data.traceType
         // If the called trace function is present in the current trace scope, return early as calls may stay
-        if(callTraceType in parentTraceType) return
+        if (callTraceType in parentTraceType) return
     }
 }

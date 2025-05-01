@@ -17,10 +17,7 @@
 package dev.karmakrafts.introspekt
 
 enum class VisibilityModifier {
-    PUBLIC,
-    PROTECTED,
-    PRIVATE,
-    INTERNAL;
+    PUBLIC, PROTECTED, PRIVATE, INTERNAL;
 
     override fun toString(): String = name.lowercase()
 }

@@ -20,8 +20,7 @@ import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 
 internal enum class TraceType(
-    val className: FqName,
-    val functionName: Name
+    val className: FqName, val functionName: Name
 ) {
     // @formatter:off
     SPAN_ENTER      (IntrospektNames.TraceSpan.Companion.fqName,        IntrospektNames.Functions.enter),

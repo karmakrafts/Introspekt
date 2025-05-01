@@ -18,8 +18,4 @@ package dev.karmakrafts.introspekt.compiler.transformer
 
 import org.jetbrains.kotlin.ir.expressions.IrCall
 
-internal class TraceInjectionTransformer : TraceTransformer() {
-    override fun visitCall(expression: IrCall, data: TraceContext) {
-        super.visitCall(expression, data)
-    }
-}
+internal class TraceInjectionTransformer : TraceTransformer() {}

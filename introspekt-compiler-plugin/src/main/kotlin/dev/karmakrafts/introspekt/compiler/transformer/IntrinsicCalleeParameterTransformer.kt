@@ -57,7 +57,7 @@ internal class IntrinsicCalleeParameterTransformer(
             parameter.defaultValue = null
             shouldAnnotate = true
         }
-        if(!shouldAnnotate) return
+        if (!shouldAnnotate) return
         // Inject @CaptureCaller marker so we can reconstruct intrinsics @ the callsite(s) in index:name format
         declaration.annotations += pluginContext.createCaptureCaller(callsiteIntrinsics.map { (index, name) ->
             "$index:$name"

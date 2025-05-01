@@ -17,9 +17,7 @@
 package dev.karmakrafts.introspekt
 
 enum class ClassModifier {
-    DATA,
-    VALUE,
-    ENUM;
+    DATA, VALUE, ENUM;
 
     override fun toString(): String = name.lowercase()
 }

@@ -29,5 +29,8 @@ sealed interface AnnotatedElementInfo : ElementInfo {
 
 inline fun <reified A : Annotation> AnnotatedElementInfo.hasAnnotation(): Boolean = hasAnnotation(A::class)
 inline fun <reified A : Annotation> AnnotatedElementInfo.getAnnotation(): AnnotationUsageInfo = getAnnotation(A::class)
-inline fun <reified A : Annotation> AnnotatedElementInfo.getAnnotations(): List<AnnotationUsageInfo> = getAnnotations(A::class)
-inline fun <reified A : Annotation> AnnotatedElementInfo.getAnnotationOrNull(): AnnotationUsageInfo? = getAnnotationOrNull(A::class)
+inline fun <reified A : Annotation> AnnotatedElementInfo.getAnnotations(): List<AnnotationUsageInfo> =
+    getAnnotations(A::class)
+
+inline fun <reified A : Annotation> AnnotatedElementInfo.getAnnotationOrNull(): AnnotationUsageInfo? =
+    getAnnotationOrNull(A::class)
