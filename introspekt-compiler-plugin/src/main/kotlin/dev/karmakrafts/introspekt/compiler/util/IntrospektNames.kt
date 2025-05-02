@@ -30,6 +30,7 @@ internal object IntrospektNames {
         val of: Name = Name.identifier("of")
         val getOrCreate: Name = Name.identifier("getOrCreate")
         val current: Name = Name.identifier("current")
+        val create: Name = Name.identifier("create")
 
         val ofClass: Name = Name.identifier("ofClass")
         val ofFunction: Name = Name.identifier("ofFunction")
@@ -65,38 +66,32 @@ internal object IntrospektNames {
         object List {
             val name: Name = Name.identifier("List")
             val id: ClassId = ClassId(collectionsPackageName, name)
-            val fqName: FqName = id.asSingleFqName()
         }
 
         object Map {
             val name: Name = Name.identifier("Map")
             val id: ClassId = ClassId(collectionsPackageName, name)
-            val fqName: FqName = id.asSingleFqName()
         }
 
         object Pair {
             val name: Name = Name.identifier("Pair")
             val id: ClassId = ClassId(rootPackageName, name)
-            val fqName: FqName = id.asSingleFqName()
         }
 
         object Annotation {
             val name: Name = Name.identifier("Annotation")
             val id: ClassId = ClassId(rootPackageName, name)
-            val fqName: FqName = id.asSingleFqName()
         }
     }
 
     object VisibilityModifier {
         val name: Name = Name.identifier("VisibilityModifier")
         val id: ClassId = ClassId(packageName, name)
-        val fqName: FqName = id.asSingleFqName()
     }
 
     object ModalityModifier {
         val name: Name = Name.identifier("ModalityModifier")
         val id: ClassId = ClassId(packageName, name)
-        val fqName: FqName = id.asSingleFqName()
     }
 
     object ClassModifier {
@@ -129,7 +124,6 @@ internal object IntrospektNames {
     object FunctionInfo {
         val name: Name = Name.identifier("FunctionInfo")
         val id: ClassId = ClassId(packageName, name)
-        val fqName: FqName = id.asSingleFqName()
 
         object Companion {
             val fqName: FqName = FqName("FunctionInfo.Companion")
@@ -144,7 +138,6 @@ internal object IntrospektNames {
     object ClassInfo {
         val name: Name = Name.identifier("ClassInfo")
         val id: ClassId = ClassId(packageName, name)
-        val fqName: FqName = id.asSingleFqName()
 
         object Companion {
             val fqName: FqName = FqName("ClassInfo.Companion")
@@ -191,7 +184,6 @@ internal object IntrospektNames {
     object LocalInfo {
         val name: Name = Name.identifier("LocalInfo")
         val id: ClassId = ClassId(packageName, name)
-        val fqName: FqName = id.asSingleFqName()
 
         object Companion {
             val fqName: FqName = FqName("LocalInfo.Companion")
@@ -222,7 +214,6 @@ internal object IntrospektNames {
     object TraceCollector {
         val name: Name = Name.identifier("TraceCollector")
         val id: ClassId = ClassId(packageName, name)
-        val fqName: FqName = id.asSingleFqName()
 
         object Companion {
             val fqName: FqName = FqName("TraceCollector.Companion")
@@ -241,14 +232,24 @@ internal object IntrospektNames {
     object TraceSpan {
         val name: Name = Name.identifier("TraceSpan")
         val id: ClassId = ClassId(packageName, name)
-        val fqName: FqName = id.asSingleFqName()
 
         object Companion {
             val fqName: FqName = FqName("TraceSpan.Companion")
-            val id: ClassId = ClassId(packageName, fqName, false)
 
             val enter: CallableId = CallableId(packageName, fqName, Functions.enter)
             val leave: CallableId = CallableId(packageName, fqName, Functions.leave)
+        }
+    }
+
+    object FrameSnapshot {
+        val name: Name = Name.identifier("FrameSnapshot")
+        val id: ClassId = ClassId(packageName, name)
+
+        object Companion {
+            val fqName: FqName = FqName("FrameSnapshot.Companion")
+            val id: ClassId = ClassId(packageName, fqName, false)
+
+            val create: CallableId = CallableId(packageName, fqName, Functions.create)
         }
     }
 

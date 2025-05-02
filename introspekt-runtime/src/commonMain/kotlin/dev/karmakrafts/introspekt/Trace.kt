@@ -28,14 +28,13 @@ annotation class Trace( // @formatter:off
 ) { // @formatter:on
     companion object {
         @OptIn(GeneratedIntrospektApi::class)
-        @CaptureCaller("3:SL_HERE", "4:FI_CURRENT")
+        @CaptureCaller("3:SL_HERE")
         @IntrospektCompilerApi
         fun event(
             message: String,
             id: Uuid = Uuid.random(),
             data: Map<String, Any> = emptyMap(),
-            location: SourceLocation = SourceLocation.here(),
-            caller: FunctionInfo = FunctionInfo.current()
+            location: SourceLocation = SourceLocation.here()
         ) {
             TraceCollector.event(TraceEvent( // @formatter:off
                 location = location,

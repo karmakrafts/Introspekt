@@ -30,6 +30,7 @@ internal enum class IntrinsicResultType {
     SOURCE_LOCATION,
     FUNCTION_INFO,
     CLASS_INFO,
+    FRAME_SNAPSHOT,
     INT
     // @formatter:on
 }
@@ -51,13 +52,15 @@ internal enum class IntrospektIntrinsic( // @formatter:off
     FI_CURRENT              (true,  IntrinsicResultType.FUNCTION_INFO,      IntrospektNames.FunctionInfo.Companion.current),
     FI_OF                   (false, IntrinsicResultType.FUNCTION_INFO,      IntrospektNames.FunctionInfo.Companion.of),
     CI_CURRENT              (true,  IntrinsicResultType.CLASS_INFO,         IntrospektNames.ClassInfo.Companion.current),
-    CI_OF                   (false, IntrinsicResultType.CLASS_INFO,         IntrospektNames.ClassInfo.Companion.of);
+    CI_OF                   (false, IntrinsicResultType.CLASS_INFO,         IntrospektNames.ClassInfo.Companion.of),
+    FS_CREATE               (true,  IntrinsicResultType.FRAME_SNAPSHOT,     IntrospektNames.FrameSnapshot.Companion.create);
     // @formatter:on
 
     private fun IntrospektPluginContext.getType(): IrType = when (resultType) {
         IntrinsicResultType.SOURCE_LOCATION -> sourceLocationType.defaultType
         IntrinsicResultType.FUNCTION_INFO -> functionInfoType.defaultType
         IntrinsicResultType.CLASS_INFO -> classInfoType.defaultType
+        IntrinsicResultType.FRAME_SNAPSHOT -> frameSnapshotType.defaultType
         IntrinsicResultType.INT -> irBuiltIns.intType
     }
 

@@ -21,8 +21,10 @@ import dev.karmakrafts.introspekt.compiler.util.ClassModifier
 import dev.karmakrafts.introspekt.compiler.util.SourceLocation
 import dev.karmakrafts.introspekt.compiler.util.getClassModifier
 import dev.karmakrafts.introspekt.compiler.util.getCompanionObjects
+import dev.karmakrafts.introspekt.compiler.util.getEnumValue
 import dev.karmakrafts.introspekt.compiler.util.getLocation
 import dev.karmakrafts.introspekt.compiler.util.getModalityName
+import dev.karmakrafts.introspekt.compiler.util.getObjectInstance
 import dev.karmakrafts.introspekt.compiler.util.getVisibilityName
 import dev.karmakrafts.introspekt.compiler.util.toAnnotationMap
 import dev.karmakrafts.introspekt.compiler.util.toClassReference
@@ -36,7 +38,9 @@ import org.jetbrains.kotlin.ir.expressions.impl.IrCallImplWithShape
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.classFqName
+import org.jetbrains.kotlin.ir.types.classOrNull
 import org.jetbrains.kotlin.ir.types.defaultType
+import org.jetbrains.kotlin.ir.types.getClass
 import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
 import org.jetbrains.kotlin.ir.util.functions
 import org.jetbrains.kotlin.ir.util.isInterface
@@ -49,6 +53,7 @@ internal data class ClassInfo(
     val type: IrType,
     val typeParameterNames: List<String>,
     val companionObjects: List<ClassInfo>,
+    val superTypes: List<ClassInfo>,
     val isInterface: Boolean,
     val isObject: Boolean,
     val isCompanionObject: Boolean,
@@ -68,6 +73,7 @@ internal data class ClassInfo(
             type: IrType,
             typeParameterNames: List<String>,
             companionObjects: List<ClassInfo>,
+            superTypes: List<ClassInfo>,
             isInterface: Boolean,
             isObject: Boolean,
             isCompanionObject: Boolean,
@@ -82,6 +88,7 @@ internal data class ClassInfo(
                 type = type,
                 typeParameterNames = typeParameterNames,
                 companionObjects = companionObjects,
+                superTypes = superTypes,
                 isInterface = isInterface,
                 isObject = isObject,
                 isCompanionObject = isCompanionObject,
@@ -99,7 +106,6 @@ internal data class ClassInfo(
     inline val qualifiedName: String
         get() = type.classFqName?.asString() ?: "n/a"
 
-    @OptIn(UnsafeDuringIrConstructionAPI::class)
     override fun instantiateCached(context: IntrospektPluginContext): IrCall = with(context) {
         return IrCallImplWithShape(
             startOffset = SYNTHETIC_OFFSET,
@@ -107,7 +113,7 @@ internal data class ClassInfo(
             type = classInfoType.defaultType,
             symbol = classInfoGetOrCreate,
             typeArgumentsCount = 0,
-            valueArgumentsCount = 16,
+            valueArgumentsCount = 17,
             contextParameterCount = 0,
             hasDispatchReceiver = true,
             hasExtensionReceiver = false
@@ -143,6 +149,11 @@ internal data class ClassInfo(
                 type = classInfoType.defaultType,
                 values = companionObjects.map { it.instantiateCached(context) })
             )
+            // superTypes
+            putValueArgument(index++, createListOf(
+                type = classInfoType.defaultType,
+                values = superTypes.map { it.instantiateCached(context) }
+            ))
             // isInterface
             putValueArgument(index++, isInterface.toIrConst(irBuiltIns.booleanType))
             // isObject
@@ -176,12 +187,16 @@ internal data class ClassInfo(
 internal fun IrClass.getClassInfo( // @formatter:off
     module: IrModuleFragment,
     file: IrFile,
-    source: List<String>
+    source: List<String>,
+    context: IntrospektPluginContext
 ): ClassInfo = ClassInfo.getOrCreate(
     location = getLocation(module, file, source),
     type = symbol.defaultType,
     typeParameterNames = typeParameters.map { it.name.asString() },
-    companionObjects = getCompanionObjects().map { it.getClassInfo(module, file, source) },
+    companionObjects = getCompanionObjects().map { it.getClassInfo(module, file, source, context) },
+    superTypes = superTypes
+        .filter { it.classOrNull != null }
+        .mapNotNull { it.getClass()?.getClassInfo(module, file, source, context) },
     isInterface = isInterface,
     isObject = isObject,
     isCompanionObject = isCompanion,

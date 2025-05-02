@@ -68,6 +68,8 @@ data class SourceLocation( // @formatter:off
          */
         const val UNDEFINED_OFFSET: Int = -3
 
+        val undefined: SourceLocation = SourceLocation("", "", UNDEFINED_OFFSET, UNDEFINED_OFFSET)
+
         @IntrospektIntrinsic(IntrospektIntrinsic.Type.SL_HERE)
         fun here(): SourceLocation = throw IntrospektPluginNotAppliedException()
 

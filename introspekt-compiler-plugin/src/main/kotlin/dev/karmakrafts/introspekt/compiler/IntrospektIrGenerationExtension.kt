@@ -18,6 +18,7 @@ package dev.karmakrafts.introspekt.compiler
 
 import dev.karmakrafts.introspekt.compiler.transformer.ClassInfoTransformer
 import dev.karmakrafts.introspekt.compiler.transformer.CompilerApiTransformer
+import dev.karmakrafts.introspekt.compiler.transformer.FrameSnapshotTransformer
 import dev.karmakrafts.introspekt.compiler.transformer.FunctionInfoTransformer
 import dev.karmakrafts.introspekt.compiler.transformer.IntrinsicCalleeParameterTransformer
 import dev.karmakrafts.introspekt.compiler.transformer.IntrinsicCallerParameterTransformer
@@ -48,6 +49,7 @@ internal class IntrospektIrGenerationExtension : IrGenerationExtension {
             file.transform(SourceLocationTransformer(introspektContext, moduleFragment, file, source), context)
             file.transform(FunctionInfoTransformer(introspektContext, moduleFragment, file, source), context)
             file.transform(ClassInfoTransformer(introspektContext, moduleFragment, file, source), context)
+            file.transform(FrameSnapshotTransformer(introspektContext, moduleFragment, file, source), context)
         }
         val traceContext = TraceContext(introspektContext)
         moduleFragment.accept(TraceInjectionTransformer(), traceContext)

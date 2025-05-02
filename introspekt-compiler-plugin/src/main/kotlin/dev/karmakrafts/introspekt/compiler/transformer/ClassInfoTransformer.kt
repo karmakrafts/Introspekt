@@ -39,13 +39,13 @@ internal class ClassInfoTransformer(
     private fun emitOf(expression: IrCall): IrElement {
         return requireNotNull(expression.typeArguments.first()?.getClass()) {
             "Missing class type parameter"
-        }.getClassInfo(moduleFragment, file, source).instantiateCached(pluginContext)
+        }.getClassInfo(moduleFragment, file, source, pluginContext).instantiateCached(pluginContext)
     }
 
     override fun visitIntrinsic(
         type: IntrospektIntrinsic, expression: IrCall, context: IntrinsicContext
     ): IrElement = when (type) {
-        IntrospektIntrinsic.CI_CURRENT -> context.`class`.getClassInfo(moduleFragment, file, source)
+        IntrospektIntrinsic.CI_CURRENT -> context.`class`.getClassInfo(moduleFragment, file, source, pluginContext)
             .instantiateCached(pluginContext)
 
         IntrospektIntrinsic.CI_OF -> emitOf(expression)

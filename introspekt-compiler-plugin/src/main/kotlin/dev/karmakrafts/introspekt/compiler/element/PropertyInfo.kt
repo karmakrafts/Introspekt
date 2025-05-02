@@ -18,8 +18,10 @@ package dev.karmakrafts.introspekt.compiler.element
 
 import dev.karmakrafts.introspekt.compiler.IntrospektPluginContext
 import dev.karmakrafts.introspekt.compiler.util.SourceLocation
+import dev.karmakrafts.introspekt.compiler.util.getEnumValue
 import dev.karmakrafts.introspekt.compiler.util.getLocation
 import dev.karmakrafts.introspekt.compiler.util.getModalityName
+import dev.karmakrafts.introspekt.compiler.util.getObjectInstance
 import dev.karmakrafts.introspekt.compiler.util.getVisibilityName
 import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.descriptors.Visibility

@@ -19,6 +19,7 @@ package dev.karmakrafts.introspekt.compiler.element
 import dev.karmakrafts.introspekt.compiler.IntrospektPluginContext
 import dev.karmakrafts.introspekt.compiler.util.SourceLocation
 import dev.karmakrafts.introspekt.compiler.util.getLocation
+import dev.karmakrafts.introspekt.compiler.util.getObjectInstance
 import dev.karmakrafts.introspekt.compiler.util.toAnnotationMap
 import dev.karmakrafts.introspekt.compiler.util.toClassReference
 import org.jetbrains.kotlin.ir.declarations.IrAnonymousInitializer

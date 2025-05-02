@@ -32,7 +32,8 @@ annotation class IntrospektIntrinsic(val type: Type) {
         FI_CURRENT,
         FI_OF,
         CI_CURRENT,
-        CI_OF
+        CI_OF,
+        FS_CREATE
         // @formatter:on
     }
 }

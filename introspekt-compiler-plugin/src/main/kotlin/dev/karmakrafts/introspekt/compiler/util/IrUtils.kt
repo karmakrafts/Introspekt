@@ -25,6 +25,7 @@ import org.jetbrains.kotlin.descriptors.Visibility
 import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.declarations.IrAnnotationContainer
 import org.jetbrains.kotlin.ir.declarations.IrClass
+import org.jetbrains.kotlin.ir.declarations.IrEnumEntry
 import org.jetbrains.kotlin.ir.declarations.IrFile
 import org.jetbrains.kotlin.ir.declarations.IrFunction
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
@@ -41,10 +42,15 @@ import org.jetbrains.kotlin.ir.expressions.IrGetEnumValue
 import org.jetbrains.kotlin.ir.expressions.IrGetField
 import org.jetbrains.kotlin.ir.expressions.IrVararg
 import org.jetbrains.kotlin.ir.expressions.impl.IrClassReferenceImpl
+import org.jetbrains.kotlin.ir.expressions.impl.IrGetEnumValueImpl
+import org.jetbrains.kotlin.ir.expressions.impl.IrGetObjectValueImpl
+import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
+import org.jetbrains.kotlin.ir.symbols.IrEnumEntrySymbol
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.classFqName
 import org.jetbrains.kotlin.ir.types.classOrFail
+import org.jetbrains.kotlin.ir.types.defaultType
 import org.jetbrains.kotlin.ir.types.starProjectedType
 import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
 import org.jetbrains.kotlin.ir.util.hasAnnotation
@@ -176,13 +182,13 @@ internal fun IrAnnotationContainer.getTraceType(): List<TraceType> {
     else getAnnotationValues<TraceType>(IntrospektNames.Trace.fqName, "types").filterNotNull()
 }
 
-internal fun IrType.toClassReference(context: IntrospektPluginContext): IrClassReferenceImpl {
-    return IrClassReferenceImpl(
+internal fun IrType.toClassReference(context: IntrospektPluginContext): IrClassReferenceImpl = with(context) {
+    IrClassReferenceImpl(
         startOffset = SYNTHETIC_OFFSET,
         endOffset = SYNTHETIC_OFFSET,
-        type = context.irBuiltIns.kClassClass.starProjectedType,
+        type = irBuiltIns.kClassClass.starProjectedType,
         symbol = classOrFail,
-        classType = this
+        classType = this@toClassReference
     )
 }
 
@@ -269,3 +275,23 @@ internal fun IrClass.getClassModifier(): ClassModifier? = when {
     isEnumClass -> ClassModifier.ENUM
     else -> null
 }
+
+internal fun IrClassSymbol.getObjectInstance(): IrGetObjectValueImpl = IrGetObjectValueImpl(
+    startOffset = SYNTHETIC_OFFSET, endOffset = SYNTHETIC_OFFSET, type = defaultType, symbol = this@getObjectInstance
+)
+
+@OptIn(UnsafeDuringIrConstructionAPI::class)
+internal fun IrClassSymbol.getEnumConstant(name: String): IrEnumEntrySymbol {
+    return requireNotNull(
+        defaultType.classOrFail.owner.declarations.filterIsInstance<IrEnumEntry>()
+            .find { it.name.asString() == name }) { "No entry $name in $this" }.symbol
+}
+
+internal inline fun <T> T.getEnumValue(
+    type: IrClassSymbol, mapper: T.() -> String
+): IrGetEnumValueImpl = IrGetEnumValueImpl(
+    startOffset = SYNTHETIC_OFFSET,
+    endOffset = SYNTHETIC_OFFSET,
+    type = type.defaultType,
+    symbol = type.getEnumConstant(this.mapper())
+)

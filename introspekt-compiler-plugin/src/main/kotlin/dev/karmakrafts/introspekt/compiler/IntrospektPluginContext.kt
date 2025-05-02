@@ -20,25 +20,23 @@ import dev.karmakrafts.introspekt.compiler.util.IntrospektNames
 import dev.karmakrafts.introspekt.compiler.util.toClassReference
 import dev.karmakrafts.introspekt.compiler.util.toStdPair
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
-import org.jetbrains.kotlin.ir.declarations.IrEnumEntry
+import org.jetbrains.kotlin.ir.declarations.IrTypeParameter
 import org.jetbrains.kotlin.ir.expressions.IrClassReference
 import org.jetbrains.kotlin.ir.expressions.IrExpression
 import org.jetbrains.kotlin.ir.expressions.impl.IrCallImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrCallImplWithShape
 import org.jetbrains.kotlin.ir.expressions.impl.IrConstructorCallImpl
-import org.jetbrains.kotlin.ir.expressions.impl.IrGetEnumValueImpl
-import org.jetbrains.kotlin.ir.expressions.impl.IrGetObjectValueImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrVarargImpl
 import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
 import org.jetbrains.kotlin.ir.symbols.IrConstructorSymbol
-import org.jetbrains.kotlin.ir.symbols.IrEnumEntrySymbol
 import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.IrType
-import org.jetbrains.kotlin.ir.types.classOrFail
+import org.jetbrains.kotlin.ir.types.classifierOrFail
 import org.jetbrains.kotlin.ir.types.defaultType
 import org.jetbrains.kotlin.ir.types.typeWith
 import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
+import org.jetbrains.kotlin.ir.util.isTypeParameter
 import org.jetbrains.kotlin.ir.util.isVararg
 import org.jetbrains.kotlin.ir.util.toIrConst
 
@@ -58,6 +56,11 @@ internal data class IntrospektPluginContext(
     private val mapOfFunction: IrSimpleFunctionSymbol = pluginContext.referenceFunctions(IntrospektNames.Kotlin.mapOf)
         .find { symbol -> symbol.owner.valueParameters.any { it.isVararg } }!!
     private val mapType: IrClassSymbol = pluginContext.referenceClass(IntrospektNames.Kotlin.Map.id)!!
+
+    // FrameSnapshot
+    internal val frameSnapshotConstructor: IrConstructorSymbol =
+        pluginContext.referenceConstructors(IntrospektNames.FrameSnapshot.id).first()
+    internal val frameSnapshotType: IrClassSymbol = pluginContext.referenceClass(IntrospektNames.FrameSnapshot.id)!!
 
     // Pair
     internal val pairConstructor: IrConstructorSymbol =
@@ -235,36 +238,17 @@ internal data class IntrospektPluginContext(
         else -> null
     }
 
+    @OptIn(UnsafeDuringIrConstructionAPI::class)
     private fun Any.toIrValueOrNull(): IrExpression? = when (this@toIrValueOrNull) {
         is IrClassReference -> this@toIrValueOrNull
-        is IrType -> this@toIrValueOrNull.toClassReference(this@IntrospektPluginContext)
+        is IrType -> if (isTypeParameter()) (this@toIrValueOrNull.classifierOrFail.owner as IrTypeParameter).superTypes.first()
+            .toClassReference(this@IntrospektPluginContext)
+        else this@toIrValueOrNull.toClassReference(this@IntrospektPluginContext)
+
         is List<*> -> createListOf(irBuiltIns.anyType, this@toIrValueOrNull.mapNotNull { it?.toIrValue() })
         is Array<*> -> createListOf(irBuiltIns.anyType, this@toIrValueOrNull.mapNotNull { it?.toIrValue() })
         else -> this@toIrValueOrNull.getConstIrType()?.let { this@toIrValueOrNull.toIrConst(it) }
     }
 
     internal fun Any.toIrValue(): IrExpression = requireNotNull(toIrValueOrNull())
-
-    internal fun IrClassSymbol.getObjectInstance(): IrGetObjectValueImpl = IrGetObjectValueImpl(
-        startOffset = SYNTHETIC_OFFSET,
-        endOffset = SYNTHETIC_OFFSET,
-        type = defaultType,
-        symbol = this@getObjectInstance
-    )
-
-    @OptIn(UnsafeDuringIrConstructionAPI::class)
-    private fun IrClassSymbol.getEnumConstant(name: String): IrEnumEntrySymbol {
-        return requireNotNull(
-            defaultType.classOrFail.owner.declarations.filterIsInstance<IrEnumEntry>()
-                .find { it.name.asString() == name }) { "No entry $name in $this" }.symbol
-    }
-
-    internal inline fun <T> T.getEnumValue(
-        type: IrClassSymbol, mapper: T.() -> String
-    ): IrGetEnumValueImpl = IrGetEnumValueImpl(
-        startOffset = SYNTHETIC_OFFSET,
-        endOffset = SYNTHETIC_OFFSET,
-        type = type.defaultType,
-        symbol = type.getEnumConstant(this.mapper())
-    )
 }

@@ -19,7 +19,9 @@ package dev.karmakrafts.introspekt.compiler.transformer
 import dev.karmakrafts.introspekt.compiler.IntrospektPluginContext
 import dev.karmakrafts.introspekt.compiler.element.FunctionInfo
 import dev.karmakrafts.introspekt.compiler.element.getFunctionInfo
+import dev.karmakrafts.introspekt.compiler.util.FrameSnapshot
 import dev.karmakrafts.introspekt.compiler.util.SourceLocation
+import dev.karmakrafts.introspekt.compiler.util.createFrameSnapshot
 import dev.karmakrafts.introspekt.compiler.util.getFunctionLocation
 import dev.karmakrafts.introspekt.compiler.util.getLocation
 import org.jetbrains.kotlin.ir.declarations.IrAnonymousInitializer
@@ -28,6 +30,7 @@ import org.jetbrains.kotlin.ir.declarations.IrFile
 import org.jetbrains.kotlin.ir.declarations.IrFunction
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.expressions.IrBody
+import org.jetbrains.kotlin.ir.expressions.IrCall
 import java.util.*
 
 internal data class IntrinsicContext(val pluginContext: IntrospektPluginContext) {
@@ -54,6 +57,17 @@ internal data class IntrinsicContext(val pluginContext: IntrospektPluginContext)
     inline val bodyOrNull: IrBody?
         get() = bodyStack.firstOrNull()
 
+    fun getFrameSnapshot( // @formatter:off
+        module: IrModuleFragment,
+        file: IrFile,
+        source: List<String>,
+        intrinsicCall: IrCall
+    ): FrameSnapshot {
+        return functionStack.firstOrNull()?.createFrameSnapshot(module, file, source, intrinsicCall)
+            ?: initializerStack.firstOrNull()?.createFrameSnapshot(module, file, source, intrinsicCall)
+            ?: error("Not inside any function or initializer")
+    } // @formatter:on
+
     fun getFunctionLocation( // @formatter:off
         module: IrModuleFragment,
         file: IrFile,
@@ -61,20 +75,16 @@ internal data class IntrinsicContext(val pluginContext: IntrospektPluginContext)
     ): SourceLocation {
         return functionStack.firstOrNull()?.getFunctionLocation(module, file, source)
             ?: initializerStack.firstOrNull()?.getLocation(module, file, source)
-            ?: throw IllegalStateException("Not inside any function or initializer")
+            ?: error("Not inside any function or initializer")
     } // @formatter:on
 
     fun getFunctionInfo( // @formatter:off
         module: IrModuleFragment,
         file: IrFile,
         source: List<String>
-    ): FunctionInfo = with(pluginContext) {
-        val function = functionStack.firstOrNull()
-        if(function != null) {
-            return function.getFunctionInfo(module, file, source)
-        }
+    ): FunctionInfo {
         return functionStack.firstOrNull()?.getFunctionInfo(module, file, source)
             ?: initializerStack.firstOrNull()?.getFunctionInfo(module, file, source)
-            ?: throw IllegalStateException("Not inside any function or initializer")
+            ?: error("Not inside any function or initializer")
     } // @formatter:on
 }

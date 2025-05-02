@@ -22,21 +22,26 @@ import org.jetbrains.kotlin.ir.declarations.IrVariable
 import org.jetbrains.kotlin.ir.visitors.IrVisitorVoid
 import org.jetbrains.kotlin.ir.visitors.acceptChildrenVoid
 
-internal class VariableDiscoveryVisitor : IrVisitorVoid() {
+internal class VariableDiscoveryVisitor(
+    val visitUntil: (IrElement) -> Boolean = { false }
+) : IrVisitorVoid() {
     val variables: ArrayList<IrVariable> = ArrayList()
     private var isInScope: Boolean = true
 
     override fun visitElement(element: IrElement) {
+        if (visitUntil(element)) return
         element.acceptChildrenVoid(this)
     }
 
     override fun visitFunction(declaration: IrFunction) {
+        if (visitUntil(declaration)) return
         isInScope = false
         super.visitFunction(declaration)
         isInScope = true
     }
 
     override fun visitVariable(declaration: IrVariable) {
+        if (visitUntil(declaration)) return
         super.visitVariable(declaration)
         if (!isInScope) return
         variables += declaration
