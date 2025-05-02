@@ -22,6 +22,7 @@ import dev.karmakrafts.introspekt.compiler.element.getFunctionInfo
 import dev.karmakrafts.introspekt.compiler.util.FrameSnapshot
 import dev.karmakrafts.introspekt.compiler.util.SourceLocation
 import dev.karmakrafts.introspekt.compiler.util.createFrameSnapshot
+import dev.karmakrafts.introspekt.compiler.util.getFrameCaptureFilter
 import dev.karmakrafts.introspekt.compiler.util.getFunctionLocation
 import dev.karmakrafts.introspekt.compiler.util.getLocation
 import org.jetbrains.kotlin.ir.declarations.IrAnonymousInitializer
@@ -29,8 +30,11 @@ import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrFile
 import org.jetbrains.kotlin.ir.declarations.IrFunction
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
+import org.jetbrains.kotlin.ir.declarations.IrVariable
 import org.jetbrains.kotlin.ir.expressions.IrBody
 import org.jetbrains.kotlin.ir.expressions.IrCall
+import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
+import org.jetbrains.kotlin.ir.util.primaryConstructor
 import java.util.*
 
 internal data class IntrinsicContext(val pluginContext: IntrospektPluginContext) {
@@ -42,30 +46,42 @@ internal data class IntrinsicContext(val pluginContext: IntrospektPluginContext)
     inline val `class`: IrClass
         get() = requireNotNull(classStack.firstOrNull()) { "Not inside any class" }
 
-    inline val classOrNull: IrClass?
+    private inline val classOrNull: IrClass?
         get() = classStack.firstOrNull()
 
-    inline val function: IrFunction
-        get() = requireNotNull(functionStack.firstOrNull()) { "Not inside any function" }
-
-    inline val functionOrNull: IrFunction?
+    private inline val functionOrNull: IrFunction?
         get() = functionStack.firstOrNull()
 
-    inline val initializer: IrAnonymousInitializer
-        get() = requireNotNull(initializerStack.firstOrNull()) { "Not inside any initializer" }
+    private inline val initializerOrNull: IrAnonymousInitializer?
+        get() = initializerStack.firstOrNull()
 
-    inline val bodyOrNull: IrBody?
-        get() = bodyStack.firstOrNull()
+    @OptIn(UnsafeDuringIrConstructionAPI::class)
+    private fun getFrameCaptureFilter(): (IrVariable) -> Boolean { // @formatter:off
+        return functionOrNull?.getFrameCaptureFilter()
+            ?: classOrNull?.primaryConstructor?.getFrameCaptureFilter()
+            ?: { false }
+    } // @formatter:on
 
-    fun getFrameSnapshot( // @formatter:off
+    fun createFrameSnapshot( // @formatter:off
         module: IrModuleFragment,
         file: IrFile,
         source: List<String>,
         intrinsicCall: IrCall
-    ): FrameSnapshot {
-        return functionStack.firstOrNull()?.createFrameSnapshot(module, file, source, intrinsicCall)
-            ?: initializerStack.firstOrNull()?.createFrameSnapshot(module, file, source, intrinsicCall)
-            ?: error("Not inside any function or initializer")
+    ): FrameSnapshot? {
+        val filter = getFrameCaptureFilter()
+        return functionOrNull?.createFrameSnapshot(
+            module = module,
+            file = file,
+            source = source,
+            captureUntil = { it == intrinsicCall },
+            filter = filter
+        ) ?: initializerOrNull?.createFrameSnapshot(
+            module = module,
+            file = file,
+            source = source,
+            captureUntil = { it == intrinsicCall },
+            filter = filter
+        )
     } // @formatter:on
 
     fun getFunctionLocation( // @formatter:off
@@ -73,8 +89,8 @@ internal data class IntrinsicContext(val pluginContext: IntrospektPluginContext)
         file: IrFile,
         source: List<String>
     ): SourceLocation {
-        return functionStack.firstOrNull()?.getFunctionLocation(module, file, source)
-            ?: initializerStack.firstOrNull()?.getLocation(module, file, source)
+        return functionOrNull?.getFunctionLocation(module, file, source)
+            ?: initializerOrNull?.getLocation(module, file, source)
             ?: error("Not inside any function or initializer")
     } // @formatter:on
 
@@ -83,8 +99,8 @@ internal data class IntrinsicContext(val pluginContext: IntrospektPluginContext)
         file: IrFile,
         source: List<String>
     ): FunctionInfo {
-        return functionStack.firstOrNull()?.getFunctionInfo(module, file, source)
-            ?: initializerStack.firstOrNull()?.getFunctionInfo(module, file, source)
+        return functionOrNull?.getFunctionInfo(module, file, source)
+            ?: initializerOrNull?.getFunctionInfo(module, file, source)
             ?: error("Not inside any function or initializer")
     } // @formatter:on
 }

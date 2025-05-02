@@ -29,6 +29,7 @@ import org.jetbrains.kotlin.ir.expressions.impl.IrConstructorCallImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrVarargImpl
 import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
 import org.jetbrains.kotlin.ir.symbols.IrConstructorSymbol
+import org.jetbrains.kotlin.ir.symbols.IrPropertySymbol
 import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.IrType
@@ -57,15 +58,18 @@ internal data class IntrospektPluginContext(
         .find { symbol -> symbol.owner.valueParameters.any { it.isVararg } }!!
     private val mapType: IrClassSymbol = pluginContext.referenceClass(IntrospektNames.Kotlin.Map.id)!!
 
-    // FrameSnapshot
-    internal val frameSnapshotConstructor: IrConstructorSymbol =
-        pluginContext.referenceConstructors(IntrospektNames.FrameSnapshot.id).first()
-    internal val frameSnapshotType: IrClassSymbol = pluginContext.referenceClass(IntrospektNames.FrameSnapshot.id)!!
-
     // Pair
     internal val pairConstructor: IrConstructorSymbol =
         pluginContext.referenceConstructors(IntrospektNames.Kotlin.Pair.id).first()
     internal val pairType: IrClassSymbol = pluginContext.referenceClass(IntrospektNames.Kotlin.Pair.id)!!
+
+    // FrameSnapshot
+    internal val frameSnapshotConstructor: IrConstructorSymbol =
+        pluginContext.referenceConstructors(IntrospektNames.FrameSnapshot.id).first()
+    internal val frameSnapshotEmpty: IrPropertySymbol =
+        pluginContext.referenceProperties(IntrospektNames.FrameSnapshot.Companion.empty).first()
+    internal val frameSnapshotType: IrClassSymbol = pluginContext.referenceClass(IntrospektNames.FrameSnapshot.id)!!
+    internal val frameSnapshotCompanionType: IrClassSymbol = pluginContext.referenceClass(IntrospektNames.FrameSnapshot.Companion.id)!!
 
     // AnnotationUsageInfo
     internal val annotationUsageInfoType: IrClassSymbol =

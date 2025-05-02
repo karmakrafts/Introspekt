@@ -17,6 +17,7 @@
 package dev.karmakrafts.introspekt.compiler.transformer
 
 import dev.karmakrafts.introspekt.compiler.IntrospektPluginContext
+import dev.karmakrafts.introspekt.compiler.util.FrameSnapshot
 import dev.karmakrafts.introspekt.compiler.util.IntrospektIntrinsic
 import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.declarations.IrFile
@@ -36,8 +37,9 @@ internal class FrameSnapshotTransformer( // @formatter:off
         expression: IrCall,
         context: IntrinsicContext
     ): IrElement = when (type) { // @formatter:on
-        IntrospektIntrinsic.FS_CREATE -> context.getFrameSnapshot(module, file, source, expression)
-            .instantiate(pluginContext)
+        IntrospektIntrinsic.FS_CREATE -> context.createFrameSnapshot(module, file, source, expression)
+            ?.instantiate(pluginContext) ?: FrameSnapshot.empty(pluginContext)
+
         else -> error("Unsupported intrinsic for FrameSnapshotTransformer")
     }
 }

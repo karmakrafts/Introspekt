@@ -19,23 +19,47 @@ package dev.karmakrafts.introspekt.compiler.util
 import dev.karmakrafts.introspekt.compiler.IntrospektPluginContext
 import dev.karmakrafts.introspekt.compiler.element.LocalInfo
 import dev.karmakrafts.introspekt.compiler.element.getLocalInfo
-import dev.karmakrafts.introspekt.compiler.transformer.VariableDiscoveryVisitor
+import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.declarations.IrAnonymousInitializer
 import org.jetbrains.kotlin.ir.declarations.IrFile
 import org.jetbrains.kotlin.ir.declarations.IrFunction
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.declarations.IrVariable
-import org.jetbrains.kotlin.ir.expressions.IrCall
+import org.jetbrains.kotlin.ir.expressions.impl.IrCallImpl
+import org.jetbrains.kotlin.ir.expressions.impl.IrCallImplWithShape
 import org.jetbrains.kotlin.ir.expressions.impl.IrConstructorCallImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrGetValueImpl
+import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.defaultType
 import org.jetbrains.kotlin.ir.types.makeNullable
 import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
+import org.jetbrains.kotlin.ir.util.statements
 import org.jetbrains.kotlin.ir.visitors.acceptVoid
+import org.jetbrains.kotlin.utils.filterIsInstanceAnd
 
-internal data class FrameSnapshot( // @formatter:on
-    val location: SourceLocation, val locals: Map<LocalInfo, IrVariable>
-) { // @formatter:off
+internal data class FrameSnapshot( // @formatter:off
+    val location: SourceLocation,
+    val locals: Map<LocalInfo, IrVariable>
+) { // @formatter:on
+    companion object {
+        @OptIn(UnsafeDuringIrConstructionAPI::class)
+        fun empty(context: IntrospektPluginContext): IrCallImpl = with(context) {
+            IrCallImplWithShape(
+                startOffset = SYNTHETIC_OFFSET,
+                endOffset = SYNTHETIC_OFFSET,
+                type = frameSnapshotType.defaultType,
+                symbol = frameSnapshotEmpty.owner.getter!!.symbol,
+                typeArgumentsCount = 0,
+                valueArgumentsCount = 0,
+                contextParameterCount = 0,
+                hasDispatchReceiver = true,
+                hasExtensionReceiver = false
+            ).apply {
+                dispatchReceiver = frameSnapshotCompanionType.getObjectInstance()
+            }
+        }
+    }
+
     fun instantiate( // @formatter:off
         context: IntrospektPluginContext
     ): IrConstructorCallImpl = with(context) { // @formatter:on
@@ -65,30 +89,33 @@ internal data class FrameSnapshot( // @formatter:on
     }
 }
 
-internal fun IrFunction.createFrameSnapshot( // @formatter:off
+internal inline fun IrFunction.createFrameSnapshot( // @formatter:off
     module: IrModuleFragment,
     file: IrFile,
     source: List<String>,
-    intrinsicCall: IrCall
+    crossinline captureUntil: (IrElement) -> Boolean = { false },
+    crossinline filter: (IrVariable) -> Boolean = { true }
 ): FrameSnapshot { // @formatter:on
-    val visitor = VariableDiscoveryVisitor { it == intrinsicCall }
-    acceptVoid(visitor)
     return FrameSnapshot( // @formatter:off
         location = getFunctionLocation(module, file, source),
-        locals = visitor.variables.associateBy { it.getLocalInfo(module, file, source, this) }
+        locals = body
+            ?.bfsFilterInstanceUntil<IrVariable>(captureUntil) { element -> filter(element) }
+            ?.associateBy { it.getLocalInfo(module, file, source, this) }
+            ?: emptyMap()
     ) // @formatter:on
 }
 
-internal fun IrAnonymousInitializer.createFrameSnapshot( // @formatter:off
+internal inline fun IrAnonymousInitializer.createFrameSnapshot( // @formatter:off
     module: IrModuleFragment,
     file: IrFile,
     source: List<String>,
-    intrinsicCall: IrCall
+    crossinline captureUntil: (IrElement) -> Boolean = { false },
+    crossinline filter: (IrVariable) -> Boolean = { true }
 ): FrameSnapshot { // @formatter:on
-    val visitor = VariableDiscoveryVisitor { it == intrinsicCall }
-    acceptVoid(visitor)
     return FrameSnapshot( // @formatter:off
         location = getLocation(module, file, source),
-        locals = visitor.variables.associateBy { it.getLocalInfo(module, file, source, this) }
+        locals = body
+            .bfsFilterInstanceUntil<IrVariable>(captureUntil) { element -> filter(element) }
+            .associateBy { it.getLocalInfo(module, file, source, this) }
     ) // @formatter:on
 }

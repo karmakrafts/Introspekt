@@ -16,12 +16,6 @@
 
 package dev.karmakrafts.introspekt
 
-import kotlin.uuid.Uuid
-
-@ConsistentCopyVisibility
-data class TraceEvent internal constructor(
-    val location: SourceLocation,
-    val id: Uuid,
-    val message: String,
-    val data: Map<String, Any>
-)
+@Retention(AnnotationRetention.BINARY)
+@Target(AnnotationTarget.FUNCTION, AnnotationTarget.CONSTRUCTOR, AnnotationTarget.CLASS)
+annotation class NoFrameCapture(val pattern: String = "")

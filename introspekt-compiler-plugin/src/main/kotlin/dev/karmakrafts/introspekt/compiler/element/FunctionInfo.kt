@@ -17,7 +17,6 @@
 package dev.karmakrafts.introspekt.compiler.element
 
 import dev.karmakrafts.introspekt.compiler.IntrospektPluginContext
-import dev.karmakrafts.introspekt.compiler.transformer.VariableDiscoveryVisitor
 import dev.karmakrafts.introspekt.compiler.util.SourceLocation
 import dev.karmakrafts.introspekt.compiler.util.getEnumValue
 import dev.karmakrafts.introspekt.compiler.util.getFunctionLocation
@@ -35,6 +34,7 @@ import org.jetbrains.kotlin.ir.declarations.IrFile
 import org.jetbrains.kotlin.ir.declarations.IrFunction
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.declarations.IrParameterKind.Regular
+import org.jetbrains.kotlin.ir.declarations.IrVariable
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.impl.IrCallImplWithShape
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
@@ -45,8 +45,8 @@ import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
 import org.jetbrains.kotlin.ir.util.kotlinFqName
 import org.jetbrains.kotlin.ir.util.parentAsClass
 import org.jetbrains.kotlin.ir.util.primaryConstructor
+import org.jetbrains.kotlin.ir.util.statements
 import org.jetbrains.kotlin.ir.util.toIrConst
-import org.jetbrains.kotlin.ir.visitors.acceptVoid
 import org.jetbrains.kotlin.it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
 
 internal data class FunctionInfo(
@@ -200,9 +200,7 @@ internal fun IrFunction.getFunctionInfo( // @formatter:off
     ) { // @formatter:on
         annotations = this@getFunctionInfo.annotations.toAnnotationMap(module, file, source)
         this@getFunctionInfo.body?.let { body ->
-            val visitor = VariableDiscoveryVisitor()
-            body.acceptVoid(visitor)
-            locals = visitor.variables.map { variable ->
+            locals = body.statements.filterIsInstance<IrVariable>().map { variable ->
                 variable.getLocalInfo(module, file, source, this@getFunctionInfo)
             }
         }
@@ -231,9 +229,7 @@ internal fun IrAnonymousInitializer.getFunctionInfo( // @formatter:off
         hashTransform = { hash -> 31 * hash + parent.hashCode() }
     ) { // @formatter:on
         annotations = constructor.annotations.toAnnotationMap(module, file, source)
-        val visitor = VariableDiscoveryVisitor()
-        body.acceptVoid(visitor)
-        locals = visitor.variables.map { variable ->
+        locals = body.statements.filterIsInstance<IrVariable>().map { variable ->
             variable.getLocalInfo(module, file, source, this@getFunctionInfo)
         }
     }

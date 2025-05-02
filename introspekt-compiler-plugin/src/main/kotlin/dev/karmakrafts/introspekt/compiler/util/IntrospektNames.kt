@@ -250,6 +250,7 @@ internal object IntrospektNames {
             val id: ClassId = ClassId(packageName, fqName, false)
 
             val create: CallableId = CallableId(packageName, fqName, Functions.create)
+            val empty: CallableId = CallableId(packageName, fqName, Name.identifier("empty"))
         }
     }
 
@@ -264,5 +265,11 @@ internal object IntrospektNames {
 
             val event: CallableId = CallableId(packageName, fqName, Functions.event)
         }
+    }
+
+    object NoFrameCapture {
+        val name: Name = Name.identifier("NoFrameCapture")
+        val id: ClassId = ClassId(packageName, name)
+        val fqName: FqName = id.asSingleFqName()
     }
 }

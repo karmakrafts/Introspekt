@@ -36,9 +36,9 @@ interface TraceCollector {
             }
         }
 
-        internal fun leaveSpan(span: TraceSpan, end: SourceLocation) {
+        internal fun leaveSpan(span: TraceSpan, endFrame: FrameSnapshot, end: SourceLocation) {
             for (collector in collectors) {
-                collector.leaveSpan(span, end)
+                collector.leaveSpan(span, endFrame, end)
             }
         }
 
@@ -100,7 +100,7 @@ interface TraceCollector {
 
     fun enterSpan(span: TraceSpan)
 
-    fun leaveSpan(span: TraceSpan, end: SourceLocation)
+    fun leaveSpan(span: TraceSpan, endFrame: FrameSnapshot, end: SourceLocation)
 
     fun enterFunction(function: FunctionInfo)
 

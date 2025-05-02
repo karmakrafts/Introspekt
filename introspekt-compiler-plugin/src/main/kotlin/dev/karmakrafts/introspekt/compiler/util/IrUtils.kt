@@ -30,6 +30,7 @@ import org.jetbrains.kotlin.ir.declarations.IrFile
 import org.jetbrains.kotlin.ir.declarations.IrFunction
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.declarations.IrParameterKind
+import org.jetbrains.kotlin.ir.declarations.IrVariable
 import org.jetbrains.kotlin.ir.declarations.path
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.IrClassReference
@@ -60,6 +61,10 @@ import org.jetbrains.kotlin.ir.util.isOverridable
 import org.jetbrains.kotlin.ir.util.kotlinFqName
 import org.jetbrains.kotlin.ir.util.parentClassOrNull
 import org.jetbrains.kotlin.ir.util.target
+import org.jetbrains.kotlin.ir.visitors.IrVisitor
+import org.jetbrains.kotlin.ir.visitors.IrVisitorVoid
+import org.jetbrains.kotlin.ir.visitors.acceptChildrenVoid
+import org.jetbrains.kotlin.ir.visitors.acceptVoid
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.utils.filterIsInstanceAnd
 
@@ -182,6 +187,17 @@ internal fun IrAnnotationContainer.getTraceType(): List<TraceType> {
     else getAnnotationValues<TraceType>(IntrospektNames.Trace.fqName, "types").filterNotNull()
 }
 
+internal fun IrAnnotationContainer.isNoFrameCapture(): Boolean = hasAnnotation(IntrospektNames.NoFrameCapture.id)
+
+internal fun IrAnnotationContainer.getFrameCaptureFilter(): (IrVariable) -> Boolean {
+    if (!isNoFrameCapture()) return { true }
+    val patternString = getAnnotationValue<String>(IntrospektNames.NoFrameCapture.fqName, "pattern") ?: return { false }
+    val pattern = Regex(patternString)
+    return { variable ->
+        !pattern.matches(variable.name.asString())
+    }
+}
+
 internal fun IrType.toClassReference(context: IntrospektPluginContext): IrClassReferenceImpl = with(context) {
     IrClassReferenceImpl(
         startOffset = SYNTHETIC_OFFSET,
@@ -191,6 +207,34 @@ internal fun IrType.toClassReference(context: IntrospektPluginContext): IrClassR
         classType = this@toClassReference
     )
 }
+
+internal inline fun IrElement.bfsUntil( // @formatter:off
+    crossinline predicate: (IrElement) -> Boolean,
+    crossinline filter: (IrElement) -> Boolean = { true }
+): List<IrElement> { // @formatter:on
+    var limitReached = false
+    val elements = ArrayList<IrElement>()
+    acceptVoid(object : IrVisitorVoid() {
+        override fun visitElement(element: IrElement) {
+            if (limitReached) return
+            if (predicate(element)) {
+                limitReached = true
+                return
+            }
+            if (filter(element)) elements += element
+            element.acceptChildrenVoid(this)
+        }
+    })
+    return elements
+}
+
+@Suppress("UNCHECKED_CAST")
+internal inline fun <reified T : IrElement> IrElement.bfsFilterInstanceUntil( // @formatter:off
+    crossinline predicate: (IrElement) -> Boolean,
+    crossinline filter: (T) -> Boolean = { true }
+): List<T> = bfsUntil(predicate) { element -> // @formatter:on
+    element is T && filter(element)
+} as List<T>
 
 @OptIn(UnsafeDuringIrConstructionAPI::class)
 internal fun IrClass.getCompanionObjects(): List<IrClass> = declarations.filterIsInstanceAnd<IrClass> { it.isCompanion }
