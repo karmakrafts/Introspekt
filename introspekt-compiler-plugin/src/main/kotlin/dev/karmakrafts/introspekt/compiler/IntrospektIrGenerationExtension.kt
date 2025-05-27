@@ -18,7 +18,6 @@ package dev.karmakrafts.introspekt.compiler
 
 import dev.karmakrafts.introspekt.compiler.transformer.ClassInfoTransformer
 import dev.karmakrafts.introspekt.compiler.transformer.CompilerApiTransformer
-import dev.karmakrafts.introspekt.compiler.transformer.FrameSnapshotTransformer
 import dev.karmakrafts.introspekt.compiler.transformer.FunctionInfoTransformer
 import dev.karmakrafts.introspekt.compiler.transformer.IntrinsicCalleeParameterTransformer
 import dev.karmakrafts.introspekt.compiler.transformer.IntrinsicCallerParameterTransformer
@@ -36,11 +35,13 @@ import kotlin.io.path.Path
 import kotlin.io.path.readLines
 
 internal class IntrospektIrGenerationExtension : IrGenerationExtension {
-    override fun generate(
-        moduleFragment: IrModuleFragment, pluginContext: IrPluginContext
-    ) {
+    override fun generate( // @formatter:off
+        moduleFragment: IrModuleFragment,
+        pluginContext: IrPluginContext
+    ) { // @formatter:on
         val introspektContext = IntrospektPluginContext(pluginContext)
         moduleFragment.acceptVoid(CompilerApiTransformer())
+
         for (file in moduleFragment.files) {
             val source = runCatching { Path(file.path).readLines() }.getOrNull() ?: continue
             val context = IntrinsicContext(introspektContext)
@@ -49,10 +50,13 @@ internal class IntrospektIrGenerationExtension : IrGenerationExtension {
             file.transform(SourceLocationTransformer(introspektContext, moduleFragment, file, source), context)
             file.transform(FunctionInfoTransformer(introspektContext, moduleFragment, file, source), context)
             file.transform(ClassInfoTransformer(introspektContext, moduleFragment, file, source), context)
-            file.transform(FrameSnapshotTransformer(introspektContext, moduleFragment, file, source), context)
         }
+
         val traceContext = TraceContext(introspektContext)
         moduleFragment.accept(TraceInjectionTransformer(), traceContext)
-        moduleFragment.accept(TraceRemovalTransformer(), traceContext)
+
+        val removalTransformer = TraceRemovalTransformer()
+        moduleFragment.accept(removalTransformer, traceContext)
+        removalTransformer.removeCalls()
     }
 }

@@ -23,6 +23,9 @@ import org.jetbrains.kotlin.name.Name
 
 internal object IntrospektNames {
     val packageName: FqName = FqName("dev.karmakrafts.introspekt")
+    val elementPackageName: FqName = FqName("dev.karmakrafts.introspekt.element")
+    val tracePackageName: FqName = FqName("dev.karmakrafts.introspekt.trace")
+    val utilPackageName: FqName = FqName("dev.karmakrafts.introspekt.util")
 
     object Functions {
         val listOf: Name = Name.identifier("listOf")
@@ -30,7 +33,6 @@ internal object IntrospektNames {
         val of: Name = Name.identifier("of")
         val getOrCreate: Name = Name.identifier("getOrCreate")
         val current: Name = Name.identifier("current")
-        val create: Name = Name.identifier("create")
 
         val ofClass: Name = Name.identifier("ofClass")
         val ofFunction: Name = Name.identifier("ofFunction")
@@ -84,114 +86,7 @@ internal object IntrospektNames {
         }
     }
 
-    object VisibilityModifier {
-        val name: Name = Name.identifier("VisibilityModifier")
-        val id: ClassId = ClassId(packageName, name)
-    }
-
-    object ModalityModifier {
-        val name: Name = Name.identifier("ModalityModifier")
-        val id: ClassId = ClassId(packageName, name)
-    }
-
-    object ClassModifier {
-        val name: Name = Name.identifier("ClassModifier")
-        val id: ClassId = ClassId(packageName, name)
-        val fqName: FqName = id.asSingleFqName()
-    }
-
-    object SourceLocation {
-        val name: Name = Name.identifier("SourceLocation")
-        val id: ClassId = ClassId(packageName, name)
-        val fqName: FqName = id.asSingleFqName()
-
-        object Companion {
-            val fqName: FqName = FqName("SourceLocation.Companion")
-            val id: ClassId = ClassId(packageName, fqName, false)
-
-            val here: CallableId = CallableId(packageName, fqName, Functions.here)
-            val hereHash: CallableId = CallableId(packageName, fqName, Functions.hereHash)
-            val currentFunction: CallableId = CallableId(packageName, fqName, Functions.currentFunction)
-            val currentFunctionHash: CallableId = CallableId(packageName, fqName, Functions.currentFunctionHash)
-            val currentClass: CallableId = CallableId(packageName, fqName, Functions.currentClass)
-            val currentClassHash: CallableId = CallableId(packageName, fqName, Functions.currentClassHash)
-            val ofClass: CallableId = CallableId(packageName, fqName, Functions.ofClass)
-            val ofFunction: CallableId = CallableId(packageName, fqName, Functions.ofFunction)
-            val getOrCreate: CallableId = CallableId(packageName, fqName, Functions.getOrCreate)
-        }
-    }
-
-    object FunctionInfo {
-        val name: Name = Name.identifier("FunctionInfo")
-        val id: ClassId = ClassId(packageName, name)
-
-        object Companion {
-            val fqName: FqName = FqName("FunctionInfo.Companion")
-            val id: ClassId = ClassId(packageName, fqName, false)
-
-            val current: CallableId = CallableId(packageName, fqName, Functions.current)
-            val of: CallableId = CallableId(packageName, fqName, Functions.of)
-            val getOrCreate: CallableId = CallableId(packageName, fqName, Functions.getOrCreate)
-        }
-    }
-
-    object ClassInfo {
-        val name: Name = Name.identifier("ClassInfo")
-        val id: ClassId = ClassId(packageName, name)
-
-        object Companion {
-            val fqName: FqName = FqName("ClassInfo.Companion")
-            val id: ClassId = ClassId(packageName, fqName, false)
-
-            val current: CallableId = CallableId(packageName, fqName, Functions.current)
-            val of: CallableId = CallableId(packageName, fqName, Functions.of)
-            val getOrCreate: CallableId = CallableId(packageName, fqName, Functions.getOrCreate)
-        }
-    }
-
-    object AnnotationUsageInfo {
-        val name: Name = Name.identifier("AnnotationUsageInfo")
-        val id: ClassId = ClassId(packageName, name)
-        val fqName: FqName = id.asSingleFqName()
-    }
-
-    object PropertyInfo {
-        val name: Name = Name.identifier("PropertyInfo")
-        val id: ClassId = ClassId(packageName, name)
-        val fqName: FqName = id.asSingleFqName()
-
-        object Companion {
-            val fqName: FqName = FqName("PropertyInfo.Companion")
-            val id: ClassId = ClassId(packageName, fqName, false)
-
-            val getOrCreate: CallableId = CallableId(packageName, fqName, Functions.getOrCreate)
-        }
-    }
-
-    object FieldInfo {
-        val name: Name = Name.identifier("FieldInfo")
-        val id: ClassId = ClassId(packageName, name)
-        val fqName: FqName = id.asSingleFqName()
-
-        object Companion {
-            val fqName: FqName = FqName("FieldInfo.Companion")
-            val id: ClassId = ClassId(packageName, fqName, false)
-
-            val getOrCreate: CallableId = CallableId(packageName, fqName, Functions.getOrCreate)
-        }
-    }
-
-    object LocalInfo {
-        val name: Name = Name.identifier("LocalInfo")
-        val id: ClassId = ClassId(packageName, name)
-
-        object Companion {
-            val fqName: FqName = FqName("LocalInfo.Companion")
-            val id: ClassId = ClassId(packageName, fqName, false)
-
-            val getOrCreate: CallableId = CallableId(packageName, fqName, Functions.getOrCreate)
-        }
-    }
+    // -------------------- dev.karmakrafts.introspekt
 
     object IntrospektIntrinsic {
         val name: Name = Name.identifier("IntrospektIntrinsic")
@@ -202,7 +97,6 @@ internal object IntrospektNames {
     object IntrospektCompilerApi {
         val name: Name = Name.identifier("IntrospektCompilerApi")
         val id: ClassId = ClassId(packageName, name)
-        val fqName: FqName = id.asSingleFqName()
     }
 
     object CaptureCaller {
@@ -211,65 +105,172 @@ internal object IntrospektNames {
         val fqName: FqName = id.asSingleFqName()
     }
 
+    // -------------------- dev.karmakrafts.introspekt.util
+
+    object VisibilityModifier {
+        val name: Name = Name.identifier("VisibilityModifier")
+        val id: ClassId = ClassId(utilPackageName, name)
+    }
+
+    object ModalityModifier {
+        val name: Name = Name.identifier("ModalityModifier")
+        val id: ClassId = ClassId(utilPackageName, name)
+    }
+
+    object ClassModifier {
+        val name: Name = Name.identifier("ClassModifier")
+        val id: ClassId = ClassId(utilPackageName, name)
+    }
+
+    object SourceLocation {
+        val name: Name = Name.identifier("SourceLocation")
+        val id: ClassId = ClassId(utilPackageName, name)
+
+        object Companion {
+            val fqName: FqName = FqName("SourceLocation.Companion")
+            val id: ClassId = ClassId(utilPackageName, fqName, false)
+
+            val here: CallableId = CallableId(utilPackageName, fqName, Functions.here)
+            val hereHash: CallableId = CallableId(utilPackageName, fqName, Functions.hereHash)
+            val currentFunction: CallableId = CallableId(utilPackageName, fqName, Functions.currentFunction)
+            val currentFunctionHash: CallableId = CallableId(utilPackageName, fqName, Functions.currentFunctionHash)
+            val currentClass: CallableId = CallableId(utilPackageName, fqName, Functions.currentClass)
+            val currentClassHash: CallableId = CallableId(utilPackageName, fqName, Functions.currentClassHash)
+            val ofClass: CallableId = CallableId(utilPackageName, fqName, Functions.ofClass)
+            val ofFunction: CallableId = CallableId(utilPackageName, fqName, Functions.ofFunction)
+            val getOrCreate: CallableId = CallableId(utilPackageName, fqName, Functions.getOrCreate)
+        }
+    }
+
+    // -------------------- dev.karmakrafts.introspekt.element
+
+    object FunctionInfo {
+        val name: Name = Name.identifier("FunctionInfo")
+        val id: ClassId = ClassId(elementPackageName, name)
+
+        object Companion {
+            val fqName: FqName = FqName("FunctionInfo.Companion")
+            val id: ClassId = ClassId(elementPackageName, fqName, false)
+
+            val current: CallableId = CallableId(elementPackageName, fqName, Functions.current)
+            val of: CallableId = CallableId(elementPackageName, fqName, Functions.of)
+            val getOrCreate: CallableId = CallableId(elementPackageName, fqName, Functions.getOrCreate)
+        }
+    }
+
+    object ClassInfo {
+        val name: Name = Name.identifier("ClassInfo")
+        val id: ClassId = ClassId(elementPackageName, name)
+
+        object Companion {
+            val fqName: FqName = FqName("ClassInfo.Companion")
+            val id: ClassId = ClassId(elementPackageName, fqName, false)
+
+            val current: CallableId = CallableId(elementPackageName, fqName, Functions.current)
+            val of: CallableId = CallableId(elementPackageName, fqName, Functions.of)
+            val getOrCreate: CallableId = CallableId(elementPackageName, fqName, Functions.getOrCreate)
+        }
+    }
+
+    object AnnotationUsageInfo {
+        val name: Name = Name.identifier("AnnotationUsageInfo")
+        val id: ClassId = ClassId(elementPackageName, name)
+    }
+
+    object PropertyInfo {
+        val name: Name = Name.identifier("PropertyInfo")
+        val id: ClassId = ClassId(elementPackageName, name)
+
+        object Companion {
+            val fqName: FqName = FqName("PropertyInfo.Companion")
+            val id: ClassId = ClassId(elementPackageName, fqName, false)
+
+            val getOrCreate: CallableId = CallableId(elementPackageName, fqName, Functions.getOrCreate)
+        }
+    }
+
+    object FieldInfo {
+        val name: Name = Name.identifier("FieldInfo")
+        val id: ClassId = ClassId(elementPackageName, name)
+
+        object Companion {
+            val fqName: FqName = FqName("FieldInfo.Companion")
+            val id: ClassId = ClassId(elementPackageName, fqName, false)
+
+            val getOrCreate: CallableId = CallableId(elementPackageName, fqName, Functions.getOrCreate)
+        }
+    }
+
+    object LocalInfo {
+        val name: Name = Name.identifier("LocalInfo")
+        val id: ClassId = ClassId(elementPackageName, name)
+
+        object Companion {
+            val fqName: FqName = FqName("LocalInfo.Companion")
+            val id: ClassId = ClassId(elementPackageName, fqName, false)
+
+            val getOrCreate: CallableId = CallableId(elementPackageName, fqName, Functions.getOrCreate)
+        }
+    }
+
+    object TypeInfo {
+        val name: Name = Name.identifier("TypeInfo")
+        val id: ClassId = ClassId(elementPackageName, name)
+    }
+
+    object SimpleTypeInfo {
+        val name: Name = Name.identifier("SimpleTypeInfo")
+        val id: ClassId = ClassId(elementPackageName, name)
+
+        object Companion {
+            val fqName: FqName = FqName("SimpleTypeInfo.Companion")
+            val id: ClassId = ClassId(elementPackageName, fqName, false)
+
+            val getOrCreate: CallableId = CallableId(elementPackageName, fqName, Functions.getOrCreate)
+        }
+    }
+
+    // -------------------- dev.karmakrafts.introspekt.trace
+
     object TraceCollector {
         val name: Name = Name.identifier("TraceCollector")
-        val id: ClassId = ClassId(packageName, name)
 
         object Companion {
             val fqName: FqName = FqName("TraceCollector.Companion")
-            val id: ClassId = ClassId(packageName, fqName, false)
+            val id: ClassId = ClassId(tracePackageName, fqName, false)
 
-            val enterFunction: CallableId = CallableId(packageName, fqName, Functions.enterFunction)
-            val leaveFunction: CallableId = CallableId(packageName, fqName, Functions.leaveFunction)
-            val call: CallableId = CallableId(packageName, fqName, Functions.call)
-            val loadProperty: CallableId = CallableId(packageName, fqName, Functions.loadProperty)
-            val storeProperty: CallableId = CallableId(packageName, fqName, Functions.storeProperty)
-            val loadLocal: CallableId = CallableId(packageName, fqName, Functions.loadLocal)
-            val storeLocal: CallableId = CallableId(packageName, fqName, Functions.storeLocal)
+            val enterFunction: CallableId = CallableId(tracePackageName, fqName, Functions.enterFunction)
+            val leaveFunction: CallableId = CallableId(tracePackageName, fqName, Functions.leaveFunction)
+            val call: CallableId = CallableId(tracePackageName, fqName, Functions.call)
+            val loadProperty: CallableId = CallableId(tracePackageName, fqName, Functions.loadProperty)
+            val storeProperty: CallableId = CallableId(tracePackageName, fqName, Functions.storeProperty)
+            val loadLocal: CallableId = CallableId(tracePackageName, fqName, Functions.loadLocal)
+            val storeLocal: CallableId = CallableId(tracePackageName, fqName, Functions.storeLocal)
         }
     }
 
     object TraceSpan {
         val name: Name = Name.identifier("TraceSpan")
-        val id: ClassId = ClassId(packageName, name)
+        val id: ClassId = ClassId(tracePackageName, name)
 
         object Companion {
             val fqName: FqName = FqName("TraceSpan.Companion")
 
-            val enter: CallableId = CallableId(packageName, fqName, Functions.enter)
-            val leave: CallableId = CallableId(packageName, fqName, Functions.leave)
-        }
-    }
-
-    object FrameSnapshot {
-        val name: Name = Name.identifier("FrameSnapshot")
-        val id: ClassId = ClassId(packageName, name)
-
-        object Companion {
-            val fqName: FqName = FqName("FrameSnapshot.Companion")
-            val id: ClassId = ClassId(packageName, fqName, false)
-
-            val create: CallableId = CallableId(packageName, fqName, Functions.create)
-            val empty: CallableId = CallableId(packageName, fqName, Name.identifier("empty"))
+            val enter: CallableId = CallableId(tracePackageName, fqName, Functions.enter)
+            val leave: CallableId = CallableId(tracePackageName, fqName, Functions.leave)
         }
     }
 
     object Trace {
         val name: Name = Name.identifier("Trace")
-        val id: ClassId = ClassId(packageName, name)
+        val id: ClassId = ClassId(tracePackageName, name)
         val fqName: FqName = id.asSingleFqName()
 
         object Companion {
             val fqName: FqName = FqName("Trace.Companion")
-            val id: ClassId = ClassId(packageName, fqName, false)
+            val id: ClassId = ClassId(tracePackageName, fqName, false)
 
-            val event: CallableId = CallableId(packageName, fqName, Functions.event)
+            val event: CallableId = CallableId(tracePackageName, fqName, Functions.event)
         }
-    }
-
-    object NoFrameCapture {
-        val name: Name = Name.identifier("NoFrameCapture")
-        val id: ClassId = ClassId(packageName, name)
-        val fqName: FqName = id.asSingleFqName()
     }
 }

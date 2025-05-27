@@ -20,6 +20,7 @@ import dev.karmakrafts.introspekt.compiler.IntrospektPluginContext
 import dev.karmakrafts.introspekt.compiler.util.TraceType
 import dev.karmakrafts.introspekt.compiler.util.getTraceType
 import org.jetbrains.kotlin.ir.declarations.IrAnnotationContainer
+import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.expressions.IrStatementContainer
 import java.util.*
 
@@ -27,13 +28,17 @@ internal class TraceContext(
     private val pluginContext: IntrospektPluginContext
 ) {
     private val traceTypeStack: Stack<List<TraceType>> = Stack()
+    internal val classStack: Stack<IrClass> = Stack()
     internal val containerStack: Stack<IrStatementContainer> = Stack()
 
     inline val traceType: List<TraceType>
         get() = traceTypeStack.firstOrNull() ?: emptyList()
 
-    inline val container: IrStatementContainer?
+    inline val containerOrNull: IrStatementContainer?
         get() = containerStack.firstOrNull()
+
+    inline val classOrNull: IrClass?
+        get() = classStack.firstOrNull()
 
     fun pushTraceType(declaration: IrAnnotationContainer) {
         traceTypeStack.push(declaration.getTraceType())

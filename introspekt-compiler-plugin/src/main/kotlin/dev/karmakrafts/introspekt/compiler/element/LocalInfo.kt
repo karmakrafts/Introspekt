@@ -44,7 +44,12 @@ internal class LocalInfo(
     val isMutable: Boolean,
     override val annotations: Map<IrType, List<AnnotationUsageInfo>>
 ) : ElementInfo, AnnotatedElement {
-    override fun instantiateCached(context: IntrospektPluginContext): IrCall = with(context) {
+    override fun instantiateCached( // @formatter:off
+        module: IrModuleFragment,
+        file: IrFile,
+        source: List<String>,
+        context: IntrospektPluginContext
+    ): IrCall = with(context) { // @formatter:on
         IrCallImplWithShape(
             startOffset = SYNTHETIC_OFFSET,
             endOffset = SYNTHETIC_OFFSET,
@@ -68,7 +73,7 @@ internal class LocalInfo(
             // isMutable
             putValueArgument(index++, isMutable.toIrConst(irBuiltIns.booleanType))
             // annotations
-            putValueArgument(index, instantiateAnnotations(context))
+            putValueArgument(index, instantiateAnnotations(module, file, source, context))
             dispatchReceiver = localInfoCompanionType.getObjectInstance()
         }
     }
@@ -95,7 +100,7 @@ internal fun IrVariable.getLocalInfo( // @formatter:off
     function: IrAnonymousInitializer
 ): LocalInfo = LocalInfo( // @formatter:on
     location = getLocation(module, file, source),
-    qualifiedName = "${function.parentAsClass.name.asString()}.<init>.${name.asString()}",
+    qualifiedName = "${function.parentAsClass.kotlinFqName.asString()}.<init>.${name.asString()}",
     name = name.asString(),
     type = type,
     isMutable = isVar,

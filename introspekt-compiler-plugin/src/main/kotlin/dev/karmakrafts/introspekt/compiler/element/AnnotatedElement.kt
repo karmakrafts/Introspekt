@@ -17,6 +17,8 @@
 package dev.karmakrafts.introspekt.compiler.element
 
 import dev.karmakrafts.introspekt.compiler.IntrospektPluginContext
+import org.jetbrains.kotlin.ir.declarations.IrFile
+import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.expressions.IrExpression
 import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.defaultType
@@ -25,14 +27,16 @@ import org.jetbrains.kotlin.ir.types.typeWith
 internal sealed interface AnnotatedElement {
     val annotations: Map<IrType, List<AnnotationUsageInfo>>
 
-    fun instantiateAnnotations(context: IntrospektPluginContext): IrExpression = with(context) {
+    fun instantiateAnnotations(
+        module: IrModuleFragment, file: IrFile, source: List<String>, context: IntrospektPluginContext
+    ): IrExpression = with(context) {
         createMapOf( // @formatter:off
             keyType = irBuiltIns.kClassClass.typeWith(annotationType.defaultType),
             valueType = annotationUsageInfoType.defaultType,
             values = annotations.map { (type, infos) ->
                 type.toIrValue() to createListOf(
                     type = annotationUsageInfoType.defaultType,
-                    values = infos.map { it.instantiate(context) }
+                    values = infos.map { it.instantiate(module, file, source, context) }
                 )
             }
         ) // @formatter:on

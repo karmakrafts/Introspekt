@@ -19,10 +19,7 @@ package dev.karmakrafts.introspekt.compiler.transformer
 import dev.karmakrafts.introspekt.compiler.IntrospektPluginContext
 import dev.karmakrafts.introspekt.compiler.element.FunctionInfo
 import dev.karmakrafts.introspekt.compiler.element.getFunctionInfo
-import dev.karmakrafts.introspekt.compiler.util.FrameSnapshot
 import dev.karmakrafts.introspekt.compiler.util.SourceLocation
-import dev.karmakrafts.introspekt.compiler.util.createFrameSnapshot
-import dev.karmakrafts.introspekt.compiler.util.getFrameCaptureFilter
 import dev.karmakrafts.introspekt.compiler.util.getFunctionLocation
 import dev.karmakrafts.introspekt.compiler.util.getLocation
 import org.jetbrains.kotlin.ir.declarations.IrAnonymousInitializer
@@ -30,11 +27,7 @@ import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrFile
 import org.jetbrains.kotlin.ir.declarations.IrFunction
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
-import org.jetbrains.kotlin.ir.declarations.IrVariable
 import org.jetbrains.kotlin.ir.expressions.IrBody
-import org.jetbrains.kotlin.ir.expressions.IrCall
-import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
-import org.jetbrains.kotlin.ir.util.primaryConstructor
 import java.util.*
 
 internal data class IntrinsicContext(val pluginContext: IntrospektPluginContext) {
@@ -46,43 +39,11 @@ internal data class IntrinsicContext(val pluginContext: IntrospektPluginContext)
     inline val `class`: IrClass
         get() = requireNotNull(classStack.firstOrNull()) { "Not inside any class" }
 
-    private inline val classOrNull: IrClass?
-        get() = classStack.firstOrNull()
-
     private inline val functionOrNull: IrFunction?
         get() = functionStack.firstOrNull()
 
     private inline val initializerOrNull: IrAnonymousInitializer?
         get() = initializerStack.firstOrNull()
-
-    @OptIn(UnsafeDuringIrConstructionAPI::class)
-    private fun getFrameCaptureFilter(): (IrVariable) -> Boolean { // @formatter:off
-        return functionOrNull?.getFrameCaptureFilter()
-            ?: classOrNull?.primaryConstructor?.getFrameCaptureFilter()
-            ?: { false }
-    } // @formatter:on
-
-    fun createFrameSnapshot( // @formatter:off
-        module: IrModuleFragment,
-        file: IrFile,
-        source: List<String>,
-        intrinsicCall: IrCall
-    ): FrameSnapshot? {
-        val filter = getFrameCaptureFilter()
-        return functionOrNull?.createFrameSnapshot(
-            module = module,
-            file = file,
-            source = source,
-            captureUntil = { it == intrinsicCall },
-            filter = filter
-        ) ?: initializerOrNull?.createFrameSnapshot(
-            module = module,
-            file = file,
-            source = source,
-            captureUntil = { it == intrinsicCall },
-            filter = filter
-        )
-    } // @formatter:on
 
     fun getFunctionLocation( // @formatter:off
         module: IrModuleFragment,

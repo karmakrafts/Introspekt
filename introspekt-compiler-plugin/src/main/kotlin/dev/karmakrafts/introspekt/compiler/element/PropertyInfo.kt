@@ -20,7 +20,6 @@ import dev.karmakrafts.introspekt.compiler.IntrospektPluginContext
 import dev.karmakrafts.introspekt.compiler.util.SourceLocation
 import dev.karmakrafts.introspekt.compiler.util.getEnumValue
 import dev.karmakrafts.introspekt.compiler.util.getLocation
-import dev.karmakrafts.introspekt.compiler.util.getModalityName
 import dev.karmakrafts.introspekt.compiler.util.getObjectInstance
 import dev.karmakrafts.introspekt.compiler.util.getVisibilityName
 import org.jetbrains.kotlin.descriptors.Modality
@@ -83,8 +82,13 @@ internal data class PropertyInfo(
         }
     }
 
-    override fun instantiateCached(context: IntrospektPluginContext): IrCall = with(context) {
-        return IrCallImplWithShape(
+    override fun instantiateCached( // @formatter:off
+        module: IrModuleFragment,
+        file: IrFile,
+        source: List<String>,
+        context: IntrospektPluginContext
+    ): IrCall = with(context) { // @formatter:on
+        IrCallImplWithShape(
             startOffset = SYNTHETIC_OFFSET,
             endOffset = SYNTHETIC_OFFSET,
             type = propertyInfoType.defaultType,
@@ -107,19 +111,22 @@ internal data class PropertyInfo(
             // visibility
             putValueArgument(index++, visibility.getEnumValue(visibilityModifierType) { getVisibilityName() })
             // modality
-            putValueArgument(index++, modality.getEnumValue(modalityModifierType) { getModalityName() })
+            putValueArgument(index++, modality.getEnumValue(modalityModifierType) { name })
             // isExpect
             putValueArgument(index++, isExpect.toIrConst(irBuiltIns.booleanType))
             // isDelegated
             putValueArgument(index++, isDelegated.toIrConst(irBuiltIns.booleanType))
             // backingField
-            putValueArgument(index++, backingField?.instantiateCached(context) ?: null.toIrConst(fieldInfoType.defaultType))
+            putValueArgument(index++, backingField?.instantiateCached(module, file, source, context)
+                ?: null.toIrConst(fieldInfoType.defaultType))
             // getter
-            putValueArgument(index++, getter?.instantiateCached(context) ?: null.toIrConst(functionInfoType.defaultType))
+            putValueArgument(index++, getter?.instantiateCached(module, file, source, context)
+                ?: null.toIrConst(functionInfoType.defaultType))
             // setter
-            putValueArgument(index++, setter?.instantiateCached(context) ?: null.toIrConst(functionInfoType.defaultType))
+            putValueArgument(index++, setter?.instantiateCached(module, file, source, context)
+                ?: null.toIrConst(functionInfoType.defaultType))
             // annotations
-            putValueArgument(index, instantiateAnnotations(context))
+            putValueArgument(index, instantiateAnnotations(module, file, source, context))
             dispatchReceiver = propertyInfoCompanionType.getObjectInstance()
         } // @formatter:on
     }

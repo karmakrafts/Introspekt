@@ -17,12 +17,14 @@
 package dev.karmakrafts.introspekt.compiler.util
 
 import dev.karmakrafts.introspekt.compiler.IntrospektPluginContext
+import org.jetbrains.kotlin.ir.declarations.IrFunction
 import org.jetbrains.kotlin.ir.expressions.impl.IrCallImpl
 import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.defaultType
 import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
+import org.jetbrains.kotlin.ir.util.hasAnnotation
 import org.jetbrains.kotlin.name.CallableId
 
 internal enum class IntrinsicResultType {
@@ -30,7 +32,6 @@ internal enum class IntrinsicResultType {
     SOURCE_LOCATION,
     FUNCTION_INFO,
     CLASS_INFO,
-    FRAME_SNAPSHOT,
     INT
     // @formatter:on
 }
@@ -52,15 +53,13 @@ internal enum class IntrospektIntrinsic( // @formatter:off
     FI_CURRENT              (true,  IntrinsicResultType.FUNCTION_INFO,      IntrospektNames.FunctionInfo.Companion.current),
     FI_OF                   (false, IntrinsicResultType.FUNCTION_INFO,      IntrospektNames.FunctionInfo.Companion.of),
     CI_CURRENT              (true,  IntrinsicResultType.CLASS_INFO,         IntrospektNames.ClassInfo.Companion.current),
-    CI_OF                   (false, IntrinsicResultType.CLASS_INFO,         IntrospektNames.ClassInfo.Companion.of),
-    FS_CREATE               (true,  IntrinsicResultType.FRAME_SNAPSHOT,     IntrospektNames.FrameSnapshot.Companion.create);
+    CI_OF                   (false, IntrinsicResultType.CLASS_INFO,         IntrospektNames.ClassInfo.Companion.of);
     // @formatter:on
 
     private fun IntrospektPluginContext.getType(): IrType = when (resultType) {
         IntrinsicResultType.SOURCE_LOCATION -> sourceLocationType.defaultType
         IntrinsicResultType.FUNCTION_INFO -> functionInfoType.defaultType
         IntrinsicResultType.CLASS_INFO -> classInfoType.defaultType
-        IntrinsicResultType.FRAME_SNAPSHOT -> frameSnapshotType.defaultType
         IntrinsicResultType.INT -> irBuiltIns.intType
     }
 
@@ -86,4 +85,9 @@ internal enum class IntrospektIntrinsic( // @formatter:off
             }
         }
     }
+}
+
+internal fun IrFunction.getIntrinsicType(): IntrospektIntrinsic? {
+    if (!hasAnnotation(IntrospektNames.IntrospektIntrinsic.id)) return null
+    return getAnnotationValue<IntrospektIntrinsic>(IntrospektNames.IntrospektIntrinsic.fqName, "type")
 }

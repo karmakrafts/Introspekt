@@ -20,7 +20,6 @@ import dev.karmakrafts.introspekt.compiler.IntrospektPluginContext
 import dev.karmakrafts.introspekt.compiler.util.SourceLocation
 import dev.karmakrafts.introspekt.compiler.util.getAnnotationValues
 import dev.karmakrafts.introspekt.compiler.util.getLocation
-import dev.karmakrafts.introspekt.compiler.util.toClassReference
 import org.jetbrains.kotlin.ir.declarations.IrFile
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.expressions.IrConstructorCall
@@ -28,6 +27,7 @@ import org.jetbrains.kotlin.ir.expressions.impl.IrConstructorCallImpl
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.defaultType
+import org.jetbrains.kotlin.ir.types.getClass
 import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
 import org.jetbrains.kotlin.ir.util.constructedClassType
 import org.jetbrains.kotlin.ir.util.toIrConst
@@ -37,8 +37,13 @@ internal data class AnnotationUsageInfo( // @formatter:off
     val type: IrType,
     val values: Map<String, Any?>
 ) { // @formatter:on
-    fun instantiate(context: IntrospektPluginContext): IrConstructorCallImpl = with(context) {
-        return IrConstructorCallImpl(
+    fun instantiate( // @formatter:off
+        module: IrModuleFragment,
+        file: IrFile,
+        source: List<String>,
+        context: IntrospektPluginContext
+    ): IrConstructorCallImpl = with(context) {
+        IrConstructorCallImpl(
             startOffset = SYNTHETIC_OFFSET,
             endOffset = SYNTHETIC_OFFSET,
             type = annotationUsageInfoType.defaultType,
@@ -48,17 +53,18 @@ internal data class AnnotationUsageInfo( // @formatter:off
         ).apply {
             var index = 0
             putValueArgument(index++, location.instantiateCached(context))
-            putValueArgument(index++, this@AnnotationUsageInfo.type.toClassReference(context))
-            putValueArgument(
-                index, createMapOf(
-                    keyType = irBuiltIns.stringType,
-                    valueType = irBuiltIns.anyType,
-                    values = values.map { (key, value) ->
-                        key.toIrConst(irBuiltIns.stringType) to value?.toIrValue()
-                    })
+            putValueArgument(index++, this@AnnotationUsageInfo.type.getClass()!!
+                .getClassInfo(module, file, source, context)
+                .instantiateCached(module, file, source, context))
+            putValueArgument(index, createMapOf(
+                keyType = irBuiltIns.stringType,
+                valueType = irBuiltIns.anyType,
+                values = values.map { (key, value) ->
+                    key.toIrConst(irBuiltIns.stringType) to value?.toIrValue()
+                })
             )
         }
-    }
+    } // @formatter:on
 }
 
 @OptIn(UnsafeDuringIrConstructionAPI::class)

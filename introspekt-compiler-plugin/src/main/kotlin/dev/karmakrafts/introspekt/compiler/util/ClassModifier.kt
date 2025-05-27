@@ -16,6 +16,16 @@
 
 package dev.karmakrafts.introspekt.compiler.util
 
+import org.jetbrains.kotlin.ir.declarations.IrClass
+import org.jetbrains.kotlin.ir.util.isEnumClass
+
 enum class ClassModifier {
     DATA, VALUE, ENUM
+}
+
+internal fun IrClass.getClassModifier(): ClassModifier? = when {
+    isEnumClass -> ClassModifier.ENUM
+    isData -> ClassModifier.DATA
+    isValue -> ClassModifier.VALUE
+    else -> null
 }

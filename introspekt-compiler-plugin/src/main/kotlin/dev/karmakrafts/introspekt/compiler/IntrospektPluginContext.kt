@@ -29,7 +29,6 @@ import org.jetbrains.kotlin.ir.expressions.impl.IrConstructorCallImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrVarargImpl
 import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
 import org.jetbrains.kotlin.ir.symbols.IrConstructorSymbol
-import org.jetbrains.kotlin.ir.symbols.IrPropertySymbol
 import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.IrType
@@ -62,14 +61,6 @@ internal data class IntrospektPluginContext(
     internal val pairConstructor: IrConstructorSymbol =
         pluginContext.referenceConstructors(IntrospektNames.Kotlin.Pair.id).first()
     internal val pairType: IrClassSymbol = pluginContext.referenceClass(IntrospektNames.Kotlin.Pair.id)!!
-
-    // FrameSnapshot
-    internal val frameSnapshotConstructor: IrConstructorSymbol =
-        pluginContext.referenceConstructors(IntrospektNames.FrameSnapshot.id).first()
-    internal val frameSnapshotEmpty: IrPropertySymbol =
-        pluginContext.referenceProperties(IntrospektNames.FrameSnapshot.Companion.empty).first()
-    internal val frameSnapshotType: IrClassSymbol = pluginContext.referenceClass(IntrospektNames.FrameSnapshot.id)!!
-    internal val frameSnapshotCompanionType: IrClassSymbol = pluginContext.referenceClass(IntrospektNames.FrameSnapshot.Companion.id)!!
 
     // AnnotationUsageInfo
     internal val annotationUsageInfoType: IrClassSymbol =
@@ -150,6 +141,24 @@ internal data class IntrospektPluginContext(
         }
     internal val localInfoGetOrCreate: IrSimpleFunctionSymbol =
         pluginContext.referenceFunctions(IntrospektNames.LocalInfo.Companion.getOrCreate).first()
+
+    // TypeInfo
+    internal val typeInfoType: IrClassSymbol =
+        requireNotNull(pluginContext.referenceClass(IntrospektNames.TypeInfo.id)) {
+            "Cannot find TypeInfo type, Trakkit runtime library is most likely missing"
+        }
+
+    // SimpleTypeInfo
+    internal val simpleTypeInfoType: IrClassSymbol =
+        requireNotNull(pluginContext.referenceClass(IntrospektNames.SimpleTypeInfo.id)) {
+            "Cannot find SimpleTypeInfo type, Trakkit runtime library is most likely missing"
+        }
+    internal val simpleTypeInfoCompanionType: IrClassSymbol =
+        requireNotNull(pluginContext.referenceClass(IntrospektNames.SimpleTypeInfo.Companion.id)) {
+            "Cannot find SimpleTypeInfo.Companion type, Trakkit runtime library is most likely missing"
+        }
+    internal val simpleTypeInfoGetOrCreate: IrSimpleFunctionSymbol =
+        pluginContext.referenceFunctions(IntrospektNames.SimpleTypeInfo.Companion.getOrCreate).first()
 
     // CaptureCaller
     private val captureCallerType: IrClassSymbol = pluginContext.referenceClass(IntrospektNames.CaptureCaller.id)!!

@@ -17,10 +17,22 @@
 package dev.karmakrafts.introspekt.compiler.util
 
 import dev.karmakrafts.introspekt.compiler.IntrospektPluginContext
+import org.jetbrains.kotlin.ir.IrElement
+import org.jetbrains.kotlin.ir.declarations.IrFile
+import org.jetbrains.kotlin.ir.declarations.IrFunction
+import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
+import org.jetbrains.kotlin.ir.declarations.path
 import org.jetbrains.kotlin.ir.expressions.IrConst
 import org.jetbrains.kotlin.ir.expressions.impl.IrCallImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrCallImplWithShape
+import org.jetbrains.kotlin.ir.symbols.IrTypeParameterSymbol
+import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
+import org.jetbrains.kotlin.ir.types.IrType
+import org.jetbrains.kotlin.ir.types.classOrNull
+import org.jetbrains.kotlin.ir.types.classifierOrFail
 import org.jetbrains.kotlin.ir.types.defaultType
+import org.jetbrains.kotlin.ir.util.isFakeOverride
+import org.jetbrains.kotlin.ir.util.isTypeParameter
 import org.jetbrains.kotlin.ir.util.toIrConst
 import org.jetbrains.kotlin.it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
 import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET as KOTLIN_SYNTHETIC_OFFSET
@@ -79,3 +91,57 @@ internal data class SourceLocation( // @formatter:off
         return hashCode().toIrConst(context.irBuiltIns.intType)
     }
 }
+
+internal fun IrFunction.getFunctionLocation( // @formatter:off
+    module: IrModuleFragment,
+    file: IrFile,
+    source: List<String>
+): SourceLocation { // @formatter:on
+    val isFakeOverride = isFakeOverride
+    return SourceLocation.getOrCreate(
+        module = module.name.getCleanName(),
+        file = file.path.trimStart('/'),
+        line = if (isFakeOverride) SourceLocation.FAKE_OVERRIDE_OFFSET
+        else getLineNumber(source, startOffset, endOffset),
+        column = if (isFakeOverride) SourceLocation.FAKE_OVERRIDE_OFFSET
+        else getColumnNumber(source, startOffset, endOffset)
+    )
+}
+
+@OptIn(UnsafeDuringIrConstructionAPI::class)
+internal fun IrType.getLocation( // @formatter:off
+    module: IrModuleFragment,
+    file: IrFile,
+    source: List<String>,
+): SourceLocation { // @formatter:on
+    if (isTypeParameter()) {
+        val symbol = classifierOrFail as IrTypeParameterSymbol
+        val typeParameter = symbol.owner
+        return SourceLocation.getOrCreate(
+            module = module.name.getCleanName(),
+            file = file.path.trimStart('/'),
+            line = getLineNumber(source, typeParameter.startOffset, typeParameter.endOffset),
+            column = getColumnNumber(source, typeParameter.startOffset, typeParameter.endOffset)
+        )
+    }
+    val clazz = classOrNull?.owner
+    return SourceLocation.getOrCreate(
+        module = module.name.getCleanName(),
+        file = file.path.trimStart('/'),
+        line = if (clazz == null) SourceLocation.UNDEFINED_OFFSET
+        else getLineNumber(source, clazz.startOffset, clazz.endOffset),
+        column = if (clazz == null) SourceLocation.UNDEFINED_OFFSET
+        else getColumnNumber(source, clazz.startOffset, clazz.endOffset)
+    )
+}
+
+internal fun IrElement.getLocation( // @formatter:off
+    module: IrModuleFragment,
+    file: IrFile,
+    source: List<String>,
+): SourceLocation = SourceLocation.getOrCreate( // @formatter:on
+    module = module.name.getCleanName(),
+    file = file.path.trimStart('/'),
+    line = getLineNumber(source, startOffset, endOffset),
+    column = getColumnNumber(source, startOffset, endOffset)
+)

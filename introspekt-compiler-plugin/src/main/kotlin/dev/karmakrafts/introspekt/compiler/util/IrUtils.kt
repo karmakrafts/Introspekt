@@ -30,9 +30,6 @@ import org.jetbrains.kotlin.ir.declarations.IrFile
 import org.jetbrains.kotlin.ir.declarations.IrFunction
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.declarations.IrParameterKind
-import org.jetbrains.kotlin.ir.declarations.IrVariable
-import org.jetbrains.kotlin.ir.declarations.path
-import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.IrClassReference
 import org.jetbrains.kotlin.ir.expressions.IrConst
 import org.jetbrains.kotlin.ir.expressions.IrConstructorCall
@@ -54,17 +51,7 @@ import org.jetbrains.kotlin.ir.types.classOrFail
 import org.jetbrains.kotlin.ir.types.defaultType
 import org.jetbrains.kotlin.ir.types.starProjectedType
 import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
-import org.jetbrains.kotlin.ir.util.hasAnnotation
-import org.jetbrains.kotlin.ir.util.isEnumClass
-import org.jetbrains.kotlin.ir.util.isFakeOverride
 import org.jetbrains.kotlin.ir.util.isOverridable
-import org.jetbrains.kotlin.ir.util.kotlinFqName
-import org.jetbrains.kotlin.ir.util.parentClassOrNull
-import org.jetbrains.kotlin.ir.util.target
-import org.jetbrains.kotlin.ir.visitors.IrVisitor
-import org.jetbrains.kotlin.ir.visitors.IrVisitorVoid
-import org.jetbrains.kotlin.ir.visitors.acceptChildrenVoid
-import org.jetbrains.kotlin.ir.visitors.acceptVoid
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.utils.filterIsInstanceAnd
 
@@ -167,37 +154,6 @@ internal fun List<IrConstructorCall>.toAnnotationMap( // @formatter:off
     return annotationMap
 }
 
-internal fun IrFunction.getIntrinsicType(): IntrospektIntrinsic? {
-    if (!hasAnnotation(IntrospektNames.IntrospektIntrinsic.id)) return null
-    return getAnnotationValue<IntrospektIntrinsic>(IntrospektNames.IntrospektIntrinsic.fqName, "type")
-}
-
-internal fun IrCall.getTraceType(): TraceType? {
-    val function = target
-    val functionName = function.name
-    val parentClass = function.parentClassOrNull ?: return null
-    val className = parentClass.kotlinFqName
-    return TraceType.entries.find { it.className == className && it.functionName == functionName }
-}
-
-internal fun IrAnnotationContainer.isTraceable(): Boolean = hasAnnotation(IntrospektNames.Trace.id)
-
-internal fun IrAnnotationContainer.getTraceType(): List<TraceType> {
-    return if (!isTraceable()) emptyList()
-    else getAnnotationValues<TraceType>(IntrospektNames.Trace.fqName, "types").filterNotNull()
-}
-
-internal fun IrAnnotationContainer.isNoFrameCapture(): Boolean = hasAnnotation(IntrospektNames.NoFrameCapture.id)
-
-internal fun IrAnnotationContainer.getFrameCaptureFilter(): (IrVariable) -> Boolean {
-    if (!isNoFrameCapture()) return { true }
-    val patternString = getAnnotationValue<String>(IntrospektNames.NoFrameCapture.fqName, "pattern") ?: return { false }
-    val pattern = Regex(patternString)
-    return { variable ->
-        !pattern.matches(variable.name.asString())
-    }
-}
-
 internal fun IrType.toClassReference(context: IntrospektPluginContext): IrClassReferenceImpl = with(context) {
     IrClassReferenceImpl(
         startOffset = SYNTHETIC_OFFSET,
@@ -207,34 +163,6 @@ internal fun IrType.toClassReference(context: IntrospektPluginContext): IrClassR
         classType = this@toClassReference
     )
 }
-
-internal inline fun IrElement.bfsUntil( // @formatter:off
-    crossinline predicate: (IrElement) -> Boolean,
-    crossinline filter: (IrElement) -> Boolean = { true }
-): List<IrElement> { // @formatter:on
-    var limitReached = false
-    val elements = ArrayList<IrElement>()
-    acceptVoid(object : IrVisitorVoid() {
-        override fun visitElement(element: IrElement) {
-            if (limitReached) return
-            if (predicate(element)) {
-                limitReached = true
-                return
-            }
-            if (filter(element)) elements += element
-            element.acceptChildrenVoid(this)
-        }
-    })
-    return elements
-}
-
-@Suppress("UNCHECKED_CAST")
-internal inline fun <reified T : IrElement> IrElement.bfsFilterInstanceUntil( // @formatter:off
-    crossinline predicate: (IrElement) -> Boolean,
-    crossinline filter: (T) -> Boolean = { true }
-): List<T> = bfsUntil(predicate) { element -> // @formatter:on
-    element is T && filter(element)
-} as List<T>
 
 @OptIn(UnsafeDuringIrConstructionAPI::class)
 internal fun IrClass.getCompanionObjects(): List<IrClass> = declarations.filterIsInstanceAnd<IrClass> { it.isCompanion }
@@ -267,33 +195,6 @@ internal fun getColumnNumber(source: List<String>, startOffset: Int, endOffset: 
     return 0
 }
 
-internal fun IrFunction.getFunctionLocation( // @formatter:off
-    module: IrModuleFragment,
-    file: IrFile,
-    source: List<String>
-): SourceLocation { // @formatter:on
-    val isFakeOverride = isFakeOverride
-    return SourceLocation.getOrCreate(
-        module = module.name.asString(),
-        file = file.path,
-        line = if (isFakeOverride) SourceLocation.FAKE_OVERRIDE_OFFSET
-        else getLineNumber(source, startOffset, endOffset),
-        column = if (isFakeOverride) SourceLocation.FAKE_OVERRIDE_OFFSET
-        else getColumnNumber(source, startOffset, endOffset)
-    )
-}
-
-internal fun IrElement.getLocation( // @formatter:off
-    module: IrModuleFragment,
-    file: IrFile,
-    source: List<String>,
-): SourceLocation = SourceLocation.getOrCreate( // @formatter:on
-    module = module.name.asString(),
-    file = file.path,
-    line = getLineNumber(source, startOffset, endOffset),
-    column = getColumnNumber(source, startOffset, endOffset)
-)
-
 internal fun Visibility.getVisibilityName(): String = when (this) {
     Visibilities.Public -> "PUBLIC"
     Visibilities.Protected -> "PROTECTED"
@@ -301,28 +202,17 @@ internal fun Visibility.getVisibilityName(): String = when (this) {
     else -> "PRIVATE"
 }
 
-internal fun Modality.getModalityName(): String = when (this) {
-    Modality.OPEN -> "OPEN"
-    Modality.SEALED -> "SEALED"
-    Modality.ABSTRACT -> "ABSTRACT"
-    Modality.FINAL -> "FINAL"
-}
-
 internal fun IrFunction.getModality(): Modality = when {
     isOverridable -> Modality.OPEN
     else -> Modality.FINAL
 }
 
-internal fun IrClass.getClassModifier(): ClassModifier? = when {
-    isData -> ClassModifier.DATA
-    isValue -> ClassModifier.VALUE
-    isEnumClass -> ClassModifier.ENUM
-    else -> null
-}
-
-internal fun IrClassSymbol.getObjectInstance(): IrGetObjectValueImpl = IrGetObjectValueImpl(
-    startOffset = SYNTHETIC_OFFSET, endOffset = SYNTHETIC_OFFSET, type = defaultType, symbol = this@getObjectInstance
-)
+internal fun IrClassSymbol.getObjectInstance(): IrGetObjectValueImpl = IrGetObjectValueImpl( // @formatter:off
+    startOffset = SYNTHETIC_OFFSET,
+    endOffset = SYNTHETIC_OFFSET,
+    type = defaultType,
+    symbol = this@getObjectInstance
+) // @formatter:on
 
 @OptIn(UnsafeDuringIrConstructionAPI::class)
 internal fun IrClassSymbol.getEnumConstant(name: String): IrEnumEntrySymbol {

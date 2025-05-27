@@ -19,8 +19,11 @@ package dev.karmakrafts.introspekt.compiler.transformer
 import dev.karmakrafts.introspekt.compiler.util.TraceType
 import dev.karmakrafts.introspekt.compiler.util.getTraceType
 import org.jetbrains.kotlin.ir.expressions.IrCall
+import org.jetbrains.kotlin.ir.expressions.IrStatementContainer
 
 internal class TraceRemovalTransformer : TraceTransformer() {
+    private val callsToRemove: ArrayList<Pair<IrStatementContainer, IrCall>> = ArrayList()
+
     companion object {
         private val types: Set<TraceType> = setOf( // @formatter:off
             TraceType.SPAN_ENTER,
@@ -39,5 +42,14 @@ internal class TraceRemovalTransformer : TraceTransformer() {
         val parentTraceType = data.traceType
         // If the called trace function is present in the current trace scope, return early as calls may stay
         if (callTraceType in parentTraceType) return
+
+        val container = data.containerOrNull ?: return
+        callsToRemove += Pair(container, expression)
+    }
+
+    fun removeCalls() {
+        for ((container, call) in callsToRemove) {
+            container.statements -= call
+        }
     }
 }

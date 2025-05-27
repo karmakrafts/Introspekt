@@ -21,9 +21,7 @@ import org.jetbrains.kotlin.ir.declarations.IrAnonymousInitializer
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrFunction
 import org.jetbrains.kotlin.ir.expressions.IrBlockBody
-import org.jetbrains.kotlin.ir.expressions.IrStatementContainer
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
-import org.jetbrains.kotlin.ir.util.parentClassOrNull
 import org.jetbrains.kotlin.ir.util.primaryConstructor
 import org.jetbrains.kotlin.ir.visitors.IrVisitor
 
@@ -33,30 +31,30 @@ internal abstract class TraceTransformer : IrVisitor<Unit, TraceContext>() {
     }
 
     override fun visitClass(declaration: IrClass, data: TraceContext) {
+        data.classStack.push(declaration)
         data.pushTraceType(declaration)
         super.visitClass(declaration, data)
         data.popTraceType()
+        data.classStack.pop()
     }
 
     override fun visitFunction(declaration: IrFunction, data: TraceContext) {
-        val body = declaration.body
-        val hasScope = body is IrBlockBody
-        if (hasScope) data.containerStack.push(body as IrStatementContainer)
         data.pushTraceType(declaration)
         super.visitFunction(declaration, data)
         data.popTraceType()
-        if (hasScope) data.containerStack.pop()
     }
 
     @OptIn(UnsafeDuringIrConstructionAPI::class)
     override fun visitAnonymousInitializer(declaration: IrAnonymousInitializer, data: TraceContext) {
-        val body = declaration.body
-        val constructor = declaration.parentClassOrNull?.primaryConstructor
-        val hasConstructor = constructor != null
-        data.containerStack.push(body)
-        if (hasConstructor) data.pushTraceType(constructor!!)
+        val constructor = data.classOrNull?.primaryConstructor ?: return
+        data.pushTraceType(constructor)
         super.visitAnonymousInitializer(declaration, data)
-        if (hasConstructor) data.popTraceType()
+        data.popTraceType()
+    }
+
+    override fun visitBlockBody(body: IrBlockBody, data: TraceContext) {
+        data.containerStack.push(body)
+        super.visitBlockBody(body, data)
         data.containerStack.pop()
     }
 }

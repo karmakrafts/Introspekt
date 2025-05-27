@@ -24,6 +24,18 @@ dependencies {
     compileOnly(libs.kotlin.compiler.embeddable)
     compileOnly(libs.autoService)
     kapt(libs.autoService)
+
+    testImplementation(libs.kotlin.test)
+    testImplementation(libs.kotest)
+    testImplementation(libs.iridium)
+    testImplementation(project(":introspekt-runtime"))
+}
+
+tasks {
+    test {
+        useJUnitPlatform()
+        maxParallelForks = Runtime.getRuntime().availableProcessors()
+    }
 }
 
 publishing {

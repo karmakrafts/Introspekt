@@ -17,8 +17,15 @@
 package dev.karmakrafts.introspekt.compiler.element
 
 import dev.karmakrafts.introspekt.compiler.IntrospektPluginContext
+import org.jetbrains.kotlin.ir.declarations.IrFile
+import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.expressions.IrCall
 
 internal sealed interface ElementInfo {
-    fun instantiateCached(context: IntrospektPluginContext): IrCall
+    fun instantiateCached( // @formatter:off
+        module: IrModuleFragment,
+        file: IrFile,
+        source: List<String>,
+        context: IntrospektPluginContext
+    ): IrCall // @formatter:on
 }

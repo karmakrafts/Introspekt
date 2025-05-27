@@ -23,7 +23,6 @@ import dev.karmakrafts.introspekt.compiler.util.getClassModifier
 import dev.karmakrafts.introspekt.compiler.util.getCompanionObjects
 import dev.karmakrafts.introspekt.compiler.util.getEnumValue
 import dev.karmakrafts.introspekt.compiler.util.getLocation
-import dev.karmakrafts.introspekt.compiler.util.getModalityName
 import dev.karmakrafts.introspekt.compiler.util.getObjectInstance
 import dev.karmakrafts.introspekt.compiler.util.getVisibilityName
 import dev.karmakrafts.introspekt.compiler.util.toAnnotationMap
@@ -106,8 +105,13 @@ internal data class ClassInfo(
     inline val qualifiedName: String
         get() = type.classFqName?.asString() ?: "n/a"
 
-    override fun instantiateCached(context: IntrospektPluginContext): IrCall = with(context) {
-        return IrCallImplWithShape(
+    override fun instantiateCached( // @formatter:off
+        module: IrModuleFragment,
+        file: IrFile,
+        source: List<String>,
+        context: IntrospektPluginContext
+    ): IrCall = with(context) { // @formatter:on
+        IrCallImplWithShape(
             startOffset = SYNTHETIC_OFFSET,
             endOffset = SYNTHETIC_OFFSET,
             type = classInfoType.defaultType,
@@ -133,26 +137,26 @@ internal data class ClassInfo(
                 values = typeParameterNames.map { it.toIrConst(irBuiltIns.stringType) })
             )
             // annotations
-            putValueArgument(index++, instantiateAnnotations(context))
+            putValueArgument(index++, instantiateAnnotations(module, file, source, context))
             // functions
             putValueArgument(index++, createListOf(
                 type = functionInfoType.defaultType,
-                values = functions.map { it.instantiateCached(context) })
+                values = functions.map { it.instantiateCached(module, file, source, context) })
             )
             // properties
             putValueArgument(index++, createListOf(
                 type = propertyInfoType.defaultType,
-                values = properties.map { it.instantiateCached(context) }
+                values = properties.map { it.instantiateCached(module, file, source, context) }
             ))
             // companionObjects
             putValueArgument(index++, createListOf(
                 type = classInfoType.defaultType,
-                values = companionObjects.map { it.instantiateCached(context) })
+                values = companionObjects.map { it.instantiateCached(module, file, source, context) })
             )
             // superTypes
             putValueArgument(index++, createListOf(
                 type = classInfoType.defaultType,
-                values = superTypes.map { it.instantiateCached(context) }
+                values = superTypes.map { it.instantiateCached(module, file, source, context) }
             ))
             // isInterface
             putValueArgument(index++, isInterface.toIrConst(irBuiltIns.booleanType))
@@ -165,7 +169,7 @@ internal data class ClassInfo(
             // visibility
             putValueArgument(index++, visibility.getEnumValue(visibilityModifierType) { getVisibilityName() })
             // modality
-            putValueArgument(index++, modality.getEnumValue(modalityModifierType) { getModalityName() })
+            putValueArgument(index++, modality.getEnumValue(modalityModifierType) { name })
             // classModifier
             putValueArgument(index, classType?.getEnumValue(classModifierType, ClassModifier::name)
                 ?: null.toIrConst(classModifierType.defaultType))

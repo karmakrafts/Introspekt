@@ -31,24 +31,24 @@ kotlin {
     mingwX64()
     linuxX64()
     linuxArm64()
-    //macosX64()
-    //macosArm64()
+    macosX64()
+    macosArm64()
     androidTarget {
         publishLibraryVariants("release")
     }
     androidNativeArm32()
     androidNativeArm64()
     androidNativeX64()
-    //iosX64()
-    //iosArm64()
-    //iosSimulatorArm64()
-    //tvosArm64()
-    //tvosX64()
-    //tvosSimulatorArm64()
-    //watchosArm32()
-    //watchosArm64()
-    //watchosX64()
-    //watchosSimulatorArm64()
+    iosX64()
+    iosArm64()
+    iosSimulatorArm64()
+    tvosArm64()
+    tvosX64()
+    tvosSimulatorArm64()
+    watchosArm32()
+    watchosArm64()
+    watchosX64()
+    watchosSimulatorArm64()
     jvm()
     js {
         browser()
@@ -65,18 +65,14 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 api(libs.stately.common)
-                api(libs.stately.collections)
+                api(libs.stately.concurrent.collections)
             }
         }
-        val nonWebMain by creating { dependsOn(commonMain) }
         val jvmAndAndroidMain by creating { dependsOn(commonMain) }
-        val nativeMain by getting { dependsOn(nonWebMain) }
         val jvmMain by getting {
-            dependsOn(nonWebMain)
             dependsOn(jvmAndAndroidMain)
         }
         val androidMain by getting {
-            dependsOn(nonWebMain)
             dependsOn(jvmAndAndroidMain)
         }
     }

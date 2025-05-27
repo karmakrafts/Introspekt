@@ -46,13 +46,15 @@ internal class FunctionInfoTransformer(
         check(argument is IrFunctionReference) { "Parameter must be a function reference" }
         return requireNotNull(argument.reflectionTarget) {
             "Parameter reference must have a reflection target"
-        }.owner.getFunctionInfo(moduleFragment, file, source).instantiateCached(pluginContext)
+        }.owner.getFunctionInfo(moduleFragment, file, source)
+            .instantiateCached(moduleFragment, file, source, pluginContext)
     }
 
     override fun visitIntrinsic(
         type: IntrospektIntrinsic, expression: IrCall, context: IntrinsicContext
     ): IrElement = when (type) { // @formatter:off
-        IntrospektIntrinsic.FI_CURRENT -> context.getFunctionInfo(moduleFragment, file, source).instantiateCached(pluginContext)
+        IntrospektIntrinsic.FI_CURRENT -> context.getFunctionInfo(moduleFragment, file, source)
+            .instantiateCached(moduleFragment, file, source, pluginContext)
         IntrospektIntrinsic.FI_OF -> emitOf(expression)
         else -> error("Unsupported intrinsic for FunctionInfoTransformer")
     } // @formatter:on

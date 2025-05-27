@@ -22,7 +22,6 @@ import dev.karmakrafts.introspekt.compiler.util.getEnumValue
 import dev.karmakrafts.introspekt.compiler.util.getFunctionLocation
 import dev.karmakrafts.introspekt.compiler.util.getLocation
 import dev.karmakrafts.introspekt.compiler.util.getModality
-import dev.karmakrafts.introspekt.compiler.util.getModalityName
 import dev.karmakrafts.introspekt.compiler.util.getObjectInstance
 import dev.karmakrafts.introspekt.compiler.util.getVisibilityName
 import dev.karmakrafts.introspekt.compiler.util.toAnnotationMap
@@ -107,8 +106,13 @@ internal data class FunctionInfo(
         }
     }
 
-    override fun instantiateCached(context: IntrospektPluginContext): IrCall = with(context) {
-        return IrCallImplWithShape(
+    override fun instantiateCached( // @formatter:off
+        module: IrModuleFragment,
+        file: IrFile,
+        source: List<String>,
+        context: IntrospektPluginContext
+    ): IrCall = with(context) { // @formatter:on
+        IrCallImplWithShape(
             startOffset = SYNTHETIC_OFFSET,
             endOffset = SYNTHETIC_OFFSET,
             type = functionInfoType.defaultType,
@@ -146,16 +150,16 @@ internal data class FunctionInfo(
             // visibility
             putValueArgument(index++, visibility.getEnumValue(visibilityModifierType) { getVisibilityName() })
             // modality
-            putValueArgument(index++, modality.getEnumValue(modalityModifierType) { getModalityName() })
+            putValueArgument(index++, modality.getEnumValue(modalityModifierType) { name })
             // locals
             putValueArgument(index++, createListOf(
                 type = localInfoType.defaultType,
-                values = locals.map { it.instantiateCached(context) }
+                values = locals.map { it.instantiateCached(module, file, source, context) }
             ))
             // isExpect
             putValueArgument(index++, isExpect.toIrConst(irBuiltIns.booleanType))
             // annotations
-            putValueArgument(index, instantiateAnnotations(context))
+            putValueArgument(index, instantiateAnnotations(module, file, source, context))
             dispatchReceiver = functionInfoCompanionType.getObjectInstance()
         } // @formatter:on
     }

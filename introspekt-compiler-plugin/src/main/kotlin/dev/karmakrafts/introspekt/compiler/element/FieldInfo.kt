@@ -23,7 +23,6 @@ import dev.karmakrafts.introspekt.compiler.util.getLocation
 import dev.karmakrafts.introspekt.compiler.util.getObjectInstance
 import dev.karmakrafts.introspekt.compiler.util.getVisibilityName
 import dev.karmakrafts.introspekt.compiler.util.toAnnotationMap
-import dev.karmakrafts.introspekt.compiler.util.toClassReference
 import org.jetbrains.kotlin.descriptors.Visibility
 import org.jetbrains.kotlin.ir.declarations.IrField
 import org.jetbrains.kotlin.ir.declarations.IrFile
@@ -32,6 +31,7 @@ import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.impl.IrCallImplWithShape
 import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.defaultType
+import org.jetbrains.kotlin.ir.types.getClass
 import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
 import org.jetbrains.kotlin.ir.util.kotlinFqName
 import org.jetbrains.kotlin.ir.util.toIrConst
@@ -47,8 +47,13 @@ internal class FieldInfo(
     val isFinal: Boolean,
     override val annotations: Map<IrType, List<AnnotationUsageInfo>>
 ) : ElementInfo, AnnotatedElement {
-    override fun instantiateCached(context: IntrospektPluginContext): IrCall = with(context) {
-        return IrCallImplWithShape(
+    override fun instantiateCached( // @formatter:off
+        module: IrModuleFragment,
+        file: IrFile,
+        source: List<String>,
+        context: IntrospektPluginContext
+    ): IrCall = with(context) { // @formatter:on
+        IrCallImplWithShape(
             startOffset = SYNTHETIC_OFFSET,
             endOffset = SYNTHETIC_OFFSET,
             type = fieldInfoType.defaultType,
@@ -58,7 +63,7 @@ internal class FieldInfo(
             contextParameterCount = 0,
             hasDispatchReceiver = true,
             hasExtensionReceiver = false
-        ).apply {
+        ).apply { // @formatter:off
             var index = 0
             // location
             putValueArgument(index++, location.instantiateCached(context))
@@ -67,7 +72,8 @@ internal class FieldInfo(
             // name
             putValueArgument(index++, name.toIrConst(irBuiltIns.stringType))
             // type
-            putValueArgument(index++, type.toClassReference(context))
+            putValueArgument(index++, type.getClass()!!.getClassInfo(module, file, source, context)
+                .instantiateCached(module, file, source, context))
             // visibility
             putValueArgument(index++, visibility.getEnumValue(visibilityModifierType) { getVisibilityName() })
             // isStatic
@@ -77,15 +83,17 @@ internal class FieldInfo(
             // isFinal
             putValueArgument(index++, isFinal.toIrConst(irBuiltIns.booleanType))
             // annotations
-            putValueArgument(index, instantiateAnnotations(context))
+            putValueArgument(index, instantiateAnnotations(module, file, source, context))
             dispatchReceiver = fieldInfoCompanionType.getObjectInstance()
-        }
+        } // @formatter:on
     }
 }
 
-internal fun IrField.getFieldInfo(
-    module: IrModuleFragment, file: IrFile, source: List<String>
-): FieldInfo = FieldInfo(
+internal fun IrField.getFieldInfo( // @formatter:off
+    module: IrModuleFragment,
+    file: IrFile,
+    source: List<String>
+): FieldInfo = FieldInfo( // @formatter:on
     location = getLocation(module, file, source),
     qualifiedName = kotlinFqName.asString(),
     name = name.asString(),

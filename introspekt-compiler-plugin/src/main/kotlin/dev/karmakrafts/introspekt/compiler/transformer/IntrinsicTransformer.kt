@@ -52,9 +52,7 @@ internal abstract class IntrinsicTransformer(
         return result
     }
 
-    override fun visitFunction(
-        declaration: IrFunction, data: IntrinsicContext
-    ): IrStatement {
+    override fun visitFunction(declaration: IrFunction, data: IntrinsicContext): IrStatement {
         data.functionStack.push(declaration)
         val result = super.visitFunction(declaration, data)
         data.functionStack.pop()

@@ -16,12 +16,19 @@
 
 package dev.karmakrafts.introspekt.compiler.util
 
+import org.jetbrains.kotlin.ir.declarations.IrAnnotationContainer
+import org.jetbrains.kotlin.ir.expressions.IrCall
+import org.jetbrains.kotlin.ir.util.hasAnnotation
+import org.jetbrains.kotlin.ir.util.kotlinFqName
+import org.jetbrains.kotlin.ir.util.parentClassOrNull
+import org.jetbrains.kotlin.ir.util.target
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 
-internal enum class TraceType(
-    val className: FqName, val functionName: Name
-) {
+internal enum class TraceType( // @formatter:off
+    val className: FqName,
+    val functionName: Name
+) { // @formatter:on
     // @formatter:off
     SPAN_ENTER      (IntrospektNames.TraceSpan.Companion.fqName,        IntrospektNames.Functions.enter),
     SPAN_LEAVE      (IntrospektNames.TraceSpan.Companion.fqName,        IntrospektNames.Functions.leave),
@@ -34,4 +41,19 @@ internal enum class TraceType(
     CALL            (IntrospektNames.TraceCollector.Companion.fqName,   IntrospektNames.Functions.call),
     EVENT           (IntrospektNames.Trace.Companion.fqName,            IntrospektNames.Functions.event);
     // @formatter:on
+}
+
+internal fun IrCall.getTraceType(): TraceType? {
+    val function = target
+    val functionName = function.name
+    val parentClass = function.parentClassOrNull ?: return null
+    val className = parentClass.kotlinFqName
+    return TraceType.entries.find { it.className == className && it.functionName == functionName }
+}
+
+internal fun IrAnnotationContainer.isTraceable(): Boolean = hasAnnotation(IntrospektNames.Trace.id)
+
+internal fun IrAnnotationContainer.getTraceType(): List<TraceType> {
+    return if (!isTraceable()) emptyList()
+    else getAnnotationValues<TraceType>(IntrospektNames.Trace.fqName, "targets").filterNotNull()
 }
