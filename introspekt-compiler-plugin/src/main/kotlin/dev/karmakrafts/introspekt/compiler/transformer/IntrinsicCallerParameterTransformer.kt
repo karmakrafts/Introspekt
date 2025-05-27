@@ -44,12 +44,11 @@ internal class IntrinsicCallerParameterTransformer(
         val function = expression.target
         if (!function.hasAnnotation(IntrospektNames.CaptureCaller.id)) return
         val intrinsicStrings = function.getAnnotationValues<String>(IntrospektNames.CaptureCaller.fqName, "intrinsics")
-        val valueArgumentsCount = expression.valueArgumentsCount
         intrinsicStrings.filterNotNull().map { stringValue ->
             val (index, name) = stringValue.split(":")
             Pair(index.toInt(), IntrospektIntrinsic.valueOf(name))
         }.forEach { (index, type) ->
-            if (index < valueArgumentsCount && expression.getValueArgument(index) != null) return@forEach
+            if (expression.arguments[index] != null) return@forEach
             expression.putValueArgument(
                 index, type.createCall(
                     context = pluginContext,
