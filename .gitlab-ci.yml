@@ -75,21 +75,31 @@ build:
 
 # ------------------------------ Publish
 
-publish:artifacts:
+publish-gitlab:
   stage: publish
   rules:
     - *if-main
     - *if-release
   script:
-    - ./gradlew clean publish --stacktrace
+    - ./gradlew publishAllPublicationsToGitLabRepository
   tags:
     - macos
 
-publish:documentation:
+publish-central:
+  stage: publish
+  rules:
+    - *if-main
+    - *if-release
+  script:
+    - ./gradlew publishToSonatype closeAndReleaseStagingRepositories
+  tags:
+    - macos
+
+publish-documentation:
   stage: publish
   rules:
     - *if-release
   script:
-    - ./gradlew -DpublishDocs.root=/var/www/docs/trakkit publishDocs --stacktrace
+    - ./gradlew -DpublishDocs.root=/var/www/docs/introspekt publishDocs
   tags:
     - linux
