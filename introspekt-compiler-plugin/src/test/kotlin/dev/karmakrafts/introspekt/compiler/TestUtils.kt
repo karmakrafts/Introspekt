@@ -39,7 +39,7 @@ import org.jetbrains.kotlin.ir.util.kotlinFqName
 import org.jetbrains.kotlin.ir.util.properties
 import org.jetbrains.kotlin.ir.util.target
 
-fun CompilerTestScope.introspektPipeline(moduleName: String = "test") {
+internal fun CompilerTestScope.introspektPipeline(moduleName: String = "test") {
     pipeline {
         defaultPipelineSpec(moduleName)
         config {
@@ -48,7 +48,7 @@ fun CompilerTestScope.introspektPipeline(moduleName: String = "test") {
     }
 }
 
-fun CompilerTestScope.introspektTransformerPipeline(moduleName: String = "test") {
+internal fun CompilerTestScope.introspektTransformerPipeline(moduleName: String = "test") {
     introspektPipeline(moduleName)
     pipeline {
         irExtension(IntrospektIrGenerationExtension { sourceLines })
@@ -56,7 +56,7 @@ fun CompilerTestScope.introspektTransformerPipeline(moduleName: String = "test")
 }
 
 @Suppress("NOTHING_TO_INLINE")
-inline fun IrElementMatcher<out IrCall>.isCachedSourceLocation( // @formatter:off
+internal inline fun IrElementMatcher<out IrCall>.isCachedSourceLocation( // @formatter:off
     module: String,
     file: String,
     line: Int,
@@ -90,7 +90,7 @@ inline fun IrElementMatcher<out IrCall>.isCachedSourceLocation( // @formatter:of
     (columnArg as IrConstImpl).value shouldBe column
 }
 
-inline fun IrElementMatcher<out IrCall>.isCachedTypeInfo( // @formatter:off
+internal inline fun IrElementMatcher<out IrCall>.isCachedTypeInfo( // @formatter:off
     module: String,
     file: String,
     line: Int,
@@ -127,7 +127,7 @@ inline fun IrElementMatcher<out IrCall>.isCachedTypeInfo( // @formatter:off
     (nameArg as IrConstImpl).value shouldBe name
 }
 
-fun IrElementMatcher<out IrCall>.isCachedFunctionInfo( // @formatter:off
+internal fun IrElementMatcher<out IrCall>.isCachedFunctionInfo( // @formatter:off
     module: String,
     file: String,
     line: Int,
@@ -158,7 +158,7 @@ fun IrElementMatcher<out IrCall>.isCachedFunctionInfo( // @formatter:off
 }
 
 @OptIn(UnsafeDuringIrConstructionAPI::class)
-inline fun IrElementMatcher<out IrCall>.isCachedClassInfo( // @formatter:off
+internal inline fun IrElementMatcher<out IrCall>.isCachedClassInfo( // @formatter:off
     module: String,
     file: String,
     line: Int,
