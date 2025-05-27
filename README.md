@@ -19,7 +19,7 @@ It currently adds the following features:
 
 ### How to use it
 
-First, add the official maven repositories to your `settings.gradle.kts`:
+First, add the official Maven Central repository to your `settings.gradle.kts`:
 
 ```kotlin
 pluginManagement {

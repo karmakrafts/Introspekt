@@ -96,9 +96,10 @@ internal inline fun <reified T> IrElement?.unwrapAnnotationValues(): List<T?> {
     }
 }
 
-internal fun IrAnnotationContainer.getAnnotation(
-    type: FqName, index: Int = 0
-): IrConstructorCall? {
+internal fun IrAnnotationContainer.getAnnotation( // @formatter:off
+    type: FqName,
+    index: Int = 0
+): IrConstructorCall? { // @formatter:on
     return annotations.filter { it.type.classFqName == type }.getOrNull(index)
 }
 
@@ -117,13 +118,17 @@ internal fun IrAnnotationContainer.getRawAnnotationValue(
     return annotation.getValueArgument(parameter.indexInOldValueParameters)
 }
 
-internal inline fun <reified T> IrAnnotationContainer.getAnnotationValue(
-    type: FqName, name: String, index: Int = 0
-): T? = getRawAnnotationValue(type, name, index).unwrapAnnotationValue<T>()
+internal inline fun <reified T> IrAnnotationContainer.getAnnotationValue( // @formatter:off
+    type: FqName,
+    name: String,
+    index: Int = 0
+): T? = getRawAnnotationValue(type, name, index).unwrapAnnotationValue<T>() // @formatter:on
 
-internal inline fun <reified T> IrAnnotationContainer.getAnnotationValues(
-    type: FqName, name: String, index: Int = 0
-): List<T?> = getRawAnnotationValue(type, name, index).unwrapAnnotationValues<T>()
+internal inline fun <reified T> IrAnnotationContainer.getAnnotationValues( // @formatter:off
+    type: FqName,
+    name: String,
+    index: Int = 0
+): List<T?> = getRawAnnotationValue(type, name, index).unwrapAnnotationValues<T>() // @formatter:on
 
 @OptIn(UnsafeDuringIrConstructionAPI::class)
 internal fun IrConstructorCall.getAnnotationValues(): Map<String, Any?> {
@@ -230,5 +235,5 @@ internal inline fun <T> T.getEnumValue(
     startOffset = SYNTHETIC_OFFSET,
     endOffset = SYNTHETIC_OFFSET,
     type = type.defaultType,
-    symbol = type.getEnumConstant(this.mapper())
+    symbol = type.getEnumConstant(mapper())
 )
