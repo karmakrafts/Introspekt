@@ -25,6 +25,8 @@ import dev.karmakrafts.iridium.pipeline.addJvmClasspathRootByType
 import dev.karmakrafts.iridium.pipeline.defaultPipelineSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import org.jetbrains.kotlin.ir.declarations.IrFunction
+import org.jetbrains.kotlin.ir.declarations.IrParameterKind
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.impl.IrCallImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrClassReferenceImpl
@@ -32,6 +34,7 @@ import org.jetbrains.kotlin.ir.expressions.impl.IrConstImpl
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.getClass
+import org.jetbrains.kotlin.ir.util.functions
 import org.jetbrains.kotlin.ir.util.kotlinFqName
 import org.jetbrains.kotlin.ir.util.properties
 import org.jetbrains.kotlin.ir.util.target
@@ -163,6 +166,7 @@ inline fun IrElementMatcher<out IrCall>.isCachedClassInfo( // @formatter:off
     qualifiedName: String,
     name: String,
     properties: Map<String, IrType> = emptyMap(),
+    functions: Map<String, List<IrType>> = emptyMap(),
     crossinline typeMatcher: IrTypeMatcher<IrType>.() -> Unit
 ) { // @formatter:on
     val function = element.target
@@ -185,7 +189,29 @@ inline fun IrElementMatcher<out IrCall>.isCachedClassInfo( // @formatter:off
     clazz shouldNotBe null
     if (properties.isNotEmpty()) {
         for (property in clazz!!.properties) {
-            (property.backingField?.type ?: property.getter!!.returnType) shouldBe properties[property.name.asString()]
+            (property.backingField?.type ?: property.getter?.returnType
+            ?: continue) shouldBe properties[property.name.asString()]
+        }
+    }
+    if (functions.isNotEmpty()) {
+        val namedFunctions = HashMap<String, ArrayList<IrFunction>>()
+        for (function in clazz!!.functions) {
+            namedFunctions.getOrPut(function.name.asString()) { ArrayList() } += function
+        }
+        for ((name, types) in functions) {
+            var targetFunction: IrFunction? = null
+            for (candidate in namedFunctions[name]!!) {
+                if (candidate.returnType != types.first()) continue
+                val paramTypes = types.drop(1)
+                // @formatter:off
+                if (candidate.parameters
+                    .filter { it.kind == IrParameterKind.Regular }
+                    .map { it.type } != paramTypes) continue
+                // @formatter:on
+                targetFunction = candidate
+                break
+            }
+            targetFunction shouldNotBe null
         }
     }
 }

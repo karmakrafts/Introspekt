@@ -35,6 +35,7 @@ class ClassInfoTransformerTest {
             import dev.karmakrafts.introspekt.element.ClassInfo
             class Test {
                 val foo: String = "HELLO, WORLD!"
+                fun bar(s: String) {}
             }
             fun foo() {
                 val info = ClassInfo.of<Test>()
@@ -53,6 +54,9 @@ class ClassInfoTransformerTest {
                     name = "Test",
                     properties = mapOf( // @formatter:off
                         "foo" to types.stringType
+                    ), // @formatter:on
+                    functions = mapOf( // @formatter:off
+                        "bar" to listOf(types.unitType, types.stringType)
                     ) // @formatter:on
                 ) { type("com/example/Test") }
             }
@@ -86,6 +90,13 @@ class ClassInfoTransformerTest {
                         "MAX_VALUE" to types.intType,
                         "SIZE_BYTES" to types.intType,
                         "SIZE_BITS" to types.intType
+                    ),
+                    functions = mapOf(
+                        "compareTo" to listOf(types.intType, types.byteType),
+                        "plus" to listOf(types.intType, types.byteType),
+                        "minus" to listOf(types.intType, types.byteType),
+                        "times" to listOf(types.intType, types.byteType),
+                        "div" to listOf(types.intType, types.byteType)
                     )
                 ) { type("kotlin/Int") }
             }
