@@ -20,7 +20,6 @@ import dev.karmakrafts.introspekt.compiler.util.SourceLocation
 import dev.karmakrafts.introspekt.compiler.util.getFunctionLocation
 import dev.karmakrafts.introspekt.compiler.util.getLocation
 import dev.karmakrafts.iridium.runCompilerTest
-import dev.karmakrafts.iridium.util.getChild
 import io.kotest.matchers.shouldBe
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrFunction
@@ -44,7 +43,7 @@ class SourceLocationTest {
         // @formatter:on
         compiler shouldNotReport { error() }
         result irMatches {
-            element.getChild<IrFunction> { it.name.asString() == "bar" }
+            getChild<IrFunction> { it.name.asString() == "bar" }
                 .getFunctionLocation(element, element.files.first(), this@runCompilerTest.sourceLines)
                 .shouldBe(SourceLocation(moduleName, this@runCompilerTest.fileName, 2, 5))
         }
@@ -64,7 +63,7 @@ class SourceLocationTest {
         // @formatter:on
         compiler shouldNotReport { error() }
         result irMatches {
-            element.getChild<IrProperty> { it.name.asString() == "bar" }
+            getChild<IrProperty> { it.name.asString() == "bar" }
                 .getLocation(element, element.files.first(), this@runCompilerTest.sourceLines)
                 .shouldBe(SourceLocation(moduleName, this@runCompilerTest.fileName, 2, 5))
         }
@@ -84,7 +83,7 @@ class SourceLocationTest {
         // @formatter:on
         compiler shouldNotReport { error() }
         result irMatches {
-            element.getChild<IrClass> { it.name.asString() == "Bar" }
+            getChild<IrClass> { it.name.asString() == "Bar" }
                 .getLocation(element, element.files.first(), this@runCompilerTest.sourceLines)
                 .shouldBe(SourceLocation(moduleName, this@runCompilerTest.fileName, 2, 5))
         }
@@ -104,7 +103,7 @@ class SourceLocationTest {
         // @formatter:on
         compiler shouldNotReport { error() }
         result irMatches { // @formatter:off
-            element.getChild<IrFunction> { it.name.asString() == "bar" }
+            getChild<IrFunction> { it.name.asString() == "bar" }
                 .returnType
                 .getLocation(element, element.files.first(), this@runCompilerTest.sourceLines)
                 .shouldBe(SourceLocation(moduleName, this@runCompilerTest.fileName, 2, 10))

@@ -19,7 +19,6 @@ package dev.karmakrafts.introspekt.compiler
 import dev.karmakrafts.introspekt.compiler.util.IntrospektIntrinsic
 import dev.karmakrafts.introspekt.compiler.util.getIntrinsicType
 import dev.karmakrafts.iridium.setupCompilerTest
-import dev.karmakrafts.iridium.util.getChild
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import org.jetbrains.kotlin.ir.declarations.IrFunction
@@ -43,8 +42,7 @@ class IntrospektIntrinsicTest {
             """.trimIndent())
             // @formatter:on
             result irMatches {
-                element.getChild<IrFunction> { it.name.asString() == "intrinsic" }
-                    .getIntrinsicType() shouldBe intrinsicType
+                getChild<IrFunction> { it.name.asString() == "intrinsic" }.getIntrinsicType() shouldBe intrinsicType
             }
             evaluate()
         }

@@ -20,7 +20,6 @@ import dev.karmakrafts.introspekt.compiler.util.ClassModifier
 import dev.karmakrafts.introspekt.compiler.util.getClassModifier
 import dev.karmakrafts.iridium.pipeline.defaultPipelineSpec
 import dev.karmakrafts.iridium.runCompilerTest
-import dev.karmakrafts.iridium.util.getChild
 import io.kotest.matchers.shouldBe
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import kotlin.test.Test
@@ -36,7 +35,7 @@ class ClassModifierTest {
         // @formatter:on
         compiler shouldNotReport { error() }
         result irMatches {
-            element.getChild<IrClass> { it.name.asString() == "Foo" }.apply {
+            getChild<IrClass> { it.name.asString() == "Foo" }.apply {
                 getClassModifier() shouldBe null
             }
         }
@@ -52,7 +51,7 @@ class ClassModifierTest {
         // @formatter:on
         compiler shouldNotReport { error() }
         result irMatches {
-            element.getChild<IrClass> { it.name.asString() == "Foo" }.apply {
+            getChild<IrClass> { it.name.asString() == "Foo" }.apply {
                 getClassModifier() shouldBe ClassModifier.ENUM
             }
         }
@@ -68,7 +67,7 @@ class ClassModifierTest {
         // @formatter:on
         compiler shouldNotReport { error() }
         result irMatches {
-            element.getChild<IrClass> { it.name.asString() == "Foo" }.apply {
+            getChild<IrClass> { it.name.asString() == "Foo" }.apply {
                 getClassModifier() shouldBe ClassModifier.DATA
             }
         }
@@ -85,7 +84,7 @@ class ClassModifierTest {
         // @formatter:on
         compiler shouldNotReport { error() }
         result irMatches {
-            element.getChild<IrClass> { it.name.asString() == "Foo" }.apply {
+            getChild<IrClass> { it.name.asString() == "Foo" }.apply {
                 getClassModifier() shouldBe ClassModifier.VALUE
             }
         }
