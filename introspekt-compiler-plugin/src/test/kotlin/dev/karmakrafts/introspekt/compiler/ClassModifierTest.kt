@@ -28,9 +28,7 @@ import kotlin.test.Test
 class ClassModifierTest {
     @Test
     fun `Get regular class modifier`() = runCompilerTest {
-        pipeline {
-            defaultPipelineSpec()
-        }
+        introspektPipeline()
         // @formatter:off
         source("""
             class Foo
@@ -46,9 +44,7 @@ class ClassModifierTest {
 
     @Test
     fun `Get enum class modifier`() = runCompilerTest {
-        pipeline {
-            defaultPipelineSpec()
-        }
+        introspektPipeline()
         // @formatter:off
         source("""
             enum class Foo
@@ -64,9 +60,7 @@ class ClassModifierTest {
 
     @Test
     fun `Get data class modifier`() = runCompilerTest {
-        pipeline {
-            defaultPipelineSpec()
-        }
+        introspektPipeline()
         // @formatter:off
         source("""
             data class Foo(val x: Int)
@@ -82,9 +76,7 @@ class ClassModifierTest {
 
     @Test
     fun `Get value class modifier`() = runCompilerTest {
-        pipeline {
-            defaultPipelineSpec()
-        }
+        introspektPipeline()
         // @formatter:off
         source("""
             @JvmInline

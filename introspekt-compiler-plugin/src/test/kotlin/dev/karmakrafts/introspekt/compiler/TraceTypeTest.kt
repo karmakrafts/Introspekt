@@ -18,24 +18,16 @@ package dev.karmakrafts.introspekt.compiler
 
 import dev.karmakrafts.introspekt.compiler.util.TraceType
 import dev.karmakrafts.introspekt.compiler.util.getTraceType
-import dev.karmakrafts.iridium.pipeline.addJvmClasspathRootByType
-import dev.karmakrafts.iridium.pipeline.defaultPipelineSpec
 import dev.karmakrafts.iridium.setupCompilerTest
 import dev.karmakrafts.iridium.util.getChild
 import io.kotest.matchers.collections.shouldContain
 import org.jetbrains.kotlin.ir.declarations.IrFunction
 import kotlin.test.Test
-import dev.karmakrafts.introspekt.IntrospektIntrinsic as IntrospektIntrinsicAnnotation
 
 class TraceTypeTest {
     @Test
     fun `Get trace type`() = setupCompilerTest {
-        pipeline {
-            defaultPipelineSpec()
-            config {
-                addJvmClasspathRootByType<IntrospektIntrinsicAnnotation>()
-            }
-        }
+        introspektPipeline()
         for (traceType in TraceType.entries) {
             resetAssertions()
             compiler shouldNotReport { error() }

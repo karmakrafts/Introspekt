@@ -19,14 +19,12 @@ package dev.karmakrafts.introspekt.compiler
 import dev.karmakrafts.introspekt.compiler.util.SourceLocation
 import dev.karmakrafts.introspekt.compiler.util.getFunctionLocation
 import dev.karmakrafts.introspekt.compiler.util.getLocation
-import dev.karmakrafts.iridium.pipeline.defaultPipelineSpec
 import dev.karmakrafts.iridium.runCompilerTest
 import dev.karmakrafts.iridium.util.getChild
 import io.kotest.matchers.shouldBe
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrFunction
 import org.jetbrains.kotlin.ir.declarations.IrProperty
-import org.jetbrains.kotlin.ir.declarations.IrTypeParameter
 import kotlin.test.Test
 
 class SourceLocationTest {
@@ -34,9 +32,7 @@ class SourceLocationTest {
     fun `Get function location`() = runCompilerTest {
         val moduleName = "testing"
         fileName = "test.kt"
-        pipeline {
-            defaultPipelineSpec(moduleName)
-        }
+        introspektPipeline(moduleName)
         // @formatter:off
         source("""
             class Foo {
@@ -58,9 +54,7 @@ class SourceLocationTest {
     fun `Get property location`() = runCompilerTest {
         val moduleName = "testing"
         fileName = "test.kt"
-        pipeline {
-            defaultPipelineSpec(moduleName)
-        }
+        introspektPipeline(moduleName)
         // @formatter:off
         source("""
             class Foo {
@@ -80,9 +74,7 @@ class SourceLocationTest {
     fun `Get class location`() = runCompilerTest {
         val moduleName = "testing"
         fileName = "test.kt"
-        pipeline {
-            defaultPipelineSpec(moduleName)
-        }
+        introspektPipeline(moduleName)
         // @formatter:off
         source("""
             class Foo {
@@ -102,9 +94,7 @@ class SourceLocationTest {
     fun `Get type parameter location`() = runCompilerTest {
         val moduleName = "testing"
         fileName = "test.kt"
-        pipeline {
-            defaultPipelineSpec(moduleName)
-        }
+        introspektPipeline(moduleName)
         // @formatter:off
         source("""
             class Foo {

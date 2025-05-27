@@ -27,13 +27,17 @@ import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
 import org.jetbrains.kotlin.ir.util.hasAnnotation
 import org.jetbrains.kotlin.name.CallableId
 
-internal enum class IntrinsicResultType {
+internal enum class IntrinsicResultType( // @formatter:off
+    private val typeProvider: (IntrospektPluginContext) -> IrType
+) { // @formatter:on
     // @formatter:off
-    SOURCE_LOCATION,
-    FUNCTION_INFO,
-    CLASS_INFO,
-    INT
+    SOURCE_LOCATION ({ it.sourceLocationType.defaultType }),
+    FUNCTION_INFO   ({ it.functionInfoType.defaultType }),
+    CLASS_INFO      ({ it.classInfoType.defaultType }),
+    INT             ({ it.irBuiltIns.intType });
     // @formatter:on
+
+    operator fun invoke(context: IntrospektPluginContext): IrType = typeProvider(context)
 }
 
 internal enum class IntrospektIntrinsic( // @formatter:off

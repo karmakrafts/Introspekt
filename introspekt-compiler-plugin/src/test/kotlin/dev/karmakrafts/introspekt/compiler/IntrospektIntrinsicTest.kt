@@ -18,24 +18,19 @@ package dev.karmakrafts.introspekt.compiler
 
 import dev.karmakrafts.introspekt.compiler.util.IntrospektIntrinsic
 import dev.karmakrafts.introspekt.compiler.util.getIntrinsicType
-import dev.karmakrafts.iridium.pipeline.addJvmClasspathRootByType
-import dev.karmakrafts.iridium.pipeline.defaultPipelineSpec
 import dev.karmakrafts.iridium.setupCompilerTest
 import dev.karmakrafts.iridium.util.getChild
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import org.jetbrains.kotlin.ir.declarations.IrFunction
+import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
+import org.jetbrains.kotlin.ir.util.parentClassOrNull
 import kotlin.test.Test
-import dev.karmakrafts.introspekt.IntrospektIntrinsic as IntrospektIntrinsicAnnotation
 
 class IntrospektIntrinsicTest {
     @Test
     fun `Get intrinsic type`() = setupCompilerTest {
-        pipeline {
-            defaultPipelineSpec()
-            config {
-                addJvmClasspathRootByType<IntrospektIntrinsicAnnotation>()
-            }
-        }
+        introspektPipeline()
         for (intrinsicType in IntrospektIntrinsic.entries) {
             resetAssertions()
             compiler shouldNotReport { error() }
@@ -50,6 +45,30 @@ class IntrospektIntrinsicTest {
             result irMatches {
                 element.getChild<IrFunction> { it.name.asString() == "intrinsic" }
                     .getIntrinsicType() shouldBe intrinsicType
+            }
+            evaluate()
+        }
+    }
+
+    @OptIn(UnsafeDuringIrConstructionAPI::class)
+    @Test
+    fun `Create call`() = setupCompilerTest {
+        introspektPipeline()
+        for (intrinsicType in IntrospektIntrinsic.entries) {
+            resetAssertions()
+            compiler shouldNotReport { error() }
+            result irMatches {
+                val introspektContext = IntrospektPluginContext(pluginContext)
+
+                val call = intrinsicType.createCall(introspektContext)
+                call.type shouldBe intrinsicType.resultType(introspektContext)
+
+                val function = call.symbol.owner
+                function.name shouldBe intrinsicType.functionId.callableName
+
+                val clazz = function.parentClassOrNull
+                clazz shouldNotBe null
+                clazz!!.name shouldBe intrinsicType.functionId.classId!!.shortClassName
             }
             evaluate()
         }
