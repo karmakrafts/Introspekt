@@ -24,9 +24,9 @@ class LocalInfo(
     override val location: SourceLocation,
     override val qualifiedName: String,
     override val name: String,
-    val type: SimpleTypeInfo,
+    val type: TypeInfo,
     val isMutable: Boolean,
-    override val annotations: Map<SimpleTypeInfo, List<AnnotationUsageInfo>>
+    override val annotations: Map<TypeInfo, List<AnnotationUsageInfo>>
 ) : AnnotatedElementInfo {
     companion object {
         private val cache: ConcurrentMutableMap<String, LocalInfo> = ConcurrentMutableMap()
@@ -36,9 +36,9 @@ class LocalInfo(
             location: SourceLocation,
             qualifiedName: String,
             name: String,
-            type: SimpleTypeInfo,
+            type: TypeInfo,
             isMutable: Boolean,
-            annotations: Map<SimpleTypeInfo, List<AnnotationUsageInfo>>
+            annotations: Map<TypeInfo, List<AnnotationUsageInfo>>
         ): LocalInfo = cache.getOrPut(qualifiedName) {
             LocalInfo(
                 location = location,

@@ -30,14 +30,14 @@ data class FunctionInfo(
     override val qualifiedName: String,
     override val name: String,
     val typeParameterNames: List<String>,
-    val returnType: SimpleTypeInfo,
-    val parameterTypes: List<SimpleTypeInfo>,
+    val returnType: TypeInfo,
+    val parameterTypes: List<TypeInfo>,
     val parameterNames: List<String>,
     val visibility: VisibilityModifier,
     val modality: ModalityModifier,
     val locals: List<LocalInfo>,
     override val isExpect: Boolean,
-    override val annotations: Map<SimpleTypeInfo, List<AnnotationUsageInfo>>
+    override val annotations: Map<TypeInfo, List<AnnotationUsageInfo>>
 ) : AnnotatedElementInfo, ExpectableElementInfo {
     companion object {
         private val cache: ConcurrentMutableMap<Int, FunctionInfo> = ConcurrentMutableMap()
@@ -50,8 +50,8 @@ data class FunctionInfo(
 
         private fun getCacheKey( // @formatter:off
             qualifiedName: String,
-            returnType: SimpleTypeInfo,
-            parameterTypes: List<SimpleTypeInfo>
+            returnType: TypeInfo,
+            parameterTypes: List<TypeInfo>
         ): Int { // @formatter:on
             var result = qualifiedName.hashCode()
             result = 31 * result + returnType.hashCode()
@@ -65,14 +65,14 @@ data class FunctionInfo(
             qualifiedName: String,
             name: String,
             typeParameterNames: List<String>,
-            returnType: SimpleTypeInfo,
-            parameterTypes: List<SimpleTypeInfo>,
+            returnType: TypeInfo,
+            parameterTypes: List<TypeInfo>,
             parameterNames: List<String>,
             visibility: VisibilityModifier,
             modality: ModalityModifier,
             locals: List<LocalInfo>,
             isExpect: Boolean,
-            annotations: Map<SimpleTypeInfo, List<AnnotationUsageInfo>>
+            annotations: Map<TypeInfo, List<AnnotationUsageInfo>>
         ): FunctionInfo {
             return cache.getOrPut(getCacheKey(qualifiedName, returnType, parameterTypes)) {
                 FunctionInfo(

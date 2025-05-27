@@ -34,6 +34,7 @@ internal enum class IntrinsicResultType( // @formatter:off
     SOURCE_LOCATION ({ it.sourceLocationType.defaultType }),
     FUNCTION_INFO   ({ it.functionInfoType.defaultType }),
     CLASS_INFO      ({ it.classInfoType.defaultType }),
+    TYPE_INFO       ({ it.typeInfoType.defaultType }),
     INT             ({ it.irBuiltIns.intType });
     // @formatter:on
 
@@ -57,15 +58,11 @@ internal enum class IntrospektIntrinsic( // @formatter:off
     FI_CURRENT              (true,  IntrinsicResultType.FUNCTION_INFO,      IntrospektNames.FunctionInfo.Companion.current),
     FI_OF                   (false, IntrinsicResultType.FUNCTION_INFO,      IntrospektNames.FunctionInfo.Companion.of),
     CI_CURRENT              (true,  IntrinsicResultType.CLASS_INFO,         IntrospektNames.ClassInfo.Companion.current),
-    CI_OF                   (false, IntrinsicResultType.CLASS_INFO,         IntrospektNames.ClassInfo.Companion.of);
+    CI_OF                   (false, IntrinsicResultType.CLASS_INFO,         IntrospektNames.ClassInfo.Companion.of),
+    TI_OF                   (false, IntrinsicResultType.TYPE_INFO,          IntrospektNames.TypeInfo.Companion.of);
     // @formatter:on
 
-    private fun IntrospektPluginContext.getType(): IrType = when (resultType) {
-        IntrinsicResultType.SOURCE_LOCATION -> sourceLocationType.defaultType
-        IntrinsicResultType.FUNCTION_INFO -> functionInfoType.defaultType
-        IntrinsicResultType.CLASS_INFO -> classInfoType.defaultType
-        IntrinsicResultType.INT -> irBuiltIns.intType
-    }
+    private fun IntrospektPluginContext.getType(): IrType = resultType(this)
 
     private fun IntrospektPluginContext.getSymbol(): IrSimpleFunctionSymbol {
         return referenceFunctions(functionId).first()

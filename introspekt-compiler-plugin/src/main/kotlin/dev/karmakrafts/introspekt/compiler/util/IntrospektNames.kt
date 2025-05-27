@@ -21,7 +21,7 @@ import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 
-internal object IntrospektNames {
+object IntrospektNames {
     val packageName: FqName = FqName("dev.karmakrafts.introspekt")
     val elementPackageName: FqName = FqName("dev.karmakrafts.introspekt.element")
     val tracePackageName: FqName = FqName("dev.karmakrafts.introspekt.trace")
@@ -217,18 +217,20 @@ internal object IntrospektNames {
     object TypeInfo {
         val name: Name = Name.identifier("TypeInfo")
         val id: ClassId = ClassId(elementPackageName, name)
+        val fqName: FqName = id.asSingleFqName()
+
+        object Companion {
+            val fqName: FqName = FqName("TypeInfo.Companion")
+            val id: ClassId = ClassId(elementPackageName, fqName, false)
+
+            val getOrCreate: CallableId = CallableId(elementPackageName, fqName, Functions.getOrCreate)
+            val of: CallableId = CallableId(elementPackageName, fqName, Functions.of)
+        }
     }
 
     object SimpleTypeInfo {
         val name: Name = Name.identifier("SimpleTypeInfo")
         val id: ClassId = ClassId(elementPackageName, name)
-
-        object Companion {
-            val fqName: FqName = FqName("SimpleTypeInfo.Companion")
-            val id: ClassId = ClassId(elementPackageName, fqName, false)
-
-            val getOrCreate: CallableId = CallableId(elementPackageName, fqName, Functions.getOrCreate)
-        }
     }
 
     // -------------------- dev.karmakrafts.introspekt.trace

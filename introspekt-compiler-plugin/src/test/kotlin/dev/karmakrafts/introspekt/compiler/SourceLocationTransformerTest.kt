@@ -109,7 +109,7 @@ class SourceLocationTransformerTest {
     }
 
     @Test
-    fun `Obtain location via type`() = runCompilerTest {
+    fun `Obtain location via type parameter`() = runCompilerTest {
         introspektTransformerPipeline()
         // @formatter:off
         source("""

@@ -27,6 +27,7 @@ import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.impl.IrCallImplWithShape
 import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.classFqName
+import org.jetbrains.kotlin.ir.types.defaultType
 import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
 import org.jetbrains.kotlin.ir.util.toIrConst
 
@@ -43,9 +44,10 @@ internal data class TypeInfo( // @formatter:off
             file: IrFile,
             source: List<String>
         ): TypeInfo = cache.getOrPut(type) { // @formatter:on
-            TypeInfo(
-                type = type, location = type.getLocation(module, file, source)
-            )
+            TypeInfo( // @formatter:off
+                type = type,
+                location = type.getLocation(module, file, source)
+            ) // @formatter:on
         }
     }
 
@@ -58,22 +60,22 @@ internal data class TypeInfo( // @formatter:off
         IrCallImplWithShape(
             startOffset = SYNTHETIC_OFFSET,
             endOffset = SYNTHETIC_OFFSET,
-            type = type,
-            symbol = context.simpleTypeInfoGetOrCreate,
+            type = context.typeInfoType.defaultType,
+            symbol = context.typeInfoGetOrCreate,
             typeArgumentsCount = 0,
             contextParameterCount = 0,
-            valueArgumentsCount = 0,
+            valueArgumentsCount = 4,
             hasDispatchReceiver = true,
             hasExtensionReceiver = false
         ).apply { // @formatter:off
             var index = 0
             putValueArgument(index++, location.instantiateCached(context))
-            putValueArgument(index++, type.toClassReference(context))
-            putValueArgument(index++, (type.classFqName?.asString()
+            putValueArgument(index++, this@TypeInfo.type.toClassReference(context))
+            putValueArgument(index++, (this@TypeInfo.type.classFqName?.asString()
                 ?: "<undefined>").toIrConst(irBuiltIns.stringType))
-            putValueArgument(index, (type.classFqName?.shortNameOrSpecial()?.asString()
+            putValueArgument(index, (this@TypeInfo.type.classFqName?.shortNameOrSpecial()?.asString()
                 ?: "<undefined>").toIrConst(irBuiltIns.stringType))
-            dispatchReceiver = context.simpleTypeInfoCompanionType.getObjectInstance()
+            dispatchReceiver = context.typeInfoCompanionType.getObjectInstance()
         } // @formatter:on
     }
 

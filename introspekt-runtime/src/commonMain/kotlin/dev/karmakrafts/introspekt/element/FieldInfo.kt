@@ -32,12 +32,12 @@ class FieldInfo(
     override val location: SourceLocation,
     override val qualifiedName: String,
     override val name: String,
-    val type: SimpleTypeInfo,
+    val type: TypeInfo,
     val visibility: VisibilityModifier,
     val isStatic: Boolean,
     val isExternal: Boolean,
     val isFinal: Boolean,
-    override val annotations: Map<SimpleTypeInfo, List<AnnotationUsageInfo>>
+    override val annotations: Map<TypeInfo, List<AnnotationUsageInfo>>
 ) : AnnotatedElementInfo {
     companion object {
         private val cache: ConcurrentMutableMap<String, FieldInfo> = ConcurrentMutableMap()
@@ -47,12 +47,12 @@ class FieldInfo(
             location: SourceLocation,
             qualifiedName: String,
             name: String,
-            type: SimpleTypeInfo,
+            type: TypeInfo,
             visibility: VisibilityModifier,
             isStatic: Boolean,
             isExternal: Boolean,
             isFinal: Boolean,
-            annotations: Map<SimpleTypeInfo, List<AnnotationUsageInfo>>
+            annotations: Map<TypeInfo, List<AnnotationUsageInfo>>
         ): FieldInfo {
             return cache.getOrPut(qualifiedName) {
                 FieldInfo(

@@ -34,7 +34,7 @@ data class PropertyInfo(
     val backingField: FieldInfo?,
     val getter: FunctionInfo?,
     val setter: FunctionInfo?,
-    override val annotations: Map<SimpleTypeInfo, List<AnnotationUsageInfo>>
+    override val annotations: Map<TypeInfo, List<AnnotationUsageInfo>>
 ) : AnnotatedElementInfo {
     companion object {
         private val cache: ConcurrentMutableMap<String, PropertyInfo> = ConcurrentMutableMap()
@@ -52,7 +52,7 @@ data class PropertyInfo(
             backingField: FieldInfo?,
             getter: FunctionInfo?,
             setter: FunctionInfo?,
-            annotations: Map<SimpleTypeInfo, List<AnnotationUsageInfo>>
+            annotations: Map<TypeInfo, List<AnnotationUsageInfo>>
         ): PropertyInfo {
             return cache.getOrPut(qualifiedName) {
                 PropertyInfo(
@@ -73,12 +73,12 @@ data class PropertyInfo(
         }
     }
 
-    inline val typeOrNull: SimpleTypeInfo?
+    inline val typeOrNull: TypeInfo?
         get() = getter?.returnType// @formatter:off
             ?: setter?.parameterTypes?.first()
             ?: backingField?.type // @formatter:on
 
-    inline val type: SimpleTypeInfo
+    inline val type: TypeInfo
         get() = typeOrNull ?: throw IllegalStateException("Could not determine type of property $qualifiedName")
 
     fun toFormattedString(indent: Int = 0): String {

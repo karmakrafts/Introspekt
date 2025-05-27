@@ -25,13 +25,13 @@ import dev.karmakrafts.introspekt.util.ModalityModifier
 import dev.karmakrafts.introspekt.util.VisibilityModifier
 
 data class ClassInfo(
-    val type: SimpleTypeInfo,
+    val type: TypeInfo,
     val typeParameterNames: List<String>,
-    override val annotations: Map<SimpleTypeInfo, List<AnnotationUsageInfo>>,
+    override val annotations: Map<TypeInfo, List<AnnotationUsageInfo>>,
     val functions: List<FunctionInfo>,
     val properties: List<PropertyInfo>,
     val companionObjects: List<ClassInfo>,
-    val superTypes: List<SimpleTypeInfo>,
+    val superTypes: List<TypeInfo>,
     val isInterface: Boolean,
     val isObject: Boolean,
     val isCompanionObject: Boolean,
@@ -41,7 +41,7 @@ data class ClassInfo(
     val classModifier: ClassModifier?
 ) : AnnotatedElementInfo, ExpectableElementInfo, TypeInfo by type {
     companion object {
-        private val cache: ConcurrentMutableMap<SimpleTypeInfo, ClassInfo> = ConcurrentMutableMap()
+        private val cache: ConcurrentMutableMap<TypeInfo, ClassInfo> = ConcurrentMutableMap()
 
         @IntrospektIntrinsic(IntrospektIntrinsic.Type.CI_CURRENT)
         fun current(): ClassInfo = throw IntrospektPluginNotAppliedException()
@@ -51,13 +51,13 @@ data class ClassInfo(
 
         @IntrospektCompilerApi
         internal fun getOrCreate(
-            type: SimpleTypeInfo,
+            type: TypeInfo,
             typeParameterNames: List<String>,
-            annotations: Map<SimpleTypeInfo, List<AnnotationUsageInfo>>,
+            annotations: Map<TypeInfo, List<AnnotationUsageInfo>>,
             functions: List<FunctionInfo>,
             properties: List<PropertyInfo>,
             companionObjects: List<ClassInfo>,
-            superTypes: List<SimpleTypeInfo>,
+            superTypes: List<TypeInfo>,
             isInterface: Boolean,
             isObject: Boolean,
             isCompanionObject: Boolean,

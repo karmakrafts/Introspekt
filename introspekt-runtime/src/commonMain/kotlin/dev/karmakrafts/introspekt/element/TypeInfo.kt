@@ -18,33 +18,38 @@ package dev.karmakrafts.introspekt.element
 
 import co.touchlab.stately.collections.ConcurrentMutableMap
 import dev.karmakrafts.introspekt.IntrospektCompilerApi
+import dev.karmakrafts.introspekt.IntrospektIntrinsic
+import dev.karmakrafts.introspekt.IntrospektPluginNotAppliedException
 import dev.karmakrafts.introspekt.util.SourceLocation
 import kotlin.reflect.KClass
 
 sealed interface TypeInfo : ElementInfo {
+    companion object {
+        private val cache: ConcurrentMutableMap<KClass<*>, SimpleTypeInfo> = ConcurrentMutableMap()
+
+        @IntrospektIntrinsic(IntrospektIntrinsic.Type.TI_OF)
+        fun <T : Any> of(): TypeInfo = throw IntrospektPluginNotAppliedException()
+
+        @IntrospektCompilerApi
+        internal fun getOrCreate( // @formatter:off
+            location: SourceLocation,
+            reflectType: KClass<*>,
+            qualifiedName: String,
+            name: String
+        ): TypeInfo = cache.getOrPut(reflectType) { // @formatter:on
+            SimpleTypeInfo(location, reflectType, qualifiedName, name)
+        }
+    }
+
     val reflectType: KClass<*>
 }
 
-data class SimpleTypeInfo(
+private data class SimpleTypeInfo(
     override val location: SourceLocation,
     override val reflectType: KClass<*>,
     override val qualifiedName: String,
     override val name: String
 ) : TypeInfo {
-    companion object {
-        private val cache: ConcurrentMutableMap<KClass<*>, SimpleTypeInfo> = ConcurrentMutableMap()
-
-        @IntrospektCompilerApi
-        fun getOrCreate( // @formatter:off
-            location: SourceLocation,
-            reflectType: KClass<*>,
-            qualifiedName: String,
-            name: String
-        ): SimpleTypeInfo = cache.getOrPut(reflectType) { // @formatter:on
-            SimpleTypeInfo(location, reflectType, qualifiedName, name)
-        }
-    }
-
     override fun equals(other: Any?): Boolean {
         return if (other !is TypeInfo) false
         else reflectType == other.reflectType

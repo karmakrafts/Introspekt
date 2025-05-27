@@ -153,12 +153,12 @@ internal data class IntrospektPluginContext(
         requireNotNull(pluginContext.referenceClass(IntrospektNames.SimpleTypeInfo.id)) {
             "Cannot find SimpleTypeInfo type, Trakkit runtime library is most likely missing"
         }
-    internal val simpleTypeInfoCompanionType: IrClassSymbol =
-        requireNotNull(pluginContext.referenceClass(IntrospektNames.SimpleTypeInfo.Companion.id)) {
+    internal val typeInfoCompanionType: IrClassSymbol =
+        requireNotNull(pluginContext.referenceClass(IntrospektNames.TypeInfo.Companion.id)) {
             "Cannot find SimpleTypeInfo.Companion type, Trakkit runtime library is most likely missing"
         }
-    internal val simpleTypeInfoGetOrCreate: IrSimpleFunctionSymbol =
-        pluginContext.referenceFunctions(IntrospektNames.SimpleTypeInfo.Companion.getOrCreate).first()
+    internal val typeInfoGetOrCreate: IrSimpleFunctionSymbol =
+        pluginContext.referenceFunctions(IntrospektNames.TypeInfo.Companion.getOrCreate).first()
 
     // CaptureCaller
     private val captureCallerType: IrClassSymbol = pluginContext.referenceClass(IntrospektNames.CaptureCaller.id)!!

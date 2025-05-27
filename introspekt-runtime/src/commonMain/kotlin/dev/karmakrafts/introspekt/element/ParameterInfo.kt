@@ -22,6 +22,6 @@ data class ParameterInfo(
     override val location: SourceLocation,
     override val qualifiedName: String,
     override val name: String,
-    val type: SimpleTypeInfo,
-    override val annotations: Map<SimpleTypeInfo, List<AnnotationUsageInfo>>
+    val type: TypeInfo,
+    override val annotations: Map<TypeInfo, List<AnnotationUsageInfo>>
 ) : AnnotatedElementInfo

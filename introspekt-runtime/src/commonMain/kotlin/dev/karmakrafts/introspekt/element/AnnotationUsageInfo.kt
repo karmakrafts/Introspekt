@@ -22,7 +22,7 @@ import dev.karmakrafts.introspekt.util.SourceLocation
 @ConsistentCopyVisibility
 data class AnnotationUsageInfo @IntrospektCompilerApi internal constructor( // @formatter:off
     val location: SourceLocation,
-    val type: SimpleTypeInfo,
+    val type: TypeInfo,
     val values: Map<String, Any?>
 ) { // @formatter:on
     @Suppress("UNCHECKED_CAST")

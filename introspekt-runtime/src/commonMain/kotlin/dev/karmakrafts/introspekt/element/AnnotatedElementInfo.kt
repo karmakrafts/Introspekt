@@ -19,7 +19,7 @@ package dev.karmakrafts.introspekt.element
 import kotlin.reflect.KClass
 
 sealed interface AnnotatedElementInfo : ElementInfo {
-    val annotations: Map<SimpleTypeInfo, List<AnnotationUsageInfo>>
+    val annotations: Map<TypeInfo, List<AnnotationUsageInfo>>
 
     fun hasAnnotation(type: KClass<out Annotation>): Boolean = annotations.keys.any { it.reflectType == type }
 
