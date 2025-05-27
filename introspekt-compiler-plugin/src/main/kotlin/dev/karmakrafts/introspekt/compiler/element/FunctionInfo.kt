@@ -25,7 +25,6 @@ import dev.karmakrafts.introspekt.compiler.util.getModality
 import dev.karmakrafts.introspekt.compiler.util.getObjectInstance
 import dev.karmakrafts.introspekt.compiler.util.getVisibilityName
 import dev.karmakrafts.introspekt.compiler.util.toAnnotationMap
-import dev.karmakrafts.introspekt.compiler.util.toClassReference
 import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.descriptors.Visibility
 import org.jetbrains.kotlin.ir.declarations.IrAnonymousInitializer
@@ -37,7 +36,6 @@ import org.jetbrains.kotlin.ir.declarations.IrVariable
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.impl.IrCallImplWithShape
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
-import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.defaultType
 import org.jetbrains.kotlin.ir.types.starProjectedType
 import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
@@ -53,22 +51,22 @@ internal data class FunctionInfo(
     val qualifiedName: String,
     val name: String,
     val typeParameterNames: List<String>,
-    val returnType: IrType,
-    val parameterTypes: List<IrType>,
+    val returnType: TypeInfo,
+    val parameterTypes: List<TypeInfo>,
     val parameterNames: List<String>,
     val visibility: Visibility,
     val modality: Modality,
     val isExpect: Boolean,
     var locals: List<LocalInfo> = emptyList(),
-    override var annotations: Map<IrType, List<AnnotationUsageInfo>> = emptyMap()
+    override var annotations: Map<TypeInfo, List<AnnotationUsageInfo>> = emptyMap()
 ) : ElementInfo, AnnotatedElement {
     companion object {
         private val cache: Int2ObjectOpenHashMap<FunctionInfo> = Int2ObjectOpenHashMap()
 
         private fun getCacheKey(
             qualifiedName: String,
-            returnType: IrType,
-            parameterTypes: List<IrType>,
+            returnType: TypeInfo,
+            parameterTypes: List<TypeInfo>,
         ): Int {
             var result = qualifiedName.hashCode()
             result = 31 * result + qualifiedName.hashCode()
@@ -82,8 +80,8 @@ internal data class FunctionInfo(
             qualifiedName: String,
             name: String,
             typeParameterNames: List<String>,
-            returnType: IrType,
-            parameterTypes: List<IrType>,
+            returnType: TypeInfo,
+            parameterTypes: List<TypeInfo>,
             parameterNames: List<String>,
             visibility: Visibility,
             modality: Modality,
@@ -136,11 +134,11 @@ internal data class FunctionInfo(
                 values = typeParameterNames.map { it.toIrConst(irBuiltIns.stringType) })
             )
             // returnType
-            putValueArgument(index++, returnType.toClassReference(context))
+            putValueArgument(index++, returnType.instantiateCached(module, file, source, context))
             // parameterTypes
             putValueArgument(index++, createListOf(
                 type = irBuiltIns.kClassClass.starProjectedType,
-                values = parameterTypes.map { it.type.toIrValue() })
+                values = parameterTypes.map { it.instantiateCached(module, file, source, context) })
             )
             // parameterNames
             putValueArgument(index++, createListOf(
@@ -194,8 +192,8 @@ internal fun IrFunction.getFunctionInfo( // @formatter:off
         qualifiedName = kotlinFqName.asString(),
         name = name.asString(),
         typeParameterNames = typeParameters.map { it.name.asString() },
-        returnType = returnType,
-        parameterTypes = regularParams.map { it.type },
+        returnType = returnType.getTypeInfo(module, file, source),
+        parameterTypes = regularParams.map { it.type.getTypeInfo(module, file, source) },
         parameterNames = regularParams.map { it.name.asString() },
         visibility = visibility.delegate,
         modality = getModality(),
@@ -224,8 +222,8 @@ internal fun IrAnonymousInitializer.getFunctionInfo( // @formatter:off
         qualifiedName = constructor.kotlinFqName.asString(),
         name = constructor.name.asString(),
         typeParameterNames = constructor.typeParameters.map { it.name.asString() },
-        returnType = constructor.returnType,
-        parameterTypes = regularParams.map { it.type },
+        returnType = constructor.returnType.getTypeInfo(module, file, source),
+        parameterTypes = regularParams.map { it.type.getTypeInfo(module, file, source) },
         parameterNames = regularParams.map { it.name.asString() },
         visibility = constructor.visibility.delegate,
         modality = constructor.getModality(),

@@ -21,7 +21,6 @@ import dev.karmakrafts.introspekt.compiler.util.SourceLocation
 import dev.karmakrafts.introspekt.compiler.util.getLocation
 import dev.karmakrafts.introspekt.compiler.util.getObjectInstance
 import dev.karmakrafts.introspekt.compiler.util.toAnnotationMap
-import dev.karmakrafts.introspekt.compiler.util.toClassReference
 import org.jetbrains.kotlin.ir.declarations.IrAnonymousInitializer
 import org.jetbrains.kotlin.ir.declarations.IrFile
 import org.jetbrains.kotlin.ir.declarations.IrFunction
@@ -29,7 +28,6 @@ import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.declarations.IrVariable
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.impl.IrCallImplWithShape
-import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.defaultType
 import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
 import org.jetbrains.kotlin.ir.util.kotlinFqName
@@ -40,9 +38,9 @@ internal class LocalInfo(
     val location: SourceLocation,
     val qualifiedName: String,
     val name: String,
-    val type: IrType,
+    val type: TypeInfo,
     val isMutable: Boolean,
-    override val annotations: Map<IrType, List<AnnotationUsageInfo>>
+    override val annotations: Map<TypeInfo, List<AnnotationUsageInfo>>
 ) : ElementInfo, AnnotatedElement {
     override fun instantiateCached( // @formatter:off
         module: IrModuleFragment,
@@ -69,7 +67,7 @@ internal class LocalInfo(
             // name
             putValueArgument(index++, name.toIrConst(irBuiltIns.stringType))
             // type
-            putValueArgument(index++, this@LocalInfo.type.toClassReference(context))
+            putValueArgument(index++, this@LocalInfo.type.instantiateCached(module, file, source, context))
             // isMutable
             putValueArgument(index++, isMutable.toIrConst(irBuiltIns.booleanType))
             // annotations
@@ -88,7 +86,7 @@ internal fun IrVariable.getLocalInfo( // @formatter:off
     location = getLocation(module, file, source),
     qualifiedName = "${function.kotlinFqName.asString()}.${name.asString()}",
     name = name.asString(),
-    type = type,
+    type = type.getTypeInfo(module, file, source),
     isMutable = isVar,
     annotations = annotations.toAnnotationMap(module, file, source)
 )
@@ -102,7 +100,7 @@ internal fun IrVariable.getLocalInfo( // @formatter:off
     location = getLocation(module, file, source),
     qualifiedName = "${function.parentAsClass.kotlinFqName.asString()}.<init>.${name.asString()}",
     name = name.asString(),
-    type = type,
+    type = type.getTypeInfo(module, file, source),
     isMutable = isVar,
     annotations = annotations.toAnnotationMap(module, file, source)
 )

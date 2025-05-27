@@ -26,7 +26,6 @@ import dev.karmakrafts.introspekt.compiler.util.getLocation
 import dev.karmakrafts.introspekt.compiler.util.getObjectInstance
 import dev.karmakrafts.introspekt.compiler.util.getVisibilityName
 import dev.karmakrafts.introspekt.compiler.util.toAnnotationMap
-import dev.karmakrafts.introspekt.compiler.util.toClassReference
 import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.descriptors.Visibility
 import org.jetbrains.kotlin.ir.declarations.IrClass
@@ -35,11 +34,9 @@ import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.impl.IrCallImplWithShape
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
-import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.classFqName
 import org.jetbrains.kotlin.ir.types.classOrNull
 import org.jetbrains.kotlin.ir.types.defaultType
-import org.jetbrains.kotlin.ir.types.getClass
 import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
 import org.jetbrains.kotlin.ir.util.functions
 import org.jetbrains.kotlin.ir.util.isInterface
@@ -49,10 +46,10 @@ import org.jetbrains.kotlin.ir.util.toIrConst
 
 internal data class ClassInfo(
     val location: SourceLocation,
-    val type: IrType,
+    val type: TypeInfo,
     val typeParameterNames: List<String>,
     val companionObjects: List<ClassInfo>,
-    val superTypes: List<ClassInfo>,
+    val superTypes: List<TypeInfo>,
     val isInterface: Boolean,
     val isObject: Boolean,
     val isCompanionObject: Boolean,
@@ -62,17 +59,17 @@ internal data class ClassInfo(
     val classType: ClassModifier?,
     var functions: List<FunctionInfo> = emptyList(),
     var properties: List<PropertyInfo> = emptyList(),
-    override var annotations: Map<IrType, List<AnnotationUsageInfo>> = emptyMap()
+    override var annotations: Map<TypeInfo, List<AnnotationUsageInfo>> = emptyMap()
 ) : ElementInfo, AnnotatedElement {
     companion object {
-        private val cache: HashMap<IrType, ClassInfo> = HashMap()
+        private val cache: HashMap<TypeInfo, ClassInfo> = HashMap()
 
         fun getOrCreate(
             location: SourceLocation,
-            type: IrType,
+            type: TypeInfo,
             typeParameterNames: List<String>,
             companionObjects: List<ClassInfo>,
-            superTypes: List<ClassInfo>,
+            superTypes: List<TypeInfo>,
             isInterface: Boolean,
             isObject: Boolean,
             isCompanionObject: Boolean,
@@ -100,10 +97,10 @@ internal data class ClassInfo(
     }
 
     inline val name: String
-        get() = type.classFqName?.shortName()?.asString() ?: "n/a"
+        get() = type.type.classFqName?.shortName()?.asString() ?: "n/a"
 
     inline val qualifiedName: String
-        get() = type.classFqName?.asString() ?: "n/a"
+        get() = type.type.classFqName?.asString() ?: "n/a"
 
     override fun instantiateCached( // @formatter:off
         module: IrModuleFragment,
@@ -123,14 +120,8 @@ internal data class ClassInfo(
             hasExtensionReceiver = false
         ).apply { // @formatter:off
             var index = 0
-            // location
-            putValueArgument(index++, location.instantiateCached(context))
-            // qualifiedName
-            putValueArgument(index++, qualifiedName.toIrConst(irBuiltIns.stringType))
-            // name
-            putValueArgument(index++, name.toIrConst(irBuiltIns.stringType))
             // type
-            putValueArgument(index++, this@ClassInfo.type.toClassReference(context))
+            putValueArgument(index++, this@ClassInfo.type.instantiateCached(module, file, source, context))
             // typeParameterNames
             putValueArgument(index++, createListOf(
                 type = irBuiltIns.stringType,
@@ -155,7 +146,7 @@ internal data class ClassInfo(
             )
             // superTypes
             putValueArgument(index++, createListOf(
-                type = classInfoType.defaultType,
+                type = simpleTypeInfoType.defaultType,
                 values = superTypes.map { it.instantiateCached(module, file, source, context) }
             ))
             // isInterface
@@ -195,12 +186,12 @@ internal fun IrClass.getClassInfo( // @formatter:off
     context: IntrospektPluginContext
 ): ClassInfo = ClassInfo.getOrCreate(
     location = getLocation(module, file, source),
-    type = symbol.defaultType,
+    type = symbol.defaultType.getTypeInfo(module, file, source),
     typeParameterNames = typeParameters.map { it.name.asString() },
     companionObjects = getCompanionObjects().map { it.getClassInfo(module, file, source, context) },
     superTypes = superTypes
         .filter { it.classOrNull != null }
-        .mapNotNull { it.getClass()?.getClassInfo(module, file, source, context) },
+        .map { it.getTypeInfo(module, file, source) },
     isInterface = isInterface,
     isObject = isObject,
     isCompanionObject = isCompanion,

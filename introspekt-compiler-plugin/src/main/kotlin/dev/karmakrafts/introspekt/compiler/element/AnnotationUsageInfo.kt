@@ -27,7 +27,6 @@ import org.jetbrains.kotlin.ir.expressions.impl.IrConstructorCallImpl
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.defaultType
-import org.jetbrains.kotlin.ir.types.getClass
 import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
 import org.jetbrains.kotlin.ir.util.constructedClassType
 import org.jetbrains.kotlin.ir.util.toIrConst
@@ -53,8 +52,8 @@ internal data class AnnotationUsageInfo( // @formatter:off
         ).apply {
             var index = 0
             putValueArgument(index++, location.instantiateCached(context))
-            putValueArgument(index++, this@AnnotationUsageInfo.type.getClass()!!
-                .getClassInfo(module, file, source, context)
+            putValueArgument(index++, this@AnnotationUsageInfo.type
+                .getTypeInfo(module, file, source)
                 .instantiateCached(module, file, source, context))
             putValueArgument(index, createMapOf(
                 keyType = irBuiltIns.stringType,

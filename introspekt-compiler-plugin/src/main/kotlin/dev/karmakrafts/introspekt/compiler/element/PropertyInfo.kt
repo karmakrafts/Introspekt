@@ -29,7 +29,6 @@ import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.declarations.IrProperty
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.impl.IrCallImplWithShape
-import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.defaultType
 import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
 import org.jetbrains.kotlin.ir.util.fqNameWhenAvailable
@@ -47,7 +46,7 @@ internal data class PropertyInfo(
     val backingField: FieldInfo?,
     val getter: FunctionInfo?,
     val setter: FunctionInfo?,
-    override var annotations: Map<IrType, List<AnnotationUsageInfo>> = emptyMap()
+    override var annotations: Map<TypeInfo, List<AnnotationUsageInfo>> = emptyMap()
 ) : ElementInfo, AnnotatedElement {
     companion object {
         private val cache: HashMap<String, PropertyInfo> = HashMap()

@@ -16,9 +16,9 @@
 
 package dev.karmakrafts.introspekt.trace
 
-import co.touchlab.stately.collections.SharedLinkedList
+import co.touchlab.stately.collections.ConcurrentMutableList
 
-private val traceSpanStack: SharedLinkedList<TraceSpan> = SharedLinkedList()
+private val traceSpanStack: ConcurrentMutableList<TraceSpan> = ConcurrentMutableList()
 
 internal actual fun pushTraceSpan(span: TraceSpan) {
     traceSpanStack.add(span)

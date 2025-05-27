@@ -29,9 +29,7 @@ import org.jetbrains.kotlin.ir.declarations.IrFile
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.impl.IrCallImplWithShape
-import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.defaultType
-import org.jetbrains.kotlin.ir.types.getClass
 import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
 import org.jetbrains.kotlin.ir.util.kotlinFqName
 import org.jetbrains.kotlin.ir.util.toIrConst
@@ -40,12 +38,12 @@ internal class FieldInfo(
     val location: SourceLocation,
     val qualifiedName: String,
     val name: String,
-    val type: IrType,
+    val type: TypeInfo,
     val visibility: Visibility,
     val isStatic: Boolean,
     val isExternal: Boolean,
     val isFinal: Boolean,
-    override val annotations: Map<IrType, List<AnnotationUsageInfo>>
+    override val annotations: Map<TypeInfo, List<AnnotationUsageInfo>>
 ) : ElementInfo, AnnotatedElement {
     override fun instantiateCached( // @formatter:off
         module: IrModuleFragment,
@@ -72,8 +70,7 @@ internal class FieldInfo(
             // name
             putValueArgument(index++, name.toIrConst(irBuiltIns.stringType))
             // type
-            putValueArgument(index++, type.getClass()!!.getClassInfo(module, file, source, context)
-                .instantiateCached(module, file, source, context))
+            putValueArgument(index++, this@FieldInfo.type.instantiateCached(module, file, source, context))
             // visibility
             putValueArgument(index++, visibility.getEnumValue(visibilityModifierType) { getVisibilityName() })
             // isStatic
@@ -97,7 +94,7 @@ internal fun IrField.getFieldInfo( // @formatter:off
     location = getLocation(module, file, source),
     qualifiedName = kotlinFqName.asString(),
     name = name.asString(),
-    type = type,
+    type = type.getTypeInfo(module, file, source),
     visibility = visibility.delegate,
     isStatic = isStatic,
     isExternal = isExternal,

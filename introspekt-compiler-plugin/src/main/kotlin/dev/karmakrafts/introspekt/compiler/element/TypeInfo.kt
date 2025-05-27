@@ -76,6 +76,13 @@ internal data class TypeInfo( // @formatter:off
             dispatchReceiver = context.simpleTypeInfoCompanionType.getObjectInstance()
         } // @formatter:on
     }
+
+    override fun equals(other: Any?): Boolean {
+        return if (other !is TypeInfo) false
+        else type == other.type
+    }
+
+    override fun hashCode(): Int = type.hashCode()
 }
 
 internal fun IrType.getTypeInfo( // @formatter:off

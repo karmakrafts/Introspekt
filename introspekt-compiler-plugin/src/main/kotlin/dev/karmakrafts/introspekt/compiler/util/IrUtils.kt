@@ -18,7 +18,9 @@ package dev.karmakrafts.introspekt.compiler.util
 
 import dev.karmakrafts.introspekt.compiler.IntrospektPluginContext
 import dev.karmakrafts.introspekt.compiler.element.AnnotationUsageInfo
+import dev.karmakrafts.introspekt.compiler.element.TypeInfo
 import dev.karmakrafts.introspekt.compiler.element.getAnnotationUsageInfo
+import dev.karmakrafts.introspekt.compiler.element.getTypeInfo
 import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.descriptors.Visibilities
 import org.jetbrains.kotlin.descriptors.Visibility
@@ -146,10 +148,11 @@ internal fun List<IrConstructorCall>.toAnnotationMap( // @formatter:off
     module: IrModuleFragment,
     file: IrFile,
     source: List<String>
-): HashMap<IrType, ArrayList<AnnotationUsageInfo>> { // @formatter:on
-    val annotationMap = HashMap<IrType, ArrayList<AnnotationUsageInfo>>()
+): HashMap<TypeInfo, ArrayList<AnnotationUsageInfo>> { // @formatter:on
+    val annotationMap = HashMap<TypeInfo, ArrayList<AnnotationUsageInfo>>()
     for (call in this) {
-        annotationMap.getOrPut(call.type) { ArrayList() } += call.getAnnotationUsageInfo(module, file, source)
+        val type = call.type.getTypeInfo(module, file, source)
+        annotationMap.getOrPut(type) { ArrayList() } += call.getAnnotationUsageInfo(module, file, source)
     }
     return annotationMap
 }
