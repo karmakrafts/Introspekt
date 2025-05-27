@@ -28,7 +28,7 @@ dependencies {
     testImplementation(libs.kotlin.test)
     testImplementation(libs.kotest)
     testImplementation(libs.iridium)
-    testImplementation(project(":introspekt-runtime"))
+    testImplementation(projects.introspektRuntime)
 }
 
 tasks {
