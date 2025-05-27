@@ -17,6 +17,7 @@
 package dev.karmakrafts.introspekt.compiler
 
 import dev.karmakrafts.introspekt.compiler.util.IntrospektNames
+import dev.karmakrafts.introspekt.util.SourceLocation
 import dev.karmakrafts.iridium.runCompilerTest
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.types.classFqName
@@ -24,7 +25,7 @@ import kotlin.test.Test
 
 class TypeInfoTransformerTest {
     @Test
-    fun `Get type info via type parameter`() = runCompilerTest {
+    fun `Get type info of class via type parameter`() = runCompilerTest {
         introspektTransformerPipeline()
         // @formatter:off
         source("""
@@ -47,6 +48,33 @@ class TypeInfoTransformerTest {
                     qualifiedName = "com.example.Test",
                     name = "Test"
                 ) { type("com/example/Test") }
+            }
+        }
+    }
+
+    @Test
+    fun `Get type info of primitive type via type parameter`() = runCompilerTest {
+        introspektTransformerPipeline()
+        // @formatter:off
+        source("""
+            package com.example
+            import dev.karmakrafts.introspekt.element.TypeInfo
+            fun foo() {
+                val info = TypeInfo.of<Int>()
+            }
+        """.trimIndent())
+        // @formatter:on
+        compiler shouldNotReport { error() }
+        result irMatches {
+            getChild<IrCall> { it.type.classFqName == IntrospektNames.TypeInfo.fqName } matches {
+                isCachedTypeInfo(
+                    module = "test",
+                    file = "test",
+                    line = SourceLocation.UNDEFINED_OFFSET,
+                    column = SourceLocation.UNDEFINED_OFFSET,
+                    qualifiedName = "kotlin.Int",
+                    name = "Int"
+                ) { type("kotlin/Int") }
             }
         }
     }
