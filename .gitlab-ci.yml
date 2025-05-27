@@ -34,7 +34,7 @@ variables:
 
 # ------------------------------ Security
 
-security:dependencies:
+security:
   stage: security
   interruptible: true
   needs: [ ]
