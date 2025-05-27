@@ -125,6 +125,7 @@ internal object IntrospektNames {
     object SourceLocation {
         val name: Name = Name.identifier("SourceLocation")
         val id: ClassId = ClassId(utilPackageName, name)
+        val fqName: FqName = id.asSingleFqName()
 
         object Companion {
             val fqName: FqName = FqName("SourceLocation.Companion")

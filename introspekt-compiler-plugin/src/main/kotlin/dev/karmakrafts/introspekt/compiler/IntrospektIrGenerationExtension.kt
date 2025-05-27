@@ -34,7 +34,11 @@ import org.jetbrains.kotlin.ir.visitors.acceptVoid
 import kotlin.io.path.Path
 import kotlin.io.path.readLines
 
-internal class IntrospektIrGenerationExtension : IrGenerationExtension {
+internal class IntrospektIrGenerationExtension(
+    private val sourceProvider: (String) -> List<String> = {
+        runCatching { Path(it).readLines() }.getOrNull() ?: emptyList()
+    }
+) : IrGenerationExtension {
     override fun generate( // @formatter:off
         moduleFragment: IrModuleFragment,
         pluginContext: IrPluginContext
@@ -43,7 +47,7 @@ internal class IntrospektIrGenerationExtension : IrGenerationExtension {
         moduleFragment.acceptVoid(CompilerApiTransformer())
 
         for (file in moduleFragment.files) {
-            val source = runCatching { Path(file.path).readLines() }.getOrNull() ?: continue
+            val source = sourceProvider(file.path)
             val context = IntrinsicContext(introspektContext)
             file.acceptVoid(IntrinsicCalleeParameterTransformer(introspektContext))
             file.acceptVoid(IntrinsicCallerParameterTransformer(introspektContext))

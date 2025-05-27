@@ -29,3 +29,10 @@ internal fun CompilerTestScope.introspektPipeline(moduleName: String = "test") {
         }
     }
 }
+
+internal fun CompilerTestScope.introspektTransformerPipeline(moduleName: String = "test") {
+    introspektPipeline()
+    pipeline {
+        irExtension(IntrospektIrGenerationExtension { sourceLines })
+    }
+}
