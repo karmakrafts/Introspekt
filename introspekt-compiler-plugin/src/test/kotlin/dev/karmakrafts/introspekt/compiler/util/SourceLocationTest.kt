@@ -41,9 +41,11 @@ class SourceLocationTest {
         // @formatter:on
         compiler shouldNotReport { error() }
         result irMatches {
-            getChild<IrFunction> { it.name.asString() == "bar" }
-                .getFunctionLocation(element, element.files.first(), this@runCompilerTest.sourceLines)
-                .shouldBe(SourceLocation(moduleName, this@runCompilerTest.fileName, 2, 5))
+            getChild<IrFunction> { it.name.asString() == "bar" }.getFunctionLocation(
+                    element,
+                    element.files.first(),
+                    this@runCompilerTest.sourceLines
+                ).shouldBe(SourceLocation(moduleName, this@runCompilerTest.fileName, 2, 5))
         }
     }
 
@@ -61,9 +63,11 @@ class SourceLocationTest {
         // @formatter:on
         compiler shouldNotReport { error() }
         result irMatches {
-            getChild<IrProperty> { it.name.asString() == "bar" }
-                .getLocation(element, element.files.first(), this@runCompilerTest.sourceLines)
-                .shouldBe(SourceLocation(moduleName, this@runCompilerTest.fileName, 2, 5))
+            getChild<IrProperty> { it.name.asString() == "bar" }.getLocation(
+                    element,
+                    element.files.first(),
+                    this@runCompilerTest.sourceLines
+                ).shouldBe(SourceLocation(moduleName, this@runCompilerTest.fileName, 2, 5))
         }
     }
 
@@ -81,9 +85,11 @@ class SourceLocationTest {
         // @formatter:on
         compiler shouldNotReport { error() }
         result irMatches {
-            getChild<IrClass> { it.name.asString() == "Bar" }
-                .getLocation(element, element.files.first(), this@runCompilerTest.sourceLines)
-                .shouldBe(SourceLocation(moduleName, this@runCompilerTest.fileName, 2, 5))
+            getChild<IrClass> { it.name.asString() == "Bar" }.getLocation(
+                    element,
+                    element.files.first(),
+                    this@runCompilerTest.sourceLines
+                ).shouldBe(SourceLocation(moduleName, this@runCompilerTest.fileName, 2, 5))
         }
     }
 

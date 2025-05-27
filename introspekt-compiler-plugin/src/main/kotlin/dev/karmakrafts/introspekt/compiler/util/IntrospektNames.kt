@@ -163,6 +163,7 @@ object IntrospektNames {
     object ClassInfo {
         val name: Name = Name.identifier("ClassInfo")
         val id: ClassId = ClassId(elementPackageName, name)
+        val fqName: FqName = id.asSingleFqName()
 
         object Companion {
             val fqName: FqName = FqName("ClassInfo.Companion")

@@ -24,15 +24,19 @@ import dev.karmakrafts.iridium.matcher.IrTypeMatcher
 import dev.karmakrafts.iridium.pipeline.addJvmClasspathRootByType
 import dev.karmakrafts.iridium.pipeline.defaultPipelineSpec
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.impl.IrCallImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrClassReferenceImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrConstImpl
+import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.IrType
+import org.jetbrains.kotlin.ir.types.getClass
 import org.jetbrains.kotlin.ir.util.kotlinFqName
+import org.jetbrains.kotlin.ir.util.properties
 import org.jetbrains.kotlin.ir.util.target
 
-internal fun CompilerTestScope.introspektPipeline(moduleName: String = "test") {
+fun CompilerTestScope.introspektPipeline(moduleName: String = "test") {
     pipeline {
         defaultPipelineSpec(moduleName)
         config {
@@ -41,14 +45,15 @@ internal fun CompilerTestScope.introspektPipeline(moduleName: String = "test") {
     }
 }
 
-internal fun CompilerTestScope.introspektTransformerPipeline(moduleName: String = "test") {
+fun CompilerTestScope.introspektTransformerPipeline(moduleName: String = "test") {
     introspektPipeline(moduleName)
     pipeline {
         irExtension(IntrospektIrGenerationExtension { sourceLines })
     }
 }
 
-internal fun IrElementMatcher<out IrCall>.isCachedSourceLocation( // @formatter:off
+@Suppress("NOTHING_TO_INLINE")
+inline fun IrElementMatcher<out IrCall>.isCachedSourceLocation( // @formatter:off
     module: String,
     file: String,
     line: Int,
@@ -82,14 +87,14 @@ internal fun IrElementMatcher<out IrCall>.isCachedSourceLocation( // @formatter:
     (columnArg as IrConstImpl).value shouldBe column
 }
 
-internal inline fun IrElementMatcher<out IrCall>.isCachedTypeInfo( // @formatter:off
+inline fun IrElementMatcher<out IrCall>.isCachedTypeInfo( // @formatter:off
     module: String,
     file: String,
     line: Int,
     column: Int,
     qualifiedName: String,
     name: String,
-    typeMatcher: IrTypeMatcher<IrType>.() -> Unit
+    crossinline typeMatcher: IrTypeMatcher<IrType>.() -> Unit
 ) { // @formatter:on
     val function = element.target
     function.kotlinFqName shouldBe IntrospektNames.TypeInfo.Companion.getOrCreate.asSingleFqName()
@@ -119,7 +124,7 @@ internal inline fun IrElementMatcher<out IrCall>.isCachedTypeInfo( // @formatter
     (nameArg as IrConstImpl).value shouldBe name
 }
 
-internal fun IrElementMatcher<out IrCall>.isCachedFunctionInfo( // @formatter:off
+fun IrElementMatcher<out IrCall>.isCachedFunctionInfo( // @formatter:off
     module: String,
     file: String,
     line: Int,
@@ -147,4 +152,70 @@ internal fun IrElementMatcher<out IrCall>.isCachedFunctionInfo( // @formatter:of
     val nameArg = element.arguments[nameParam.indexInParameters]!!
     nameArg::class shouldBe IrConstImpl::class
     (nameArg as IrConstImpl).value shouldBe name
+}
+
+fun IrElementMatcher<out IrCall>.isCachedPropertyInfo( // @formatter:off
+    module: String,
+    file: String,
+    line: Int,
+    column: Int,
+    qualifiedName: String,
+    name: String
+) { // @formatter:on
+    val function = element.target
+    function.kotlinFqName shouldBe IntrospektNames.PropertyInfo.Companion.getOrCreate.asSingleFqName()
+
+    val locationParam = function.parameters.first { it.name.asString() == "location" }
+    locationParam.type matches { type(IntrospektNames.SourceLocation.id) }
+    val locationArg = element.arguments[locationParam.indexInParameters]!!
+    locationArg::class shouldBe IrCallImpl::class
+    (locationArg as IrCallImpl) matches { isCachedSourceLocation(module, file, line, column) }
+
+    val qualifiedNameParam = function.parameters.first { it.name.asString() == "qualifiedName" }
+    qualifiedNameParam.type matches { string() }
+    val qualifiedNameArg = element.arguments[qualifiedNameParam.indexInParameters]!!
+    qualifiedNameArg::class shouldBe IrConstImpl::class
+    (qualifiedNameArg as IrConstImpl).value shouldBe qualifiedName
+
+    val nameParam = function.parameters.first { it.name.asString() == "name" }
+    nameParam.type matches { string() }
+    val nameArg = element.arguments[nameParam.indexInParameters]!!
+    nameArg::class shouldBe IrConstImpl::class
+    (nameArg as IrConstImpl).value shouldBe name
+}
+
+@OptIn(UnsafeDuringIrConstructionAPI::class)
+inline fun IrElementMatcher<out IrCall>.isCachedClassInfo( // @formatter:off
+    module: String,
+    file: String,
+    line: Int,
+    column: Int,
+    qualifiedName: String,
+    name: String,
+    properties: Map<String, IrType> = emptyMap(),
+    crossinline typeMatcher: IrTypeMatcher<IrType>.() -> Unit
+) { // @formatter:on
+    val function = element.target
+    function.kotlinFqName shouldBe IntrospektNames.ClassInfo.Companion.getOrCreate.asSingleFqName()
+
+    val typeParam = function.parameters.first { it.name.asString() == "type" }
+    typeParam.type matches { type(IntrospektNames.TypeInfo.id) }
+    val typeArg = element.arguments[typeParam.indexInParameters]!!
+    typeArg::class shouldBe IrCallImpl::class
+
+    val typeCall = typeArg as IrCallImpl
+    typeCall matches { isCachedTypeInfo(module, file, line, column, qualifiedName, name, typeMatcher) }
+    val typeFunction = typeCall.target
+    val reflectTypeParam = typeFunction.parameters.first { it.name.asString() == "reflectType" }
+    val reflectArg = typeCall.arguments[reflectTypeParam.indexInParameters]!!
+    reflectArg::class shouldBe IrClassReferenceImpl::class
+    val underlyingType = (reflectArg as IrClassReferenceImpl).classType
+
+    val clazz = underlyingType.getClass()
+    clazz shouldNotBe null
+    if (properties.isNotEmpty()) {
+        for (property in clazz!!.properties) {
+            (property.backingField?.type ?: property.getter!!.returnType) shouldBe properties[property.name.asString()]
+        }
+    }
 }
