@@ -31,10 +31,5 @@ class IntrospektCompilerPluginRegistrar : CompilerPluginRegistrar() {
         IrGenerationExtension.registerExtension(IntrospektIrGenerationExtension())
     }
 
-    /**
-     * Indicates that this plugin supports the K2 compiler.
-     *
-     * The K2 compiler is the new Kotlin compiler implementation that replaces the legacy compiler.
-     */
     override val supportsK2: Boolean = true
 }

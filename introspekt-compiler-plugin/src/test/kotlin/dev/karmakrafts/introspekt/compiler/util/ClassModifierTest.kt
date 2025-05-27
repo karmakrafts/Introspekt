@@ -14,11 +14,9 @@
  * limitations under the License.
  */
 
-package dev.karmakrafts.introspekt.compiler
+package dev.karmakrafts.introspekt.compiler.util
 
-import dev.karmakrafts.introspekt.compiler.util.ClassModifier
-import dev.karmakrafts.introspekt.compiler.util.getClassModifier
-import dev.karmakrafts.iridium.pipeline.defaultPipelineSpec
+import dev.karmakrafts.introspekt.compiler.introspektPipeline
 import dev.karmakrafts.iridium.runCompilerTest
 import io.kotest.matchers.shouldBe
 import org.jetbrains.kotlin.ir.declarations.IrClass

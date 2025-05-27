@@ -148,6 +148,7 @@ object IntrospektNames {
     object FunctionInfo {
         val name: Name = Name.identifier("FunctionInfo")
         val id: ClassId = ClassId(elementPackageName, name)
+        val fqName: FqName = id.asSingleFqName()
 
         object Companion {
             val fqName: FqName = FqName("FunctionInfo.Companion")

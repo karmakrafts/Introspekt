@@ -52,6 +52,7 @@ internal class IntrospektIrGenerationExtension(
             val context = IntrinsicContext(introspektContext)
             file.acceptVoid(IntrinsicCalleeParameterTransformer(introspektContext))
             file.acceptVoid(IntrinsicCallerParameterTransformer(introspektContext))
+            // Reduce intrinsics in type dependence order
             file.transform(ClassInfoTransformer(introspektContext, moduleFragment, file, source), context)
             file.transform(FunctionInfoTransformer(introspektContext, moduleFragment, file, source), context)
             file.transform(TypeInfoTransformer(introspektContext, moduleFragment, file, source), context)

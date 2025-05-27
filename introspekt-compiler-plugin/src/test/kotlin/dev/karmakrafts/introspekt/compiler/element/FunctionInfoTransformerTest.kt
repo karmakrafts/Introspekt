@@ -14,67 +14,72 @@
  * limitations under the License.
  */
 
-package dev.karmakrafts.introspekt.compiler
+package dev.karmakrafts.introspekt.compiler.element
 
+import dev.karmakrafts.introspekt.compiler.introspektTransformerPipeline
+import dev.karmakrafts.introspekt.compiler.isCachedFunctionInfo
 import dev.karmakrafts.introspekt.compiler.util.IntrospektNames
-import dev.karmakrafts.introspekt.util.SourceLocation
 import dev.karmakrafts.iridium.runCompilerTest
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.types.classFqName
 import kotlin.test.Test
 
-class TypeInfoTransformerTest {
+class FunctionInfoTransformerTest {
     @Test
-    fun `Get type info of class via type parameter`() = runCompilerTest {
+    fun `Obtain current function info`() = runCompilerTest {
         introspektTransformerPipeline()
         // @formatter:off
         source("""
             package com.example
-            import dev.karmakrafts.introspekt.element.TypeInfo
-            class Test
-            fun foo() {
-                val info = TypeInfo.of<Test>()
+            import dev.karmakrafts.introspekt.element.FunctionInfo
+            class Test {
+                fun foo() {
+                    val info = FunctionInfo.current()
+                }
             }
         """.trimIndent())
         // @formatter:on
         compiler shouldNotReport { error() }
         result irMatches {
-            getChild<IrCall> { it.type.classFqName == IntrospektNames.TypeInfo.fqName } matches {
-                isCachedTypeInfo(
+            getChild<IrCall> { it.type.classFqName == IntrospektNames.FunctionInfo.fqName } matches {
+                isCachedFunctionInfo( // @formatter:off
                     module = "test",
                     file = "test",
-                    line = 3,
-                    column = 1,
-                    qualifiedName = "com.example.Test",
-                    name = "Test"
-                ) { type("com/example/Test") }
+                    line = 4,
+                    column = 5,
+                    qualifiedName = "com.example.Test.foo",
+                    name = "foo"
+                ) // @formatter:on
             }
         }
     }
 
     @Test
-    fun `Get type info of primitive type via type parameter`() = runCompilerTest {
+    fun `Obtain function info via function reference`() = runCompilerTest {
         introspektTransformerPipeline()
         // @formatter:off
         source("""
             package com.example
-            import dev.karmakrafts.introspekt.element.TypeInfo
-            fun foo() {
-                val info = TypeInfo.of<Int>()
+            import dev.karmakrafts.introspekt.element.FunctionInfo
+            class Test {
+                fun test() {}
+                fun foo() {
+                    val info = FunctionInfo.of(::test)
+                }
             }
         """.trimIndent())
         // @formatter:on
         compiler shouldNotReport { error() }
         result irMatches {
-            getChild<IrCall> { it.type.classFqName == IntrospektNames.TypeInfo.fqName } matches {
-                isCachedTypeInfo(
+            getChild<IrCall> { it.type.classFqName == IntrospektNames.FunctionInfo.fqName } matches {
+                isCachedFunctionInfo( // @formatter:off
                     module = "test",
                     file = "test",
-                    line = SourceLocation.UNDEFINED_OFFSET,
-                    column = SourceLocation.UNDEFINED_OFFSET,
-                    qualifiedName = "kotlin.Int",
-                    name = "Int"
-                ) { type("kotlin/Int") }
+                    line = 4,
+                    column = 5,
+                    qualifiedName = "com.example.Test.test",
+                    name = "test"
+                ) // @formatter:on
             }
         }
     }

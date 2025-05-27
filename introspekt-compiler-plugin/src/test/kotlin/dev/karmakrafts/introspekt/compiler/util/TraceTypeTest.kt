@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-package dev.karmakrafts.introspekt.compiler
+package dev.karmakrafts.introspekt.compiler.util
 
-import dev.karmakrafts.introspekt.compiler.util.TraceType
-import dev.karmakrafts.introspekt.compiler.util.getTraceType
+import dev.karmakrafts.introspekt.compiler.introspektPipeline
 import dev.karmakrafts.iridium.setupCompilerTest
 import io.kotest.matchers.collections.shouldContain
 import org.jetbrains.kotlin.ir.declarations.IrFunction

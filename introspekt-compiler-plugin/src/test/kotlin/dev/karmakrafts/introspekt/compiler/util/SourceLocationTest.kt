@@ -14,11 +14,9 @@
  * limitations under the License.
  */
 
-package dev.karmakrafts.introspekt.compiler
+package dev.karmakrafts.introspekt.compiler.util
 
-import dev.karmakrafts.introspekt.compiler.util.SourceLocation
-import dev.karmakrafts.introspekt.compiler.util.getFunctionLocation
-import dev.karmakrafts.introspekt.compiler.util.getLocation
+import dev.karmakrafts.introspekt.compiler.introspektPipeline
 import dev.karmakrafts.iridium.runCompilerTest
 import io.kotest.matchers.shouldBe
 import org.jetbrains.kotlin.ir.declarations.IrClass

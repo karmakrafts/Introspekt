@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-package dev.karmakrafts.introspekt.compiler
+package dev.karmakrafts.introspekt.compiler.util
 
-import dev.karmakrafts.introspekt.compiler.util.getVisibilityName
 import io.kotest.matchers.shouldBe
 import org.jetbrains.kotlin.descriptors.Visibilities
 import kotlin.test.Test

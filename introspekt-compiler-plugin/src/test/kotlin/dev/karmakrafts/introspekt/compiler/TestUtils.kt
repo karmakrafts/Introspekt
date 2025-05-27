@@ -118,3 +118,33 @@ internal inline fun IrElementMatcher<out IrCall>.isCachedTypeInfo( // @formatter
     nameArg::class shouldBe IrConstImpl::class
     (nameArg as IrConstImpl).value shouldBe name
 }
+
+internal fun IrElementMatcher<out IrCall>.isCachedFunctionInfo( // @formatter:off
+    module: String,
+    file: String,
+    line: Int,
+    column: Int,
+    qualifiedName: String,
+    name: String
+) {// @formatter:on
+    val function = element.target
+    function.kotlinFqName shouldBe IntrospektNames.FunctionInfo.Companion.getOrCreate.asSingleFqName()
+
+    val locationParam = function.parameters.first { it.name.asString() == "location" }
+    locationParam.type matches { type(IntrospektNames.SourceLocation.id) }
+    val locationArg = element.arguments[locationParam.indexInParameters]!!
+    locationArg::class shouldBe IrCallImpl::class
+    (locationArg as IrCallImpl) matches { isCachedSourceLocation(module, file, line, column) }
+
+    val qualifiedNameParam = function.parameters.first { it.name.asString() == "qualifiedName" }
+    qualifiedNameParam.type matches { string() }
+    val qualifiedNameArg = element.arguments[qualifiedNameParam.indexInParameters]!!
+    qualifiedNameArg::class shouldBe IrConstImpl::class
+    (qualifiedNameArg as IrConstImpl).value shouldBe qualifiedName
+
+    val nameParam = function.parameters.first { it.name.asString() == "name" }
+    nameParam.type matches { string() }
+    val nameArg = element.arguments[nameParam.indexInParameters]!!
+    nameArg::class shouldBe IrConstImpl::class
+    (nameArg as IrConstImpl).value shouldBe name
+}
