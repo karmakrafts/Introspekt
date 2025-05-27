@@ -16,7 +16,7 @@
 
 package dev.karmakrafts.introspekt.trace
 
-import co.touchlab.stately.collections.SharedLinkedList
+import co.touchlab.stately.collections.ConcurrentMutableList
 import dev.karmakrafts.introspekt.IntrospektCompilerApi
 import dev.karmakrafts.introspekt.element.CallInfo
 import dev.karmakrafts.introspekt.element.FunctionInfo
@@ -26,7 +26,7 @@ import dev.karmakrafts.introspekt.util.SourceLocation
 
 interface TraceCollector {
     companion object {
-        private val collectors: SharedLinkedList<TraceCollector> = SharedLinkedList()
+        private val collectors: ConcurrentMutableList<TraceCollector> = ConcurrentMutableList()
 
         fun register(collector: TraceCollector) {
             collectors.add(collector)
