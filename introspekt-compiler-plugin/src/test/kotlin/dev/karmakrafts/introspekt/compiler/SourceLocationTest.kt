@@ -26,6 +26,7 @@ import io.kotest.matchers.shouldBe
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrFunction
 import org.jetbrains.kotlin.ir.declarations.IrProperty
+import org.jetbrains.kotlin.ir.declarations.IrTypeParameter
 import kotlin.test.Test
 
 class SourceLocationTest {
@@ -95,5 +96,28 @@ class SourceLocationTest {
                 .getLocation(element, element.files.first(), this@runCompilerTest.sourceLines)
                 .shouldBe(SourceLocation(moduleName, this@runCompilerTest.fileName, 2, 5))
         }
+    }
+
+    @Test
+    fun `Get type parameter location`() = runCompilerTest {
+        val moduleName = "testing"
+        fileName = "test.kt"
+        pipeline {
+            defaultPipelineSpec(moduleName)
+        }
+        // @formatter:off
+        source("""
+            class Foo {
+                fun <T> bar(value: T): T = value
+            }
+        """.trimIndent())
+        // @formatter:on
+        compiler shouldNotReport { error() }
+        result irMatches { // @formatter:off
+            element.getChild<IrFunction> { it.name.asString() == "bar" }
+                .returnType
+                .getLocation(element, element.files.first(), this@runCompilerTest.sourceLines)
+                .shouldBe(SourceLocation(moduleName, this@runCompilerTest.fileName, 2, 10))
+        } // @formatter:on
     }
 }
