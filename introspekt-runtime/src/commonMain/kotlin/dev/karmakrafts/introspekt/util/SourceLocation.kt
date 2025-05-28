@@ -22,6 +22,17 @@ import dev.karmakrafts.introspekt.IntrospektIntrinsic
 import dev.karmakrafts.introspekt.IntrospektPluginNotAppliedException
 import kotlin.reflect.KFunction
 
+/**
+ * Represents a location in source code.
+ *
+ * This data class provides information about the location of a code element in the source code,
+ * including the module, file, line, and column.
+ *
+ * @property module The name of the module containing the source code.
+ * @property file The name of the file containing the source code.
+ * @property line The line number in the source file (1-based).
+ * @property column The column number in the source file (1-based).
+ */
 data class SourceLocation( // @formatter:off
     val module: String,
     val file: String,
@@ -31,6 +42,15 @@ data class SourceLocation( // @formatter:off
     companion object {
         private val cache: ConcurrentMutableMap<Int, SourceLocation> = ConcurrentMutableMap()
 
+        /**
+         * Computes a hash code for a source location based on its components.
+         *
+         * @param module The module name.
+         * @param file The file name.
+         * @param line The line number.
+         * @param column The column number.
+         * @return A hash code that uniquely identifies this combination of parameters.
+         */
         private fun hash(module: String, file: String, line: Int, column: Int): Int {
             var result = module.hashCode()
             result = 31 * result + file.hashCode()
@@ -39,6 +59,17 @@ data class SourceLocation( // @formatter:off
             return result
         }
 
+        /**
+         * Gets an existing [SourceLocation] from the cache or creates a new one if it doesn't exist.
+         *
+         * This method helps reduce memory usage by reusing instances with the same parameters.
+         *
+         * @param module The module name.
+         * @param file The file name.
+         * @param line The line number.
+         * @param column The column number.
+         * @return A [SourceLocation] instance with the specified parameters.
+         */
         @IntrospektCompilerApi
         internal fun getOrCreate(module: String, file: String, line: Int, column: Int): SourceLocation {
             return cache.getOrPut(hash(module, file, line, column)) {
@@ -71,42 +102,148 @@ data class SourceLocation( // @formatter:off
          */
         const val UNDEFINED_OFFSET: Int = -3
 
+        /**
+         * A predefined [SourceLocation] instance representing an undefined location.
+         * 
+         * This is used as a default value when no valid source location is available.
+         */
         val undefined: SourceLocation = SourceLocation("", "", UNDEFINED_OFFSET, UNDEFINED_OFFSET)
 
+        /**
+         * Returns the [SourceLocation] of the current call site.
+         * 
+         * This is an intrinsic function that is replaced by the compiler plugin with the actual source location.
+         * 
+         * @return The source location of the call site.
+         * @throws IntrospektPluginNotAppliedException if the Introspekt compiler plugin is not applied.
+         */
         @IntrospektIntrinsic(IntrospektIntrinsic.Type.SL_HERE)
         fun here(): SourceLocation = throw IntrospektPluginNotAppliedException()
 
+        /**
+         * Returns a hash code for the source location of the current call site.
+         * 
+         * This is an intrinsic function that is replaced by the compiler plugin with the actual hash code.
+         * 
+         * @return The hash code of the source location of the call site.
+         * @throws IntrospektPluginNotAppliedException if the Introspekt compiler plugin is not applied.
+         */
         @IntrospektIntrinsic(IntrospektIntrinsic.Type.SL_HERE_HASH)
         fun hereHash(): Int = throw IntrospektPluginNotAppliedException()
 
+        /**
+         * Returns the [SourceLocation] of the current function.
+         * 
+         * This is an intrinsic function that is replaced by the compiler plugin with the actual source location.
+         * 
+         * @return The source location of the current function.
+         * @throws IntrospektPluginNotAppliedException if the Introspekt compiler plugin is not applied.
+         */
         @IntrospektIntrinsic(IntrospektIntrinsic.Type.SL_CURRENT_FUNCTION)
         fun currentFunction(): SourceLocation = throw IntrospektPluginNotAppliedException()
 
+        /**
+         * Returns a hash code for the source location of the current function.
+         * 
+         * This is an intrinsic function that is replaced by the compiler plugin with the actual hash code.
+         * 
+         * @return The hash code of the source location of the current function.
+         * @throws IntrospektPluginNotAppliedException if the Introspekt compiler plugin is not applied.
+         */
         @IntrospektIntrinsic(IntrospektIntrinsic.Type.SL_CURRENT_FUNCTION_HASH)
         fun currentFunctionHash(): Int = throw IntrospektPluginNotAppliedException()
 
+        /**
+         * Returns the [SourceLocation] of the current class.
+         * 
+         * This is an intrinsic function that is replaced by the compiler plugin with the actual source location.
+         * 
+         * @return The source location of the current class.
+         * @throws IntrospektPluginNotAppliedException if the Introspekt compiler plugin is not applied.
+         */
         @IntrospektIntrinsic(IntrospektIntrinsic.Type.SL_CURRENT_CLASS)
         fun currentClass(): SourceLocation = throw IntrospektPluginNotAppliedException()
 
+        /**
+         * Returns a hash code for the source location of the current class.
+         * 
+         * This is an intrinsic function that is replaced by the compiler plugin with the actual hash code.
+         * 
+         * @return The hash code of the source location of the current class.
+         * @throws IntrospektPluginNotAppliedException if the Introspekt compiler plugin is not applied.
+         */
         @IntrospektIntrinsic(IntrospektIntrinsic.Type.SL_CURRENT_CLASS_HASH)
         fun currentClassHash(): Int = throw IntrospektPluginNotAppliedException()
 
+        /**
+         * Returns the [SourceLocation] of the specified class type.
+         * 
+         * This is an intrinsic function that is replaced by the compiler plugin with the actual source location.
+         * 
+         * @param T The class type to get the source location for.
+         * @return The source location of the specified class.
+         * @throws IntrospektPluginNotAppliedException if the Introspekt compiler plugin is not applied.
+         */
         @IntrospektIntrinsic(IntrospektIntrinsic.Type.SL_OF_CLASS)
         fun <T : Any> ofClass(): SourceLocation = throw IntrospektPluginNotAppliedException()
 
+        /**
+         * Returns the [SourceLocation] of the specified function.
+         * 
+         * This is an intrinsic function that is replaced by the compiler plugin with the actual source location.
+         * 
+         * @param function The function to get the source location for.
+         * @return The source location of the specified function.
+         * @throws IntrospektPluginNotAppliedException if the Introspekt compiler plugin is not applied.
+         */
         @IntrospektIntrinsic(IntrospektIntrinsic.Type.SL_OF_FUNCTION)
         fun ofFunction(function: KFunction<*>): SourceLocation = throw IntrospektPluginNotAppliedException()
     }
 
+    /**
+     * Indicates whether this source location represents a fake override element.
+     * 
+     * A fake override is an element that was not explicitly declared in the source code
+     * but was added by the compiler, such as default interface methods.
+     * 
+     * @return `true` if this source location represents a fake override, `false` otherwise.
+     */
     inline val isFakeOverride: Boolean
         get() = line == FAKE_OVERRIDE_OFFSET || column == FAKE_OVERRIDE_OFFSET
 
+    /**
+     * Indicates whether this source location represents a synthetic element.
+     * 
+     * A synthetic element is one that was generated by an IR processor rather than
+     * being explicitly declared in the source code.
+     * 
+     * @return `true` if this source location represents a synthetic element, `false` otherwise.
+     */
     inline val isSynthetic: Boolean
         get() = line == SYNTHETIC_OFFSET || column == SYNTHETIC_OFFSET
 
+    /**
+     * Indicates whether this source location is undefined.
+     * 
+     * An undefined source location is one that has no source context within the current module,
+     * such as elements from the Kotlin standard library.
+     * 
+     * @return `true` if this source location is undefined, `false` otherwise.
+     */
     inline val isUndefined: Boolean
         get() = line == UNDEFINED_OFFSET || column == UNDEFINED_OFFSET
 
+    /**
+     * Returns a string representation of this source location.
+     * 
+     * The format of the string depends on the type of source location:
+     * - For fake overrides: "{file} (FAKE OVERRIDE)"
+     * - For synthetic elements: "{file} (GENERATED)"
+     * - For undefined locations: "(UNDEFINED)"
+     * - For normal locations: "{file}:{line}:{column}"
+     * 
+     * @return A string representation of this source location.
+     */
     override fun toString(): String = when {
         isFakeOverride -> "$file (FAKE OVERRIDE)"
         isSynthetic -> "$file (GENERATED)"

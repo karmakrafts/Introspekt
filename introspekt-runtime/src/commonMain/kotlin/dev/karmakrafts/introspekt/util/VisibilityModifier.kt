@@ -16,6 +16,9 @@
 
 package dev.karmakrafts.introspekt.util
 
+/**
+ * Represents the visibility modifiers available in Kotlin.
+ */
 enum class VisibilityModifier {
     // @formatter:off
     PUBLIC,
@@ -24,5 +27,10 @@ enum class VisibilityModifier {
     INTERNAL;
     // @formatter:on
 
+    /**
+     * Returns the lowercase string representation of this visibility modifier.
+     *
+     * @return The name of the visibility modifier in lowercase.
+     */
     override fun toString(): String = name.lowercase()
 }

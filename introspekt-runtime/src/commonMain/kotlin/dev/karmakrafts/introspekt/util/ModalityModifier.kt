@@ -16,8 +16,21 @@
 
 package dev.karmakrafts.introspekt.util
 
+/**
+ * Represents modality modifiers available in Kotlin.
+ */
 enum class ModalityModifier {
-    ABSTRACT, OPEN, SEALED, FINAL;
+    // @formatter:off
+    ABSTRACT,
+    OPEN,
+    SEALED,
+    FINAL;
+    // @formatter:on
 
+    /**
+     * Returns the lowercase string representation of this modality modifier.
+     *
+     * @return The name of the modality modifier in lowercase.
+     */
     override fun toString(): String = name.lowercase()
 }

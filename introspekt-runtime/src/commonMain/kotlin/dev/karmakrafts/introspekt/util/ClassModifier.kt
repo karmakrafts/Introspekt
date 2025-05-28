@@ -16,8 +16,20 @@
 
 package dev.karmakrafts.introspekt.util
 
+/**
+ * Represents special class modifiers available in Kotlin.
+ */
 enum class ClassModifier {
-    DATA, VALUE, ENUM;
+    // @formatter:off
+    DATA,
+    VALUE,
+    ENUM;
+    // @formatter:on
 
+    /**
+     * Returns the lowercase string representation of this class modifier.
+     *
+     * @return The name of the class modifier in lowercase.
+     */
     override fun toString(): String = name.lowercase()
 }
