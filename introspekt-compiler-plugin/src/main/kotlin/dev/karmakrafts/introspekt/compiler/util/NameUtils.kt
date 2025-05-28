@@ -16,6 +16,7 @@
 
 package dev.karmakrafts.introspekt.compiler.util
 
+import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 
 internal fun Name.getCleanName(): String {
@@ -24,4 +25,8 @@ internal fun Name.getCleanName(): String {
         return string.substring(1..<string.length - 1)
     }
     else asString()
+}
+
+internal fun FqName.getCleanName(): String {
+    return pathSegments().joinToString(".") { it.getCleanName() }
 }

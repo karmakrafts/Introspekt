@@ -22,19 +22,57 @@ import dev.karmakrafts.introspekt.util.ModalityModifier
 import dev.karmakrafts.introspekt.util.SourceLocation
 import dev.karmakrafts.introspekt.util.VisibilityModifier
 
-data class PropertyInfo(
-    override val location: SourceLocation,
-    override val qualifiedName: String,
-    override val name: String,
+/**
+ * Represents information about a property in a class or interface.
+ *
+ * This class provides access to metadata about a specific property, including its
+ * location in source code, qualified name, simple name, mutability, visibility,
+ * modality, and associated elements like backing field, getter, and setter.
+ * It extends [AnnotatedElementInfo] to include annotation information.
+ */
+@ConsistentCopyVisibility
+data class PropertyInfo private constructor(
+    override val location: SourceLocation, override val qualifiedName: String, override val name: String,
+
+    /**
+     * Indicates whether this property is mutable (var) or immutable (val).
+     */
     val isMutable: Boolean,
+
+    /**
+     * The visibility modifier of this property (public, private, protected, internal).
+     */
     val visibility: VisibilityModifier,
+
+    /**
+     * The modality of this property (final, open, abstract, sealed).
+     */
     val modality: ModalityModifier,
+
+    /**
+     * Indicates whether this property is marked with the 'expect' keyword.
+     */
     val isExpect: Boolean,
+
+    /**
+     * Indicates whether this property uses delegation (by keyword).
+     */
     val isDelegated: Boolean,
+
+    /**
+     * The backing field information for this property, if it has one.
+     */
     val backingField: FieldInfo?,
+
+    /**
+     * The getter function information for this property.
+     */
     val getter: FunctionInfo?,
-    val setter: FunctionInfo?,
-    override val annotations: Map<TypeInfo, List<AnnotationUsageInfo>>
+
+    /**
+     * The setter function information for this property, if it's mutable.
+     */
+    val setter: FunctionInfo?, override val annotations: Map<TypeInfo, List<AnnotationUsageInfo>>
 ) : AnnotatedElementInfo {
     companion object {
         private val cache: ConcurrentMutableMap<String, PropertyInfo> = ConcurrentMutableMap()
@@ -73,14 +111,37 @@ data class PropertyInfo(
         }
     }
 
+    /**
+     * The type of this property, or null if the type cannot be determined.
+     *
+     * This property attempts to determine the type from the getter's return type,
+     * the setter's first parameter type, or the backing field's type, in that order.
+     */
     inline val typeOrNull: TypeInfo?
         get() = getter?.returnType// @formatter:off
-            ?: setter?.parameterTypes?.first()
+            ?: setter?.parameters?.first()?.type
             ?: backingField?.type // @formatter:on
 
+    /**
+     * The type of this property.
+     *
+     * This property returns the type determined by [typeOrNull] or throws an
+     * [IllegalStateException] if the type cannot be determined.
+     *
+     * @throws IllegalStateException if the property type cannot be determined
+     */
     inline val type: TypeInfo
         get() = typeOrNull ?: throw IllegalStateException("Could not determine type of property $qualifiedName")
 
+    /**
+     * Returns a formatted string representation of this property.
+     *
+     * The string includes the property's visibility, modality, mutability (var/val),
+     * name, and type.
+     *
+     * @param indent The number of tab characters to prepend to the string for indentation
+     * @return A formatted string representation of this property
+     */
     fun toFormattedString(indent: Int = 0): String {
         val indentString = "\t".repeat(indent)
         var result = "$indentString$visibility $modality "

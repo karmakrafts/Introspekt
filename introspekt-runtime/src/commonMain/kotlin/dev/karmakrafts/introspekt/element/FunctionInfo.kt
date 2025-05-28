@@ -25,14 +25,14 @@ import dev.karmakrafts.introspekt.util.SourceLocation
 import dev.karmakrafts.introspekt.util.VisibilityModifier
 import kotlin.reflect.KFunction
 
-data class FunctionInfo(
+@ConsistentCopyVisibility
+data class FunctionInfo private constructor(
     override val location: SourceLocation,
     override val qualifiedName: String,
     override val name: String,
     val typeParameterNames: List<String>,
     val returnType: TypeInfo,
-    val parameterTypes: List<TypeInfo>,
-    val parameterNames: List<String>,
+    val parameters: List<ParameterInfo>,
     val visibility: VisibilityModifier,
     val modality: ModalityModifier,
     val locals: List<LocalInfo>,
@@ -51,11 +51,11 @@ data class FunctionInfo(
         private fun getCacheKey( // @formatter:off
             qualifiedName: String,
             returnType: TypeInfo,
-            parameterTypes: List<TypeInfo>
+            parameters: List<ParameterInfo>
         ): Int { // @formatter:on
             var result = qualifiedName.hashCode()
             result = 31 * result + returnType.hashCode()
-            result = 31 * result + parameterTypes.hashCode()
+            result = 31 * result + parameters.hashCode()
             return result
         }
 
@@ -66,23 +66,21 @@ data class FunctionInfo(
             name: String,
             typeParameterNames: List<String>,
             returnType: TypeInfo,
-            parameterTypes: List<TypeInfo>,
-            parameterNames: List<String>,
+            parameters: List<ParameterInfo>,
             visibility: VisibilityModifier,
             modality: ModalityModifier,
             locals: List<LocalInfo>,
             isExpect: Boolean,
             annotations: Map<TypeInfo, List<AnnotationUsageInfo>>
         ): FunctionInfo {
-            return cache.getOrPut(getCacheKey(qualifiedName, returnType, parameterTypes)) {
+            return cache.getOrPut(getCacheKey(qualifiedName, returnType, parameters)) {
                 FunctionInfo(
                     location = location,
                     qualifiedName = qualifiedName,
                     name = name,
                     typeParameterNames = typeParameterNames,
                     returnType = returnType,
-                    parameterTypes = parameterTypes,
-                    parameterNames = parameterNames,
+                    parameters = parameters,
                     visibility = visibility,
                     modality = modality,
                     locals = locals,
@@ -98,9 +96,9 @@ data class FunctionInfo(
         var result = if (annotations.isEmpty()) ""
         else "${annotations.values.flatten().joinToString("\n") { it.toFormattedString(indent) }}\n"
         // Parameters
-        val parameters = if (parameterNames.isEmpty()) ""
-        else parameterNames.mapIndexed { index, name ->
-            "$name: ${parameterTypes[index].qualifiedName}"
+        val parameters = if (parameters.isEmpty()) ""
+        else parameters.mapIndexed { index, name ->
+            "$name: ${parameters[index].qualifiedName}"
         }.joinToString(", ")
         // Function
         result += "${"\t".repeat(indent)}fun "

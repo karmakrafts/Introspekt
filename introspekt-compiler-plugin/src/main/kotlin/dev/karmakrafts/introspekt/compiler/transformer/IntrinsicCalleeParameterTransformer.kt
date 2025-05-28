@@ -40,7 +40,7 @@ internal class IntrinsicCalleeParameterTransformer(
 
     override fun visitFunction(declaration: IrFunction) {
         super.visitFunction(declaration)
-        if(declaration.isInline) return // Skip functions that are being inlined by Kotlin anyway
+        if (declaration.isInline) return // Skip functions that are being inlined by Kotlin anyway
         val callsiteIntrinsics = ArrayList<Pair<Int, String>>()
         var shouldAnnotate = false
         for (parameter in declaration.valueParameters) {

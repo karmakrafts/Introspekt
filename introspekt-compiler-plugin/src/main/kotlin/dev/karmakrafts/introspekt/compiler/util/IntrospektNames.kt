@@ -216,6 +216,18 @@ object IntrospektNames {
         }
     }
 
+    object ParameterInfo {
+        val name: Name = Name.identifier("ParameterInfo")
+        val id: ClassId = ClassId(elementPackageName, name)
+
+        object Companion {
+            val fqName: FqName = FqName("ParameterInfo.Companion")
+            val id: ClassId = ClassId(elementPackageName, fqName, false)
+
+            val getOrCreate: CallableId = CallableId(elementPackageName, fqName, Functions.getOrCreate)
+        }
+    }
+
     object TypeInfo {
         val name: Name = Name.identifier("TypeInfo")
         val id: ClassId = ClassId(elementPackageName, name)

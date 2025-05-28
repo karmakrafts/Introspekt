@@ -18,7 +18,7 @@ package dev.karmakrafts.introspekt
 
 /**
  * Annotation used to mark functions as intrinsics for the Introspekt compiler plugin.
- * 
+ *
  * Introspekt intrinsics are special functions that are recognized by the Introspekt compiler plugin
  * and replaced with compile-time generated code that provides introspection capabilities.
  * These intrinsics allow access to source code information, class metadata, function details,
@@ -31,7 +31,7 @@ package dev.karmakrafts.introspekt
 annotation class IntrospektIntrinsic(val type: Type) {
     /**
      * Enumeration of supported intrinsic types.
-     * 
+     *
      * The enum values are grouped by prefix:
      * - SL_*: Source Location intrinsics for getting file, line, and position information
      * - FI_*: Function Information intrinsics for accessing function metadata

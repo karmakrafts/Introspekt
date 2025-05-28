@@ -16,12 +16,36 @@
 
 package dev.karmakrafts.introspekt.element
 
+import co.touchlab.stately.collections.ConcurrentMutableMap
+import dev.karmakrafts.introspekt.IntrospektCompilerApi
 import dev.karmakrafts.introspekt.util.SourceLocation
 
-data class ParameterInfo(
+@ConsistentCopyVisibility
+data class ParameterInfo private constructor(
     override val location: SourceLocation,
     override val qualifiedName: String,
     override val name: String,
     val type: TypeInfo,
     override val annotations: Map<TypeInfo, List<AnnotationUsageInfo>>
-) : AnnotatedElementInfo
+) : AnnotatedElementInfo {
+    companion object {
+        private val cache: ConcurrentMutableMap<String, ParameterInfo> = ConcurrentMutableMap()
+
+        @IntrospektCompilerApi
+        internal fun getOrCreate(
+            location: SourceLocation,
+            qualifiedName: String,
+            name: String,
+            type: TypeInfo,
+            annotations: Map<TypeInfo, List<AnnotationUsageInfo>>
+        ): ParameterInfo = cache.getOrPut(qualifiedName) {
+            ParameterInfo( // @formatter:off
+                location = location,
+                qualifiedName = qualifiedName,
+                name = name,
+                type = type,
+                annotations = annotations
+            ) // @formatter:on
+        }
+    }
+}

@@ -18,7 +18,7 @@ package dev.karmakrafts.introspekt
 
 /**
  * Annotation used to automatically inject intrinsic values into function parameters at compile time.
- * 
+ *
  * When a function or constructor is annotated with @CaptureCaller, the Introspekt compiler plugin
  * will automatically inject the specified intrinsic values into the function's parameters at call sites.
  * This allows for capturing compile-time information such as source location, caller information,

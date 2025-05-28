@@ -52,8 +52,7 @@ internal data class FunctionInfo(
     val name: String,
     val typeParameterNames: List<String>,
     val returnType: TypeInfo,
-    val parameterTypes: List<TypeInfo>,
-    val parameterNames: List<String>,
+    val parameters: List<ParameterInfo>,
     val visibility: Visibility,
     val modality: Modality,
     val isExpect: Boolean,
@@ -66,12 +65,12 @@ internal data class FunctionInfo(
         private fun getCacheKey(
             qualifiedName: String,
             returnType: TypeInfo,
-            parameterTypes: List<TypeInfo>,
+            parameters: List<ParameterInfo>,
         ): Int {
             var result = qualifiedName.hashCode()
             result = 31 * result + qualifiedName.hashCode()
             result = 31 * result + returnType.hashCode()
-            result = 31 * result + parameterTypes.hashCode()
+            result = 31 * result + parameters.hashCode()
             return result
         }
 
@@ -81,22 +80,20 @@ internal data class FunctionInfo(
             name: String,
             typeParameterNames: List<String>,
             returnType: TypeInfo,
-            parameterTypes: List<TypeInfo>,
-            parameterNames: List<String>,
+            parameters: List<ParameterInfo>,
             visibility: Visibility,
             modality: Modality,
             isExpect: Boolean,
             hashTransform: (Int) -> Int = { it },
             createCallback: FunctionInfo.() -> Unit = {}
-        ): FunctionInfo = cache.getOrPut(hashTransform(getCacheKey(qualifiedName, returnType, parameterTypes))) {
+        ): FunctionInfo = cache.getOrPut(hashTransform(getCacheKey(qualifiedName, returnType, parameters))) {
             FunctionInfo(
                 location = location,
                 qualifiedName = qualifiedName,
                 name = name,
                 typeParameterNames = typeParameterNames,
                 returnType = returnType,
-                parameterTypes = parameterTypes,
-                parameterNames = parameterNames,
+                parameters = parameters,
                 visibility = visibility,
                 modality = modality,
                 isExpect = isExpect
@@ -115,7 +112,7 @@ internal data class FunctionInfo(
             endOffset = SYNTHETIC_OFFSET,
             type = functionInfoType.defaultType,
             symbol = functionInfoGetOrCreate,
-            valueArgumentsCount = 12,
+            valueArgumentsCount = 11,
             typeArgumentsCount = 0,
             contextParameterCount = 0,
             hasDispatchReceiver = true,
@@ -135,15 +132,10 @@ internal data class FunctionInfo(
             )
             // returnType
             putValueArgument(index++, returnType.instantiateCached(module, file, source, context))
-            // parameterTypes
+            // parameters
             putValueArgument(index++, createListOf(
                 type = irBuiltIns.kClassClass.starProjectedType,
-                values = parameterTypes.map { it.instantiateCached(module, file, source, context) })
-            )
-            // parameterNames
-            putValueArgument(index++, createListOf(
-                type = irBuiltIns.stringType,
-                values = parameterNames.map { it.toIrConst(irBuiltIns.stringType) })
+                values = parameters.map { it.instantiateCached(module, file, source, context) })
             )
             // visibility
             putValueArgument(index++, visibility.getEnumValue(visibilityModifierType) { getVisibilityName() })
@@ -167,7 +159,7 @@ internal data class FunctionInfo(
         var result = qualifiedName.hashCode()
         result = 31 * result + typeParameterNames.hashCode()
         result = 31 * result + returnType.hashCode()
-        result = 31 * result + parameterTypes.hashCode()
+        result = 31 * result + parameters.hashCode()
         return result
     }
 
@@ -177,7 +169,7 @@ internal data class FunctionInfo(
         else qualifiedName == other.qualifiedName
             && typeParameterNames == other.typeParameterNames
             && returnType == other.returnType
-            && parameterTypes == other.parameterTypes
+            && parameters == other.parameters
     } // @formatter:on
 }
 
@@ -193,8 +185,7 @@ internal fun IrFunction.getFunctionInfo( // @formatter:off
         name = name.asString(),
         typeParameterNames = typeParameters.map { it.name.asString() },
         returnType = returnType.getTypeInfo(module, file, source),
-        parameterTypes = regularParams.map { it.type.getTypeInfo(module, file, source) },
-        parameterNames = regularParams.map { it.name.asString() },
+        parameters = regularParams.map { it.getParameterInfo(module, file, source) },
         visibility = visibility.delegate,
         modality = getModality(),
         isExpect = isExpect,
@@ -223,8 +214,7 @@ internal fun IrAnonymousInitializer.getFunctionInfo( // @formatter:off
         name = constructor.name.asString(),
         typeParameterNames = constructor.typeParameters.map { it.name.asString() },
         returnType = constructor.returnType.getTypeInfo(module, file, source),
-        parameterTypes = regularParams.map { it.type.getTypeInfo(module, file, source) },
-        parameterNames = regularParams.map { it.name.asString() },
+        parameters = regularParams.map { it.getParameterInfo(module, file, source) },
         visibility = constructor.visibility.delegate,
         modality = constructor.getModality(),
         isExpect = false,

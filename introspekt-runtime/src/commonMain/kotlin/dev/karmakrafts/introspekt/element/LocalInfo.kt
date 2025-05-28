@@ -20,7 +20,8 @@ import co.touchlab.stately.collections.ConcurrentMutableMap
 import dev.karmakrafts.introspekt.IntrospektCompilerApi
 import dev.karmakrafts.introspekt.util.SourceLocation
 
-class LocalInfo(
+@ConsistentCopyVisibility
+data class LocalInfo private constructor(
     override val location: SourceLocation,
     override val qualifiedName: String,
     override val name: String,

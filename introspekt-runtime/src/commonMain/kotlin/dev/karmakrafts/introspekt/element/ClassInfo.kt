@@ -24,7 +24,8 @@ import dev.karmakrafts.introspekt.util.ClassModifier
 import dev.karmakrafts.introspekt.util.ModalityModifier
 import dev.karmakrafts.introspekt.util.VisibilityModifier
 
-data class ClassInfo(
+@ConsistentCopyVisibility
+data class ClassInfo private constructor(
     val type: TypeInfo,
     val typeParameterNames: List<String>,
     override val annotations: Map<TypeInfo, List<AnnotationUsageInfo>>,

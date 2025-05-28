@@ -142,6 +142,18 @@ internal data class IntrospektPluginContext(
     internal val localInfoGetOrCreate: IrSimpleFunctionSymbol =
         pluginContext.referenceFunctions(IntrospektNames.LocalInfo.Companion.getOrCreate).first()
 
+    // ParameterInfo
+    internal val parameterInfoType: IrClassSymbol =
+        requireNotNull(pluginContext.referenceClass(IntrospektNames.ParameterInfo.id)) {
+            "Cannot find LocalInfo type, Trakkit runtime library is most likely missing"
+        }
+    internal val parameterInfoCompanionType: IrClassSymbol =
+        requireNotNull(pluginContext.referenceClass(IntrospektNames.ParameterInfo.Companion.id)) {
+            "Cannot find LocalInfo.Companion type, Trakkit runtime library is most likely missing"
+        }
+    internal val parameterInfoGetOrCreate: IrSimpleFunctionSymbol =
+        pluginContext.referenceFunctions(IntrospektNames.ParameterInfo.Companion.getOrCreate).first()
+
     // TypeInfo
     internal val typeInfoType: IrClassSymbol =
         requireNotNull(pluginContext.referenceClass(IntrospektNames.TypeInfo.id)) {

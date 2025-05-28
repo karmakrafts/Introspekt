@@ -28,7 +28,8 @@ import dev.karmakrafts.introspekt.util.VisibilityModifier
  * type, visibility, and other modifiers. It also provides access to any annotations
  * that are present on the field.
  */
-class FieldInfo(
+@ConsistentCopyVisibility
+data class FieldInfo private constructor(
     override val location: SourceLocation,
     override val qualifiedName: String,
     override val name: String,

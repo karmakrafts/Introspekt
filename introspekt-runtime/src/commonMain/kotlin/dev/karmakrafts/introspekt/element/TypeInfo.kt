@@ -23,10 +23,26 @@ import dev.karmakrafts.introspekt.IntrospektPluginNotAppliedException
 import dev.karmakrafts.introspekt.util.SourceLocation
 import kotlin.reflect.KClass
 
+/**
+ * Represents type information for a class or interface.
+ *
+ * This interface provides access to metadata about a specific type, including its
+ * location in source code, qualified name, simple name, and the corresponding KClass.
+ * It extends [ElementInfo] to include basic element information.
+ */
 sealed interface TypeInfo : ElementInfo {
     companion object {
         private val cache: ConcurrentMutableMap<KClass<*>, SimpleTypeInfo> = ConcurrentMutableMap()
 
+        /**
+         * Creates a [TypeInfo] instance for the specified type.
+         *
+         * This function is an intrinsic that will be replaced by the Introspekt compiler plugin.
+         * If the plugin is not applied, an [IntrospektPluginNotAppliedException] will be thrown.
+         *
+         * @return A [TypeInfo] instance representing the type [T]
+         * @throws IntrospektPluginNotAppliedException if the Introspekt compiler plugin is not applied
+         */
         @IntrospektIntrinsic(IntrospektIntrinsic.Type.TI_OF)
         fun <T : Any> of(): TypeInfo = throw IntrospektPluginNotAppliedException()
 
@@ -41,6 +57,11 @@ sealed interface TypeInfo : ElementInfo {
         }
     }
 
+    /**
+     * The Kotlin reflection class ([KClass]) corresponding to this type.
+     *
+     * This property provides access to the runtime reflection capabilities for this type.
+     */
     val reflectType: KClass<*>
 }
 
