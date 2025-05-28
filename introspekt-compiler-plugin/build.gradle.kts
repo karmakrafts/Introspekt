@@ -1,3 +1,5 @@
+import dev.karmakrafts.conventions.signPublications
+
 /*
  * Copyright 2025 Karma Krafts & associates
  *
@@ -17,6 +19,7 @@
 plugins {
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.kotlin.kapt)
+    signing
     `maven-publish`
 }
 

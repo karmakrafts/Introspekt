@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import dev.karmakrafts.conventions.signPublications
 import kotlin.io.path.createDirectories
 import kotlin.io.path.deleteIfExists
 import kotlin.io.path.div
@@ -22,6 +23,7 @@ import kotlin.io.path.writeText
 plugins {
     alias(libs.plugins.kotlin.jvm)
     `java-gradle-plugin`
+    signing
     `maven-publish`
 }
 
