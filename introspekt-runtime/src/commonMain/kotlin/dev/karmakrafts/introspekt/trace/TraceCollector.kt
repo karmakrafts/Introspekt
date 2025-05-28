@@ -24,7 +24,7 @@ import dev.karmakrafts.introspekt.element.LocalInfo
 import dev.karmakrafts.introspekt.element.PropertyInfo
 import dev.karmakrafts.introspekt.util.SourceLocation
 
-interface TraceCollector {
+internal interface TraceCollector {
     companion object {
         private val collectors: ConcurrentMutableList<TraceCollector> = ConcurrentMutableList()
 

@@ -27,7 +27,7 @@ import kotlin.uuid.Uuid
  */
 @Retention(AnnotationRetention.BINARY)
 @Target(AnnotationTarget.FUNCTION, AnnotationTarget.CONSTRUCTOR, AnnotationTarget.CLASS)
-annotation class Trace( // @formatter:off
+internal annotation class Trace( // @formatter:off
     vararg val targets: Target
 ) { // @formatter:on
     companion object {

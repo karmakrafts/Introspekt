@@ -18,4 +18,4 @@ package dev.karmakrafts.introspekt.trace
 
 @Retention(AnnotationRetention.BINARY)
 @Target(AnnotationTarget.FUNCTION, AnnotationTarget.CONSTRUCTOR, AnnotationTarget.CLASS)
-annotation class NoFrameCapture(val pattern: String = "")
+internal annotation class NoFrameCapture(val pattern: String = "")

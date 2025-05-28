@@ -20,6 +20,6 @@ import dev.karmakrafts.introspekt.util.SourceLocation
 import kotlin.uuid.Uuid
 
 @ConsistentCopyVisibility
-data class TraceEvent internal constructor(
+internal data class TraceEvent internal constructor(
     val location: SourceLocation, val id: Uuid, val message: String, val data: Map<String, Any>
 )

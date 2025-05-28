@@ -30,7 +30,7 @@ internal expect fun popTraceSpan(): TraceSpan
 internal expect fun peekTraceSpan(): TraceSpan?
 
 @ConsistentCopyVisibility
-data class TraceSpan private constructor( // @formatter:off
+internal data class TraceSpan private constructor( // @formatter:off
     val name: String,
     val id: Uuid,
     val start: SourceLocation,

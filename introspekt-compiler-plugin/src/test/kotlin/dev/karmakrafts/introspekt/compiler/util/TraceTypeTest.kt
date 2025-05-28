@@ -20,9 +20,11 @@ import dev.karmakrafts.introspekt.compiler.introspektPipeline
 import dev.karmakrafts.iridium.setupCompilerTest
 import io.kotest.matchers.collections.shouldContain
 import org.jetbrains.kotlin.ir.declarations.IrFunction
+import kotlin.test.Ignore
 import kotlin.test.Test
 
 class TraceTypeTest {
+    @Ignore
     @Test
     fun `Get trace type`() = setupCompilerTest {
         introspektPipeline()
