@@ -66,7 +66,7 @@ internal fun IrElement?.unwrapAnyAnnotationValue(): Any? {
         is IrExpressionBody -> expression
         is IrGetField -> symbol.owner.initializer
         is IrGetEnumValue -> symbol.owner.name.asString() // Enum values are unwrapped to their constant names
-        is IrClassReference -> type
+        is IrClassReference -> classType
         is IrConst -> value
         is IrVararg -> elements.map { element ->
             check(element is IrExpression) { "Annotation vararg element must be an expression" }
