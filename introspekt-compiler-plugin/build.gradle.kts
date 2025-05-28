@@ -20,6 +20,11 @@ plugins {
     `maven-publish`
 }
 
+java {
+    withSourcesJar()
+    withJavadocJar()
+}
+
 dependencies {
     compileOnly(libs.kotlin.compiler.embeddable)
     compileOnly(libs.autoService)

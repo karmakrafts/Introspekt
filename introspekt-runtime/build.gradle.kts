@@ -25,6 +25,7 @@ plugins {
 }
 
 kotlin {
+    withSourcesJar(true)
     compilerOptions {
         freeCompilerArgs.add("-opt-in=kotlin.uuid.ExperimentalUuidApi")
     }
@@ -55,7 +56,6 @@ kotlin {
         nodejs()
     }
     applyDefaultHierarchyTemplate()
-    withSourcesJar(true)
     sourceSets {
         commonTest {
             dependencies {
@@ -109,5 +109,11 @@ tasks {
             from(zipTree(dokkaJar.get().outputs.files.first()))
             into(docsDir)
         }
+    }
+}
+
+publishing {
+    publications.named<MavenPublication>("kotlinMultiplatform") {
+        artifact(dokkaJar)
     }
 }

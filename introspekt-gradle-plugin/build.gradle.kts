@@ -25,6 +25,11 @@ plugins {
     `maven-publish`
 }
 
+java {
+    withSourcesJar()
+    withJavadocJar()
+}
+
 dependencies {
     compileOnly(gradleApi())
     compileOnly(libs.kotlin.gradle.plugin)
@@ -39,6 +44,9 @@ kotlin {
 }
 
 tasks {
+    val sourcesJar by getting {
+        dependsOn(compileJava)
+    }
     val createVersionFile by registering {
         doFirst {
             val path = (layout.buildDirectory.asFile.get().toPath() / "generated" / "introspekt.version")
