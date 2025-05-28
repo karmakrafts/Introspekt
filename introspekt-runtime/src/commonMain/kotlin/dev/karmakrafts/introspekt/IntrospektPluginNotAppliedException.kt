@@ -16,4 +16,7 @@
 
 package dev.karmakrafts.introspekt
 
+/**
+ * Exception thrown when attempting to use introspection functionality without applying the Introspekt compiler plugin.
+ */
 class IntrospektPluginNotAppliedException : IllegalStateException()

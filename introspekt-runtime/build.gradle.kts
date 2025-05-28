@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-import dev.karmakrafts.conventions.signPublications
-import org.gradle.internal.extensions.stdlib.capitalized
 import java.time.ZonedDateTime
 
 plugins {
@@ -99,7 +97,7 @@ dokka {
 
 val dokkaJar by tasks.registering(Jar::class) {
     group = "dokka"
-    from(tasks.dokkaGenerateModuleHtml.flatMap { it.outputDirectory })
+    from(tasks.dokkaGeneratePublicationHtml.flatMap { it.outputDirectory })
     archiveClassifier.set("javadoc")
 }
 
@@ -111,10 +109,6 @@ tasks {
             from(zipTree(dokkaJar.get().outputs.files.first()))
             into(docsDir)
         }
-    }
-    // https://github.com/gradle/gradle/issues/26091
-    withType<AbstractPublishToMaven>().configureEach {
-        mustRunAfter(withType<Sign>())
     }
 }
 

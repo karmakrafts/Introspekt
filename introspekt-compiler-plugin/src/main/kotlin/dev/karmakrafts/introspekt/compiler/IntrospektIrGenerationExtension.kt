@@ -17,7 +17,6 @@
 package dev.karmakrafts.introspekt.compiler
 
 import dev.karmakrafts.introspekt.compiler.transformer.ClassInfoTransformer
-import dev.karmakrafts.introspekt.compiler.transformer.CompilerApiTransformer
 import dev.karmakrafts.introspekt.compiler.transformer.FunctionInfoTransformer
 import dev.karmakrafts.introspekt.compiler.transformer.IntrinsicCalleeParameterTransformer
 import dev.karmakrafts.introspekt.compiler.transformer.IntrinsicCallerParameterTransformer
@@ -45,7 +44,6 @@ internal class IntrospektIrGenerationExtension(
         pluginContext: IrPluginContext
     ) { // @formatter:on
         val introspektContext = IntrospektPluginContext(pluginContext)
-        moduleFragment.acceptVoid(CompilerApiTransformer())
 
         for (file in moduleFragment.files) {
             val source = sourceProvider(file.path)

@@ -16,6 +16,10 @@
 
 package dev.karmakrafts.introspekt
 
+/**
+ * Marker annotation for functions used in code generated
+ * by the Introspekt compiler plugin.
+ */
 @Retention(AnnotationRetention.BINARY)
 @Target(AnnotationTarget.FUNCTION, AnnotationTarget.CONSTRUCTOR)
 internal annotation class IntrospektCompilerApi

@@ -16,7 +16,11 @@
 
 package dev.karmakrafts.introspekt
 
-@RequiresOptIn("The API you are trying to use is used internally by the Trakkit compiler, it shouldn't be used directly")
+/**
+ * Marker annotation for generated APIs which shouldn't be called directly
+ * to prevent the Introspekt ABI from breaking external code.
+ */
+@RequiresOptIn("The API you are trying to use is used internally by the Introspekt compiler, it shouldn't be used directly")
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.BINARY)
 annotation class GeneratedIntrospektApi
