@@ -24,22 +24,43 @@ import dev.karmakrafts.introspekt.util.VisibilityModifier
 /**
  * Represents information about a field in a class.
  *
- * This class provides access to various metadata about a field, including its name,
- * type, visibility, and other modifiers. It also provides access to any annotations
- * that are present on the field.
+ * This class provides access to metadata about a specific field, including its
+ * location in source code, qualified name, simple name, type, visibility,
+ * and other modifiers like static, external, and final.
+ * It extends [AnnotatedElementInfo] to include annotation information.
  */
 @ConsistentCopyVisibility
-data class FieldInfo private constructor(
+data class FieldInfo private constructor( // @formatter:off
     override val location: SourceLocation,
     override val qualifiedName: String,
     override val name: String,
+
+    /**
+     * The type of this field.
+     */
     val type: TypeInfo,
+
+    /**
+     * The visibility modifier of this field (public, private, protected, internal).
+     */
     val visibility: VisibilityModifier,
+
+    /**
+     * Indicates whether this field is static (companion object member or top-level).
+     */
     val isStatic: Boolean,
+
+    /**
+     * Indicates whether this field is marked with the 'external' keyword.
+     */
     val isExternal: Boolean,
+
+    /**
+     * Indicates whether this field is final (val) or mutable (var).
+     */
     val isFinal: Boolean,
     override val annotations: Map<TypeInfo, List<AnnotationUsageInfo>>
-) : AnnotatedElementInfo {
+) : AnnotatedElementInfo { // @formatter:on
     companion object {
         private val cache: ConcurrentMutableMap<String, FieldInfo> = ConcurrentMutableMap()
 

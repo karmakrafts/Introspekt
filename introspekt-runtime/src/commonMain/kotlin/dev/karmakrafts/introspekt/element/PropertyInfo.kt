@@ -31,8 +31,10 @@ import dev.karmakrafts.introspekt.util.VisibilityModifier
  * It extends [AnnotatedElementInfo] to include annotation information.
  */
 @ConsistentCopyVisibility
-data class PropertyInfo private constructor(
-    override val location: SourceLocation, override val qualifiedName: String, override val name: String,
+data class PropertyInfo private constructor( // @formatter:off
+    override val location: SourceLocation,
+    override val qualifiedName: String,
+    override val name: String,
 
     /**
      * Indicates whether this property is mutable (var) or immutable (val).
@@ -73,7 +75,7 @@ data class PropertyInfo private constructor(
      * The setter function information for this property, if it's mutable.
      */
     val setter: FunctionInfo?, override val annotations: Map<TypeInfo, List<AnnotationUsageInfo>>
-) : AnnotatedElementInfo {
+) : AnnotatedElementInfo { // @formatter:on
     companion object {
         private val cache: ConcurrentMutableMap<String, PropertyInfo> = ConcurrentMutableMap()
 

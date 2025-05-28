@@ -25,26 +25,80 @@ import dev.karmakrafts.introspekt.util.SourceLocation
 import dev.karmakrafts.introspekt.util.VisibilityModifier
 import kotlin.reflect.KFunction
 
+/**
+ * Represents information about a function or method in a class, interface, or file.
+ *
+ * This class provides access to metadata about a specific function, including its
+ * location in source code, qualified name, simple name, type parameters, return type,
+ * parameters, visibility, modality, local variables, and annotations.
+ * It extends [AnnotatedElementInfo] to include annotation information and
+ * [ExpectableElementInfo] to support Kotlin's expect/actual mechanism.
+ */
 @ConsistentCopyVisibility
-data class FunctionInfo private constructor(
+data class FunctionInfo private constructor( // @formatter:off
     override val location: SourceLocation,
     override val qualifiedName: String,
     override val name: String,
+
+    /**
+     * The names of type parameters declared by this function.
+     *
+     * For example, in `fun <T, U> process(input: T): U`, this would contain ["T", "U"].
+     */
     val typeParameterNames: List<String>,
+
+    /**
+     * The return type information for this function.
+     */
     val returnType: TypeInfo,
+
+    /**
+     * The list of parameters this function accepts.
+     */
     val parameters: List<ParameterInfo>,
+
+    /**
+     * The visibility modifier of this function (public, private, protected, internal).
+     */
     val visibility: VisibilityModifier,
+
+    /**
+     * The modality of this function (final, open, abstract, sealed).
+     */
     val modality: ModalityModifier,
+
+    /**
+     * The list of local variables declared within this function.
+     */
     val locals: List<LocalInfo>,
     override val isExpect: Boolean,
     override val annotations: Map<TypeInfo, List<AnnotationUsageInfo>>
-) : AnnotatedElementInfo, ExpectableElementInfo {
+) : AnnotatedElementInfo, ExpectableElementInfo { // @formatter:on
     companion object {
         private val cache: ConcurrentMutableMap<Int, FunctionInfo> = ConcurrentMutableMap()
 
+        /**
+         * Gets information about the currently executing function.
+         *
+         * This method is an intrinsic that is replaced by the Introspekt compiler plugin
+         * with code that returns the [FunctionInfo] for the function where this call appears.
+         *
+         * @return The [FunctionInfo] for the currently executing function
+         * @throws IntrospektPluginNotAppliedException if the Introspekt compiler plugin is not applied
+         */
         @IntrospektIntrinsic(IntrospektIntrinsic.Type.FI_CURRENT)
         fun current(): FunctionInfo = throw IntrospektPluginNotAppliedException()
 
+        /**
+         * Gets information about the specified Kotlin function.
+         *
+         * This method is an intrinsic that is replaced by the Introspekt compiler plugin
+         * with code that returns the [FunctionInfo] for the given [KFunction].
+         *
+         * @param function The Kotlin function to get information about
+         * @return The [FunctionInfo] for the specified function
+         * @throws IntrospektPluginNotAppliedException if the Introspekt compiler plugin is not applied
+         */
         @IntrospektIntrinsic(IntrospektIntrinsic.Type.FI_OF)
         fun of(function: KFunction<*>): FunctionInfo = throw IntrospektPluginNotAppliedException()
 
@@ -91,6 +145,15 @@ data class FunctionInfo private constructor(
         }
     }
 
+    /**
+     * Returns a formatted string representation of this function.
+     *
+     * The string includes the function's annotations, visibility, modality, name,
+     * type parameters, parameters, return type, and local variables.
+     *
+     * @param indent The number of tab characters to prepend to the string for indentation
+     * @return A formatted string representation of this function
+     */
     fun toFormattedString(indent: Int = 0): String {
         // Annotations
         var result = if (annotations.isEmpty()) ""

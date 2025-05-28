@@ -18,8 +18,36 @@ package dev.karmakrafts.introspekt.element
 
 import dev.karmakrafts.introspekt.util.SourceLocation
 
+/**
+ * Represents information about a function call in the source code.
+ *
+ * This class provides metadata about a specific function call, including its
+ * location in the source code, the function making the call (caller), and
+ * the function being called (callee). It is used for introspection of function
+ * call relationships and call site analysis.
+ */
 data class CallInfo( // @formatter:off
+    /**
+     * The source code location where this function call occurs.
+     *
+     * This property provides information about where the call is made in the source code,
+     * including the module, file, line, and column.
+     */
     val location: SourceLocation,
+
+    /**
+     * The function that is making the call (the caller).
+     *
+     * This property represents the function in which this call appears, providing
+     * access to all metadata about the calling function.
+     */
     val caller: FunctionInfo,
+
+    /**
+     * The function that is being called (the callee).
+     *
+     * This property represents the target function of this call, providing
+     * access to all metadata about the function being invoked.
+     */
     val callee: FunctionInfo
 ) // @formatter:on
