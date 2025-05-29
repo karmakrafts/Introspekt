@@ -18,6 +18,7 @@ package dev.karmakrafts.introspekt.compiler.util
 
 import dev.karmakrafts.introspekt.compiler.introspektPipeline
 import dev.karmakrafts.iridium.runCompilerTest
+import dev.karmakrafts.iridium.setupCompilerTest
 import io.kotest.matchers.collections.shouldContainOnly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -36,6 +37,28 @@ class IrUtilsTest {
         Visibilities.Private.getVisibilityName() shouldBe "PRIVATE"
         Visibilities.Internal.getVisibilityName() shouldBe "INTERNAL"
         Visibilities.Unknown.getVisibilityName() shouldBe "PRIVATE"
+    }
+
+    @Test
+    fun `Compute line and column from source range`() = setupCompilerTest {
+        introspektPipeline()
+        val sourceBuffer = StringBuilder()
+        for (x in 0..<10) for (y in 0..<10) {
+            resetAssertions()
+            sourceBuffer.clear()
+            sourceBuffer.append("\n".repeat(y))
+            sourceBuffer.append(" ".repeat(x))
+            sourceBuffer.append("class Test")
+            source(sourceBuffer.toString())
+            compiler shouldNotReport { error() }
+            result irMatches {
+                val clazz = getChild<IrClass> { it.name.asString() == "Test" }
+                val source = this@setupCompilerTest.sourceLines
+                getLineNumber(source, clazz.startOffset, clazz.endOffset) shouldBe (y + 1)
+                getColumnNumber(source, clazz.startOffset, clazz.endOffset) shouldBe (x + 1)
+            }
+            evaluate()
+        }
     }
 
     @Test
