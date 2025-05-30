@@ -18,12 +18,86 @@ package dev.karmakrafts.introspekt.compiler.util
 
 import dev.karmakrafts.introspekt.compiler.introspektTransformerPipeline
 import dev.karmakrafts.introspekt.compiler.isCachedSourceLocation
+import dev.karmakrafts.iridium.matcher.IrElementMatcher
 import dev.karmakrafts.iridium.runCompilerTest
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
+import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
+import org.jetbrains.kotlin.ir.declarations.IrParameterKind
 import org.jetbrains.kotlin.ir.expressions.IrCall
+import org.jetbrains.kotlin.ir.expressions.impl.IrCallImpl
 import org.jetbrains.kotlin.ir.types.classFqName
+import org.jetbrains.kotlin.ir.util.target
 import kotlin.test.Test
 
 class SourceLocationTransformerTest {
+    fun IrElementMatcher<IrModuleFragment>.checkInlinedIntrinsic() {
+        val call = getChild<IrCall> { it.target.name.asString() == "foo" }
+        val locationParam = call.target.parameters.find { it.kind == IrParameterKind.Regular }
+        locationParam shouldNotBe null
+        val locationArg = call.arguments[locationParam!!.indexInParameters]
+        locationArg shouldNotBe null
+        locationArg!!::class shouldBe IrCallImpl::class
+        (locationArg as IrCallImpl) matches { isCachedSourceLocation("test", "test", 7, 5) }
+    }
+
+    @Test
+    fun `Obtain caller source location by parameter default`() = runCompilerTest {
+        introspektTransformerPipeline()
+        // @formatter:off
+        source("""
+            package com.example
+            import dev.karmakrafts.introspekt.util.SourceLocation
+            fun foo(location: SourceLocation = SourceLocation.here()) {
+                println(location)
+            }
+            fun bar() {
+                foo()
+            }
+        """.trimIndent())
+        // @formatter:on
+        compiler shouldNotReport { error() }
+        result irMatches { checkInlinedIntrinsic() }
+    }
+
+    @Test
+    fun `Obtain caller source location by inline parameter default`() = runCompilerTest {
+        introspektTransformerPipeline()
+        // @formatter:off
+        source("""
+            package com.example
+            import dev.karmakrafts.introspekt.util.SourceLocation
+            inline fun foo(location: SourceLocation = SourceLocation.here()) {
+                println(location)
+            }
+            fun bar() {
+                foo()
+            }
+        """.trimIndent())
+        // @formatter:on
+        compiler shouldNotReport { error() }
+        result irMatches { checkInlinedIntrinsic() }
+    }
+
+    @Test
+    fun `Obtain caller source location by inline parameter default with trailing closure`() = runCompilerTest {
+        introspektTransformerPipeline()
+        // @formatter:off
+        source("""
+            package com.example
+            import dev.karmakrafts.introspekt.util.SourceLocation
+            inline fun <reified T> foo(location: SourceLocation = SourceLocation.here(), i: Int = 20, closure: () -> T): T {
+                return closure()
+            }
+            fun bar() {
+                foo { println("HELLO, WORLD!") }
+            }
+        """.trimIndent())
+        // @formatter:on
+        compiler shouldNotReport { error() }
+        result irMatches { checkInlinedIntrinsic() }
+    }
+
     @Test
     fun `Obtain current source location`() = runCompilerTest {
         introspektTransformerPipeline()

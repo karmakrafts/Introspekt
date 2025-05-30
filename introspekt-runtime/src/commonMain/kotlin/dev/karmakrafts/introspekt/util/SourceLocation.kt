@@ -113,6 +113,8 @@ data class SourceLocation( // @formatter:off
          * Returns the [SourceLocation] of the current call site.
          *
          * This is an intrinsic function that is replaced by the compiler plugin with the actual source location.
+         * If this intrinsic is called as the default value of a function parameter,
+         * the call will be inlined to the call site.
          *
          * @return The source location of the call site.
          * @throws IntrospektPluginNotAppliedException if the Introspekt compiler plugin is not applied.
@@ -124,6 +126,8 @@ data class SourceLocation( // @formatter:off
          * Returns a hash code for the source location of the current call site.
          *
          * This is an intrinsic function that is replaced by the compiler plugin with the actual hash code.
+         * If this intrinsic is called as the default value of a function parameter,
+         * the call will be inlined to the call site.
          *
          * @return The hash code of the source location of the call site.
          * @throws IntrospektPluginNotAppliedException if the Introspekt compiler plugin is not applied.
@@ -135,6 +139,8 @@ data class SourceLocation( // @formatter:off
          * Returns the [SourceLocation] of the current function.
          *
          * This is an intrinsic function that is replaced by the compiler plugin with the actual source location.
+         * If this intrinsic is called as the default value of a function parameter,
+         * the call will be inlined to the call site.
          *
          * @return The source location of the current function.
          * @throws IntrospektPluginNotAppliedException if the Introspekt compiler plugin is not applied.
@@ -146,6 +152,8 @@ data class SourceLocation( // @formatter:off
          * Returns a hash code for the source location of the current function.
          *
          * This is an intrinsic function that is replaced by the compiler plugin with the actual hash code.
+         * If this intrinsic is called as the default value of a function parameter,
+         * the call will be inlined to the call site.
          *
          * @return The hash code of the source location of the current function.
          * @throws IntrospektPluginNotAppliedException if the Introspekt compiler plugin is not applied.
@@ -157,6 +165,8 @@ data class SourceLocation( // @formatter:off
          * Returns the [SourceLocation] of the current class.
          *
          * This is an intrinsic function that is replaced by the compiler plugin with the actual source location.
+         * If this intrinsic is called as the default value of a function parameter,
+         * the call will be inlined to the call site.
          *
          * @return The source location of the current class.
          * @throws IntrospektPluginNotAppliedException if the Introspekt compiler plugin is not applied.
@@ -168,6 +178,8 @@ data class SourceLocation( // @formatter:off
          * Returns a hash code for the source location of the current class.
          *
          * This is an intrinsic function that is replaced by the compiler plugin with the actual hash code.
+         * If this intrinsic is called as the default value of a function parameter,
+         * the call will be inlined to the call site.
          *
          * @return The hash code of the source location of the current class.
          * @throws IntrospektPluginNotAppliedException if the Introspekt compiler plugin is not applied.

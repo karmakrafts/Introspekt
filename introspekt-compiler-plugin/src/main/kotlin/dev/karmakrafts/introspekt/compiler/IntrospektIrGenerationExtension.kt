@@ -58,10 +58,11 @@ internal class IntrospektIrGenerationExtension(
         }
 
         val traceContext = TraceContext(introspektContext)
-        moduleFragment.accept(TraceInjectionTransformer(), traceContext)
 
         val removalTransformer = TraceRemovalTransformer()
         moduleFragment.accept(removalTransformer, traceContext)
         removalTransformer.removeCalls()
+
+        moduleFragment.accept(TraceInjectionTransformer(), traceContext)
     }
 }

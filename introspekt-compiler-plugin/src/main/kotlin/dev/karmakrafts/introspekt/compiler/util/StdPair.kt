@@ -20,6 +20,7 @@ import dev.karmakrafts.introspekt.compiler.IntrospektPluginContext
 import org.jetbrains.kotlin.ir.expressions.IrExpression
 import org.jetbrains.kotlin.ir.expressions.impl.IrConstructorCallImpl
 import org.jetbrains.kotlin.ir.types.IrType
+import org.jetbrains.kotlin.ir.types.makeNullable
 import org.jetbrains.kotlin.ir.types.typeWith
 import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
 import org.jetbrains.kotlin.ir.util.toIrConst
@@ -30,8 +31,8 @@ internal data class StdPair( // @formatter:off
 ) { // @formatter:on
     fun instantiate(
         context: IntrospektPluginContext,
-        firstType: IrType = first?.type ?: context.irBuiltIns.anyType,
-        secondType: IrType = second?.type ?: context.irBuiltIns.anyType
+        firstType: IrType = first?.type ?: context.irBuiltIns.anyType.makeNullable(),
+        secondType: IrType = second?.type ?: context.irBuiltIns.anyType.makeNullable()
     ): IrConstructorCallImpl = with(context) {
         IrConstructorCallImpl(
             startOffset = SYNTHETIC_OFFSET,
