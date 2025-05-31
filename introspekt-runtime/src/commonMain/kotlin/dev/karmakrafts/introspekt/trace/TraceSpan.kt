@@ -20,6 +20,8 @@ import dev.karmakrafts.introspekt.GeneratedIntrospektApi
 import dev.karmakrafts.introspekt.InlineDefaults
 import dev.karmakrafts.introspekt.IntrospektCompilerApi
 import dev.karmakrafts.introspekt.element.FunctionInfo
+import dev.karmakrafts.introspekt.trace.TraceSpan.Companion.enter
+import dev.karmakrafts.introspekt.trace.TraceSpan.Companion.leave
 import dev.karmakrafts.introspekt.util.SourceLocation
 import kotlin.uuid.Uuid
 
@@ -29,14 +31,50 @@ internal expect fun popTraceSpan(): TraceSpan
 
 internal expect fun peekTraceSpan(): TraceSpan?
 
+/**
+ * Represents a trace span for tracking execution flow in code.
+ *
+ * A trace span captures information about a specific section of code execution,
+ * including its name, unique identifier, source location, and function information.
+ * Spans are typically created using [enter] and closed using [leave].
+ */
 @ConsistentCopyVisibility
 data class TraceSpan private constructor( // @formatter:off
+    /**
+     * The name of this trace span, used for identification.
+     */
     val name: String,
+
+    /**
+     * The unique identifier for this trace span.
+     */
     val id: Uuid,
+
+    /**
+     * The source location where this trace span was created.
+     */
     val start: SourceLocation,
+
+    /**
+     * Information about the function where this trace span was created.
+     */
     val function: FunctionInfo
 ) { // @formatter:on
+    /**
+     * Companion object providing factory methods for creating and managing trace spans.
+     */
     companion object {
+        /**
+         * Creates and enters a new trace span.
+         *
+         * This method creates a new trace span with the given parameters and pushes it onto the trace stack.
+         * It also notifies the [TraceCollector] that a new span has started.
+         *
+         * @param name The name of the trace span.
+         * @param id The unique identifier for the trace span. Defaults to a random UUID.
+         * @param start The source location where the trace span starts. Defaults to the current location.
+         * @param function Information about the function where the trace span is created. Defaults to the current function.
+         */
         @OptIn(GeneratedIntrospektApi::class)
         @InlineDefaults(
             InlineDefaults.Mode.NONE,
@@ -56,6 +94,14 @@ data class TraceSpan private constructor( // @formatter:off
             pushTraceSpan(span)
         }
 
+        /**
+         * Leaves the current trace span.
+         *
+         * This method pops the current trace span from the trace stack and notifies
+         * the [TraceCollector] that the span has ended.
+         *
+         * @param end The source location where the trace span ends. Defaults to the current location.
+         */
         @OptIn(GeneratedIntrospektApi::class)
         @InlineDefaults(InlineDefaults.Mode.SL_HERE)
         @IntrospektCompilerApi
@@ -65,6 +111,11 @@ data class TraceSpan private constructor( // @formatter:off
             TraceCollector.leaveSpan(popTraceSpan(), end)
         }
 
+        /**
+         * Returns the current active trace span, if any.
+         *
+         * @return The current trace span, or null if no span is active.
+         */
         fun current(): TraceSpan? = peekTraceSpan()
     }
 }

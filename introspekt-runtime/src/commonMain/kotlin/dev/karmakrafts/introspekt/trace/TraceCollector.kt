@@ -23,14 +23,32 @@ import dev.karmakrafts.introspekt.IntrospektCompilerApi
 import dev.karmakrafts.introspekt.element.FunctionInfo
 import dev.karmakrafts.introspekt.util.SourceLocation
 
+/**
+ * Interface for collecting and processing trace information during code execution.
+ *
+ * A trace collector receives notifications about trace spans, function entries and exits,
+ * function calls, and discrete events that occur during program execution. Implementations
+ * can use this information for various purposes such as performance monitoring, debugging,
+ * or generating execution reports.
+ */
 interface TraceCollector {
     companion object {
         private val collectors: ConcurrentMutableList<TraceCollector> = ConcurrentMutableList()
 
+        /**
+         * Registers a trace collector to receive trace notifications.
+         *
+         * @param collector The trace collector to register.
+         */
         fun register(collector: TraceCollector) {
             collectors.add(collector)
         }
 
+        /**
+         * Unregisters a trace collector to stop it from receiving trace notifications.
+         *
+         * @param collector The trace collector to unregister.
+         */
         fun unregister(collector: TraceCollector) {
             collectors.remove(collector)
         }
@@ -89,15 +107,48 @@ interface TraceCollector {
         }
     }
 
+    /**
+     * Called when a new trace span is entered.
+     *
+     * @param span The trace span that is being entered.
+     */
     fun enterSpan(span: TraceSpan)
 
+    /**
+     * Called when a trace span is exited.
+     *
+     * @param span The trace span that is being exited.
+     * @param end The source location where the span ends.
+     */
     fun leaveSpan(span: TraceSpan, end: SourceLocation)
 
+    /**
+     * Called when a function is entered.
+     *
+     * @param function Information about the function being entered.
+     */
     fun enterFunction(function: FunctionInfo)
 
+    /**
+     * Called when a function is exited.
+     *
+     * @param function Information about the function being exited.
+     */
     fun leaveFunction(function: FunctionInfo)
 
+    /**
+     * Called when a function calls another function.
+     *
+     * @param callee Information about the function being called.
+     * @param caller Information about the function making the call.
+     * @param location The source location where the call occurs.
+     */
     fun call(callee: FunctionInfo, caller: FunctionInfo, location: SourceLocation)
 
+    /**
+     * Called when a trace event occurs.
+     *
+     * @param event The trace event that occurred.
+     */
     fun event(event: TraceEvent)
 }

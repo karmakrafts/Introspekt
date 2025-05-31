@@ -19,10 +19,32 @@ package dev.karmakrafts.introspekt.trace
 import dev.karmakrafts.introspekt.util.SourceLocation
 import kotlin.uuid.Uuid
 
+/**
+ * Represents a discrete event that occurs during code execution.
+ *
+ * A trace event captures information about a specific point in code execution,
+ * including its source location, unique identifier, message, and associated data.
+ * Events are typically collected by [TraceCollector] implementations.
+ */
 @ConsistentCopyVisibility
 data class TraceEvent internal constructor( // @formatter:off
+    /**
+     * The source location where this event occurred.
+     */
     val location: SourceLocation,
+
+    /**
+     * The unique identifier for this event.
+     */
     val id: Uuid,
+
+    /**
+     * A descriptive message for this event.
+     */
     val message: String,
+
+    /**
+     * Additional data associated with this event, stored as key-value pairs.
+     */
     val data: Map<String, Any>
 ) // @formatter:on

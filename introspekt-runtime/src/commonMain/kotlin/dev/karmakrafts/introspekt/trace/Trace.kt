@@ -35,6 +35,18 @@ annotation class Trace( // @formatter:off
     vararg val targets: Target
 ) { // @formatter:on
     companion object {
+        /**
+         * Creates and records a trace event with the specified parameters.
+         *
+         * This function creates a [TraceEvent] with the provided information and passes it to the
+         * [TraceCollector] for processing. It can be used to record discrete events that occur during
+         * code execution, such as important state changes, user actions, or significant milestones.
+         *
+         * @param message A descriptive message for the event
+         * @param id A unique identifier for the event (defaults to a random UUID)
+         * @param data Additional data associated with the event as key-value pairs (defaults to empty map)
+         * @param location The source location where the event occurred (defaults to the current location)
+         */
         @OptIn(GeneratedIntrospektApi::class)
         @InlineDefaults( // @formatter:off
             InlineDefaults.Mode.NONE,
@@ -49,13 +61,14 @@ annotation class Trace( // @formatter:off
             data: Map<String, Any> = emptyMap(),
             location: SourceLocation = SourceLocation.here()
         ) {
-            TraceCollector.event(TraceEvent( // @formatter:off
+            // @formatter:off
+            TraceCollector.event(TraceEvent(
                 location = location,
                 id = id,
                 message = message,
                 data = data
-            )
-            ) // @formatter:on
+            ))
+            // @formatter:on
         }
     }
 

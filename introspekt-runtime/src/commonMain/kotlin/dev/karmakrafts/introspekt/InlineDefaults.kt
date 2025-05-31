@@ -16,10 +16,28 @@
 
 package dev.karmakrafts.introspekt
 
+/**
+ * Annotation used to control how default parameter values are inlined with respect to
+ * introspection capabilities provided by Introspekt.
+ *
+ * When applied to a function or constructor, this annotation specifies which introspection
+ * information should be inlined into the default parameter values at compile time.
+ *
+ * @property modes The introspection modes to be applied for inlining default values.
+ */
 @GeneratedIntrospektApi
 @Retention(AnnotationRetention.BINARY)
 @Target(AnnotationTarget.FUNCTION, AnnotationTarget.CONSTRUCTOR)
 annotation class InlineDefaults(vararg val modes: Mode) {
+    /**
+     * Enumeration of supported inlining modes for default parameter values.
+     *
+     * The enum values are grouped by prefix:
+     * - NONE: No introspection information is inlined
+     * - SL_*: Source Location introspection modes for getting file, line, and position information
+     * - FI_*: Function Information introspection modes for accessing function metadata
+     * - CI_*: Class Information introspection modes for accessing class metadata
+     */
     enum class Mode {
         // @formatter:off
         NONE,
@@ -29,13 +47,8 @@ annotation class InlineDefaults(vararg val modes: Mode) {
         SL_CURRENT_FUNCTION_HASH,
         SL_CURRENT_CLASS,
         SL_CURRENT_CLASS_HASH,
-        SL_OF_CLASS,
-        SL_OF_FUNCTION,
         FI_CURRENT,
-        FI_OF,
-        CI_CURRENT,
-        CI_OF,
-        TI_OF;
+        CI_CURRENT;
         // @formatter:on
     }
 }
