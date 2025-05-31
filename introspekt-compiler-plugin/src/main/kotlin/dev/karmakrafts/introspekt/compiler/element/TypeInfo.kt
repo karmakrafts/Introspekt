@@ -25,6 +25,7 @@ import org.jetbrains.kotlin.ir.declarations.IrFile
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.impl.IrCallImplWithShape
+import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.classFqName
 import org.jetbrains.kotlin.ir.types.defaultType
@@ -51,6 +52,7 @@ internal data class TypeInfo( // @formatter:off
         }
     }
 
+    @OptIn(UnsafeDuringIrConstructionAPI::class)
     override fun instantiateCached( // @formatter:off
         module: IrModuleFragment,
         file: IrFile,
@@ -67,16 +69,19 @@ internal data class TypeInfo( // @formatter:off
             valueArgumentsCount = 4,
             hasDispatchReceiver = true,
             hasExtensionReceiver = false
-        ).apply { // @formatter:off
-            var index = 0
-            putValueArgument(index++, location.instantiateCached(context))
-            putValueArgument(index++, this@TypeInfo.type.toClassReference(context))
-            putValueArgument(index++, (this@TypeInfo.type.classFqName?.asString()
-                ?: "<undefined>").toIrConst(irBuiltIns.stringType))
-            putValueArgument(index, (this@TypeInfo.type.classFqName?.shortNameOrSpecial()?.asString()
-                ?: "<undefined>").toIrConst(irBuiltIns.stringType))
+        ).apply {
+            val function = symbol.owner
+            arguments[function.parameters.first { it.name.asString() == "location" }] =
+                location.instantiateCached(context)
+            arguments[function.parameters.first { it.name.asString() == "reflectType" }] =
+                this@TypeInfo.type.toClassReference(context)
+            arguments[function.parameters.first { it.name.asString() == "qualifiedName" }] =
+                (this@TypeInfo.type.classFqName?.asString() ?: "<undefined>").toIrConst(irBuiltIns.stringType)
+            arguments[function.parameters.first { it.name.asString() == "name" }] =
+                (this@TypeInfo.type.classFqName?.shortNameOrSpecial()?.asString()
+                    ?: "<undefined>").toIrConst(irBuiltIns.stringType)
             dispatchReceiver = context.typeInfoCompanionType.getObjectInstance()
-        } // @formatter:on
+        }
     }
 
     override fun equals(other: Any?): Boolean {

@@ -16,8 +16,8 @@
 
 package dev.karmakrafts.introspekt.trace
 
-import dev.karmakrafts.introspekt.CaptureCaller
 import dev.karmakrafts.introspekt.GeneratedIntrospektApi
+import dev.karmakrafts.introspekt.InlineDefaults
 import dev.karmakrafts.introspekt.IntrospektCompilerApi
 import dev.karmakrafts.introspekt.element.FunctionInfo
 import dev.karmakrafts.introspekt.util.SourceLocation
@@ -38,7 +38,12 @@ data class TraceSpan private constructor( // @formatter:off
 ) { // @formatter:on
     companion object {
         @OptIn(GeneratedIntrospektApi::class)
-        @CaptureCaller("2:SL_HERE", "3:FI_CURRENT")
+        @InlineDefaults(
+            InlineDefaults.Mode.NONE,
+            InlineDefaults.Mode.NONE,
+            InlineDefaults.Mode.SL_HERE,
+            InlineDefaults.Mode.FI_CURRENT
+        )
         @IntrospektCompilerApi
         fun enter(
             name: String,
@@ -52,7 +57,7 @@ data class TraceSpan private constructor( // @formatter:off
         }
 
         @OptIn(GeneratedIntrospektApi::class)
-        @CaptureCaller("0:SL_HERE")
+        @InlineDefaults(InlineDefaults.Mode.SL_HERE)
         @IntrospektCompilerApi
         fun leave( // @formatter:off
             end: SourceLocation = SourceLocation.here()

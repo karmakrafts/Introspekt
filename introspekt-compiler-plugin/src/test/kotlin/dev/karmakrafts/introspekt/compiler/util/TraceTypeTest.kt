@@ -18,7 +18,6 @@ package dev.karmakrafts.introspekt.compiler.util
 
 import dev.karmakrafts.introspekt.compiler.introspektPipeline
 import dev.karmakrafts.iridium.setupCompilerTest
-import io.kotest.matchers.collections.shouldContain
 import org.jetbrains.kotlin.ir.declarations.IrFunction
 import kotlin.test.Ignore
 import kotlin.test.Test
@@ -41,7 +40,7 @@ class TraceTypeTest {
             """.trimIndent())
             // @formatter:on
             result irMatches {
-                getChild<IrFunction> { it.name.asString() == "test" }.getTraceType() shouldContain traceType
+                getChild<IrFunction> { it.name.asString() == "test" }.getTraceType() shouldContain listOf(traceType)
             }
             evaluate()
         }

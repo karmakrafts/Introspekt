@@ -29,6 +29,7 @@ import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.declarations.IrProperty
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.impl.IrCallImplWithShape
+import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.defaultType
 import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
 import org.jetbrains.kotlin.ir.util.fqNameWhenAvailable
@@ -81,6 +82,7 @@ internal data class PropertyInfo(
         }
     }
 
+    @OptIn(UnsafeDuringIrConstructionAPI::class)
     override fun instantiateCached( // @formatter:off
         module: IrModuleFragment,
         file: IrFile,
@@ -97,37 +99,35 @@ internal data class PropertyInfo(
             contextParameterCount = 0,
             hasDispatchReceiver = true,
             hasExtensionReceiver = false
-        ).apply { // @formatter:off
-            var index = 0
-            // location
-            putValueArgument(index++, location.instantiateCached(context))
-            // qualifiedName
-            putValueArgument(index++, qualifiedName.toIrConst(irBuiltIns.stringType))
-            // name
-            putValueArgument(index++, name.toIrConst(irBuiltIns.stringType))
-            // isMutable
-            putValueArgument(index++, isMutable.toIrConst(irBuiltIns.booleanType))
-            // visibility
-            putValueArgument(index++, visibility.getEnumValue(visibilityModifierType) { getVisibilityName() })
-            // modality
-            putValueArgument(index++, modality.getEnumValue(modalityModifierType) { name })
-            // isExpect
-            putValueArgument(index++, isExpect.toIrConst(irBuiltIns.booleanType))
-            // isDelegated
-            putValueArgument(index++, isDelegated.toIrConst(irBuiltIns.booleanType))
-            // backingField
-            putValueArgument(index++, backingField?.instantiateCached(module, file, source, context)
-                ?: null.toIrConst(fieldInfoType.defaultType))
-            // getter
-            putValueArgument(index++, getter?.instantiateCached(module, file, source, context)
-                ?: null.toIrConst(functionInfoType.defaultType))
-            // setter
-            putValueArgument(index++, setter?.instantiateCached(module, file, source, context)
-                ?: null.toIrConst(functionInfoType.defaultType))
-            // annotations
-            putValueArgument(index, instantiateAnnotations(module, file, source, context))
+        ).apply {
+            val function = symbol.owner
+            arguments[function.parameters.first { it.name.asString() == "location" }] =
+                location.instantiateCached(context)
+            arguments[function.parameters.first { it.name.asString() == "qualifiedName" }] =
+                qualifiedName.toIrConst(irBuiltIns.stringType)
+            arguments[function.parameters.first { it.name.asString() == "name" }] =
+                name.toIrConst(irBuiltIns.stringType)
+            arguments[function.parameters.first { it.name.asString() == "isMutable" }] =
+                isMutable.toIrConst(irBuiltIns.booleanType)
+            arguments[function.parameters.first { it.name.asString() == "visibility" }] =
+                visibility.getEnumValue(visibilityModifierType) { getVisibilityName() }
+            arguments[function.parameters.first { it.name.asString() == "modality" }] =
+                modality.getEnumValue(modalityModifierType) { name }
+            arguments[function.parameters.first { it.name.asString() == "isExpect" }] =
+                isExpect.toIrConst(irBuiltIns.booleanType)
+            arguments[function.parameters.first { it.name.asString() == "isDelegated" }] =
+                isDelegated.toIrConst(irBuiltIns.booleanType)
+            arguments[function.parameters.first { it.name.asString() == "backingField" }] =
+                backingField?.instantiateCached(module, file, source, context)
+                    ?: null.toIrConst(fieldInfoType.defaultType)
+            arguments[function.parameters.first { it.name.asString() == "getter" }] =
+                getter?.instantiateCached(module, file, source, context) ?: null.toIrConst(functionInfoType.defaultType)
+            arguments[function.parameters.first { it.name.asString() == "setter" }] =
+                setter?.instantiateCached(module, file, source, context) ?: null.toIrConst(functionInfoType.defaultType)
+            arguments[function.parameters.first { it.name.asString() == "annotations" }] =
+                instantiateAnnotations(module, file, source, context)
             dispatchReceiver = propertyInfoCompanionType.getObjectInstance()
-        } // @formatter:on
+        }
     }
 
     // Modifiers are not relevant to identity hash

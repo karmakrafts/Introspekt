@@ -29,6 +29,7 @@ import org.jetbrains.kotlin.ir.declarations.IrFile
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.impl.IrCallImplWithShape
+import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.defaultType
 import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
 import org.jetbrains.kotlin.ir.util.kotlinFqName
@@ -45,6 +46,7 @@ internal class FieldInfo(
     val isFinal: Boolean,
     override val annotations: Map<TypeInfo, List<AnnotationUsageInfo>>
 ) : ElementInfo, AnnotatedElement {
+    @OptIn(UnsafeDuringIrConstructionAPI::class)
     override fun instantiateCached( // @formatter:off
         module: IrModuleFragment,
         file: IrFile,
@@ -61,28 +63,28 @@ internal class FieldInfo(
             contextParameterCount = 0,
             hasDispatchReceiver = true,
             hasExtensionReceiver = false
-        ).apply { // @formatter:off
-            var index = 0
-            // location
-            putValueArgument(index++, location.instantiateCached(context))
-            // qualifiedName
-            putValueArgument(index++, qualifiedName.toIrConst(irBuiltIns.stringType))
-            // name
-            putValueArgument(index++, name.toIrConst(irBuiltIns.stringType))
-            // type
-            putValueArgument(index++, this@FieldInfo.type.instantiateCached(module, file, source, context))
-            // visibility
-            putValueArgument(index++, visibility.getEnumValue(visibilityModifierType) { getVisibilityName() })
-            // isStatic
-            putValueArgument(index++, isStatic.toIrConst(irBuiltIns.booleanType))
-            // isExternal
-            putValueArgument(index++, isExternal.toIrConst(irBuiltIns.booleanType))
-            // isFinal
-            putValueArgument(index++, isFinal.toIrConst(irBuiltIns.booleanType))
-            // annotations
-            putValueArgument(index, instantiateAnnotations(module, file, source, context))
+        ).apply {
+            val function = symbol.owner
+            arguments[function.parameters.first { it.name.asString() == "location" }] =
+                location.instantiateCached(context)
+            arguments[function.parameters.first { it.name.asString() == "qualifiedName" }] =
+                qualifiedName.toIrConst(irBuiltIns.stringType)
+            arguments[function.parameters.first { it.name.asString() == "name" }] =
+                name.toIrConst(irBuiltIns.stringType)
+            arguments[function.parameters.first { it.name.asString() == "type" }] =
+                this@FieldInfo.type.instantiateCached(module, file, source, context)
+            arguments[function.parameters.first { it.name.asString() == "visibility" }] =
+                visibility.getEnumValue(visibilityModifierType) { getVisibilityName() }
+            arguments[function.parameters.first { it.name.asString() == "isStatic" }] =
+                isStatic.toIrConst(irBuiltIns.booleanType)
+            arguments[function.parameters.first { it.name.asString() == "isExternal" }] =
+                isExternal.toIrConst(irBuiltIns.booleanType)
+            arguments[function.parameters.first { it.name.asString() == "isFinal" }] =
+                isFinal.toIrConst(irBuiltIns.booleanType)
+            arguments[function.parameters.first { it.name.asString() == "annotations" }] =
+                instantiateAnnotations(module, file, source, context)
             dispatchReceiver = fieldInfoCompanionType.getObjectInstance()
-        } // @formatter:on
+        }
     }
 }
 

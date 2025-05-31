@@ -66,6 +66,7 @@ internal data class SourceLocation( // @formatter:off
         }
     }
 
+    @OptIn(UnsafeDuringIrConstructionAPI::class)
     fun instantiateCached(context: IntrospektPluginContext): IrCallImpl = with(context) {
         IrCallImplWithShape(
             startOffset = KOTLIN_SYNTHETIC_OFFSET,
@@ -78,11 +79,14 @@ internal data class SourceLocation( // @formatter:off
             hasDispatchReceiver = true,
             hasExtensionReceiver = false
         ).apply {
-            var index = 0
-            putValueArgument(index++, module.toIrConst(irBuiltIns.stringType))
-            putValueArgument(index++, file.toIrConst(irBuiltIns.stringType))
-            putValueArgument(index++, line.toIrConst(irBuiltIns.intType))
-            putValueArgument(index, column.toIrConst(irBuiltIns.intType))
+            val function = symbol.owner
+            arguments[function.parameters.first { it.name.asString() == "module" }] =
+                module.toIrConst(irBuiltIns.stringType)
+            arguments[function.parameters.first { it.name.asString() == "file" }] =
+                file.toIrConst(irBuiltIns.stringType)
+            arguments[function.parameters.first { it.name.asString() == "line" }] = line.toIrConst(irBuiltIns.intType)
+            arguments[function.parameters.first { it.name.asString() == "column" }] =
+                column.toIrConst(irBuiltIns.intType)
             dispatchReceiver = sourcLocationCompanionType.getObjectInstance()
         }
     }

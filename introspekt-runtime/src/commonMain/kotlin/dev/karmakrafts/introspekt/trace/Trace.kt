@@ -16,7 +16,7 @@
 
 package dev.karmakrafts.introspekt.trace
 
-import dev.karmakrafts.introspekt.CaptureCaller
+import dev.karmakrafts.introspekt.InlineDefaults
 import dev.karmakrafts.introspekt.GeneratedIntrospektApi
 import dev.karmakrafts.introspekt.IntrospektCompilerApi
 import dev.karmakrafts.introspekt.util.SourceLocation
@@ -32,7 +32,12 @@ annotation class Trace( // @formatter:off
 ) { // @formatter:on
     companion object {
         @OptIn(GeneratedIntrospektApi::class)
-        @CaptureCaller("3:SL_HERE")
+        @InlineDefaults(
+            InlineDefaults.Mode.NONE,
+            InlineDefaults.Mode.NONE,
+            InlineDefaults.Mode.NONE,
+            InlineDefaults.Mode.SL_HERE
+        )
         @IntrospektCompilerApi
         fun event(
             message: String,

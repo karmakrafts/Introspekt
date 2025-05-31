@@ -19,6 +19,7 @@ package dev.karmakrafts.introspekt.compiler.util
 import dev.karmakrafts.introspekt.compiler.IntrospektPluginContext
 import org.jetbrains.kotlin.ir.expressions.IrExpression
 import org.jetbrains.kotlin.ir.expressions.impl.IrConstructorCallImpl
+import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.makeNullable
 import org.jetbrains.kotlin.ir.types.typeWith
@@ -29,6 +30,7 @@ internal data class StdPair( // @formatter:off
     val first: IrExpression?,
     val second: IrExpression?
 ) { // @formatter:on
+    @OptIn(UnsafeDuringIrConstructionAPI::class)
     fun instantiate(
         context: IntrospektPluginContext,
         firstType: IrType = first?.type ?: context.irBuiltIns.anyType.makeNullable(),
@@ -42,10 +44,13 @@ internal data class StdPair( // @formatter:off
             typeArgumentsCount = 2,
             constructorTypeArgumentsCount = 2
         ).apply {
-            putTypeArgument(0, firstType)
-            putTypeArgument(1, secondType)
-            putValueArgument(0, first ?: null.toIrConst(firstType))
-            putValueArgument(1, second ?: null.toIrConst(secondType))
+            val constructor = symbol.owner
+            typeArguments[0] = firstType
+            typeArguments[1] = secondType
+            arguments[constructor.parameters.first { it.name.asString() == "first" }] =
+                first ?: null.toIrConst(firstType)
+            arguments[constructor.parameters.first { it.name.asString() == "second" }] =
+                second ?: null.toIrConst(secondType)
         }
     }
 }

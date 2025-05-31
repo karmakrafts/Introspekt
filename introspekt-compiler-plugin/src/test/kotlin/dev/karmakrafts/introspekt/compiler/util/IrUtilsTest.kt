@@ -19,9 +19,6 @@ package dev.karmakrafts.introspekt.compiler.util
 import dev.karmakrafts.introspekt.compiler.introspektPipeline
 import dev.karmakrafts.iridium.runCompilerTest
 import dev.karmakrafts.iridium.setupCompilerTest
-import io.kotest.matchers.collections.shouldContainOnly
-import io.kotest.matchers.shouldBe
-import io.kotest.matchers.shouldNotBe
 import org.jetbrains.kotlin.descriptors.Visibilities
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.types.classFqName
@@ -31,7 +28,7 @@ import kotlin.test.Test
 
 class IrUtilsTest {
     @Test
-    fun `Get visibility name`() {
+    fun `Get visibility name`() = setupCompilerTest {
         Visibilities.Public.getVisibilityName() shouldBe "PUBLIC"
         Visibilities.Protected.getVisibilityName() shouldBe "PROTECTED"
         Visibilities.Private.getVisibilityName() shouldBe "PRIVATE"
@@ -224,7 +221,7 @@ class IrUtilsTest {
             annotation shouldNotBe null
             val values = annotation!!.getAnnotationValues()
             values.size shouldBe 1
-            (values["values"] as List<*>) shouldContainOnly listOf("FOO1", "FOO2")
+            (values["values"] as List<*>) shouldBe listOf("FOO1", "FOO2")
         }
     }
 
@@ -247,7 +244,7 @@ class IrUtilsTest {
             annotation shouldNotBe null
             val values = annotation!!.getAnnotationValues()
             values.size shouldBe 1
-            (values["values"] as List<*>) shouldContainOnly listOf("Hello", "World!")
+            (values["values"] as List<*>) shouldBe listOf("Hello", "World!")
         }
     }
 
@@ -270,7 +267,7 @@ class IrUtilsTest {
             annotation shouldNotBe null
             val values = annotation!!.getAnnotationValues()
             values.size shouldBe 1
-            (values["values"] as List<*>) shouldContainOnly listOf(4, 20)
+            (values["values"] as List<*>) shouldBe listOf(4, 20)
         }
     }
 
@@ -293,7 +290,7 @@ class IrUtilsTest {
             annotation shouldNotBe null
             val values = annotation!!.getAnnotationValues()
             values.size shouldBe 1
-            (values["values"] as List<*>) shouldContainOnly listOf(4F, 20F)
+            (values["values"] as List<*>) shouldBe listOf(4F, 20F)
         }
     }
 
@@ -316,7 +313,7 @@ class IrUtilsTest {
             annotation shouldNotBe null
             val values = annotation!!.getAnnotationValues()
             values.size shouldBe 1
-            (values["values"] as List<*>) shouldContainOnly listOf(true, false)
+            (values["values"] as List<*>) shouldBe listOf(true, false)
         }
     }
 
@@ -346,10 +343,10 @@ class IrUtilsTest {
             val (arg1, arg2) = value!!
 
             arg1!!::class shouldBe IrSimpleTypeImpl::class
-            (arg1 as IrSimpleTypeImpl).classFqName shouldBe FqName("kotlin.String")
+            (arg1 as IrSimpleTypeImpl) matches { string() }
 
             arg2!!::class shouldBe IrSimpleTypeImpl::class
-            (arg2 as IrSimpleTypeImpl).classFqName shouldBe FqName("kotlin.Int")
+            (arg2 as IrSimpleTypeImpl) matches { int() }
         }
     }
 }

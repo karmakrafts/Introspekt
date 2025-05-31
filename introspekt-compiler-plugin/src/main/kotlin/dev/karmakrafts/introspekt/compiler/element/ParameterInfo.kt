@@ -27,6 +27,7 @@ import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.declarations.IrValueParameter
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.impl.IrCallImplWithShape
+import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.defaultType
 import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
 import org.jetbrains.kotlin.ir.util.kotlinFqName
@@ -39,6 +40,7 @@ internal class ParameterInfo(
     val type: TypeInfo,
     override val annotations: Map<TypeInfo, List<AnnotationUsageInfo>>
 ) : ElementInfo, AnnotatedElement {
+    @OptIn(UnsafeDuringIrConstructionAPI::class)
     override fun instantiateCached( // @formatter:off
         module: IrModuleFragment,
         file: IrFile,
@@ -56,12 +58,17 @@ internal class ParameterInfo(
             hasDispatchReceiver = true,
             hasExtensionReceiver = false
         ).apply {
-            var index = 0
-            putValueArgument(index++, location.instantiateCached(context))
-            putValueArgument(index++, qualifiedName.toIrConst(irBuiltIns.stringType))
-            putValueArgument(index++, name.toIrConst(irBuiltIns.stringType))
-            putValueArgument(index++, this@ParameterInfo.type.instantiateCached(module, file, source, context))
-            putValueArgument(index, instantiateAnnotations(module, file, source, context))
+            val function = symbol.owner
+            arguments[function.parameters.first { it.name.asString() == "location" }] =
+                location.instantiateCached(context)
+            arguments[function.parameters.first { it.name.asString() == "qualifiedName" }] =
+                qualifiedName.toIrConst(irBuiltIns.stringType)
+            arguments[function.parameters.first { it.name.asString() == "name" }] =
+                name.toIrConst(irBuiltIns.stringType)
+            arguments[function.parameters.first { it.name.asString() == "type" }] =
+                this@ParameterInfo.type.instantiateCached(module, file, source, context)
+            arguments[function.parameters.first { it.name.asString() == "annotations" }] =
+                instantiateAnnotations(module, file, source, context)
             dispatchReceiver = parameterInfoCompanionType.getObjectInstance()
         }
     }

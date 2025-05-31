@@ -1,5 +1,3 @@
-import dev.karmakrafts.conventions.signPublications
-
 /*
  * Copyright 2025 Karma Krafts & associates
  *
@@ -34,7 +32,6 @@ dependencies {
     kapt(libs.autoService)
 
     testImplementation(libs.kotlin.test)
-    testImplementation(libs.kotest)
     testImplementation(libs.iridium)
     testImplementation(projects.introspektRuntime)
 }

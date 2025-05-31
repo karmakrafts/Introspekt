@@ -36,12 +36,13 @@ internal data class AnnotationUsageInfo( // @formatter:off
     val type: IrType,
     val values: Map<String, Any?>
 ) { // @formatter:on
+    @OptIn(UnsafeDuringIrConstructionAPI::class)
     fun instantiate( // @formatter:off
         module: IrModuleFragment,
         file: IrFile,
         source: List<String>,
         context: IntrospektPluginContext
-    ): IrConstructorCallImpl = with(context) {
+    ): IrConstructorCallImpl = with(context) { // @formatter:on
         IrConstructorCallImpl(
             startOffset = SYNTHETIC_OFFSET,
             endOffset = SYNTHETIC_OFFSET,
@@ -50,20 +51,18 @@ internal data class AnnotationUsageInfo( // @formatter:off
             typeArgumentsCount = 0,
             constructorTypeArgumentsCount = 0
         ).apply {
-            var index = 0
-            putValueArgument(index++, location.instantiateCached(context))
-            putValueArgument(index++, this@AnnotationUsageInfo.type
-                .getTypeInfo(module, file, source)
-                .instantiateCached(module, file, source, context))
-            putValueArgument(index, createMapOf(
+            val constructor = symbol.owner
+            arguments[constructor.parameters.first { it.name.asString() == "location" }] =
+                location.instantiateCached(context)
+            arguments[constructor.parameters.first { it.name.asString() == "type" }] =
+                this@AnnotationUsageInfo.type.getTypeInfo(module, file, source)
+                    .instantiateCached(module, file, source, context)
+            arguments[constructor.parameters.first { it.name.asString() == "values" }] = createMapOf(
                 keyType = irBuiltIns.stringType,
                 valueType = irBuiltIns.anyType,
-                values = values.map { (key, value) ->
-                    key.toIrConst(irBuiltIns.stringType) to value?.toIrValue()
-                })
-            )
+                values = values.map { (key, value) -> key.toIrConst(irBuiltIns.stringType) to value?.toIrValue() })
         }
-    } // @formatter:on
+    }
 }
 
 @OptIn(UnsafeDuringIrConstructionAPI::class)

@@ -16,7 +16,9 @@
 
 package dev.karmakrafts.introspekt.compiler
 
+import dev.karmakrafts.introspekt.compiler.util.InlineDefaultMode
 import dev.karmakrafts.introspekt.compiler.util.IntrospektNames
+import dev.karmakrafts.introspekt.compiler.util.getEnumValue
 import dev.karmakrafts.introspekt.compiler.util.toClassReference
 import dev.karmakrafts.introspekt.compiler.util.toStdPair
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
@@ -172,10 +174,12 @@ internal data class IntrospektPluginContext(
     internal val typeInfoGetOrCreate: IrSimpleFunctionSymbol =
         pluginContext.referenceFunctions(IntrospektNames.TypeInfo.Companion.getOrCreate).first()
 
-    // CaptureCaller
-    private val captureCallerType: IrClassSymbol = pluginContext.referenceClass(IntrospektNames.CaptureCaller.id)!!
-    private val captureCallerConstructor: IrConstructorSymbol =
-        pluginContext.referenceConstructors(IntrospektNames.CaptureCaller.id).first()
+    // InlineDefaults
+    private val inlineDefaultsType: IrClassSymbol = pluginContext.referenceClass(IntrospektNames.InlineDefaults.id)!!
+    private val inlineDefaultsConstructor: IrConstructorSymbol =
+        pluginContext.referenceConstructors(IntrospektNames.InlineDefaults.id).first()
+    private val inlineDefaultsModeType: IrClassSymbol =
+        pluginContext.referenceClass(IntrospektNames.InlineDefaults.Mode.id)!!
 
     internal val visibilityModifierType: IrClassSymbol =
         pluginContext.referenceClass(IntrospektNames.VisibilityModifier.id)!!
@@ -183,26 +187,30 @@ internal data class IntrospektPluginContext(
         pluginContext.referenceClass(IntrospektNames.ModalityModifier.id)!!
     internal val classModifierType: IrClassSymbol = pluginContext.referenceClass(IntrospektNames.ClassModifier.id)!!
 
-    fun createCaptureCaller(intrinsics: List<String>): IrConstructorCallImpl = IrConstructorCallImpl(
+    @OptIn(UnsafeDuringIrConstructionAPI::class)
+    fun createInlineDefaults(modes: List<InlineDefaultMode>): IrConstructorCallImpl = IrConstructorCallImpl(
         startOffset = SYNTHETIC_OFFSET,
         endOffset = SYNTHETIC_OFFSET,
-        type = captureCallerType.defaultType,
-        symbol = captureCallerConstructor,
+        type = inlineDefaultsType.defaultType,
+        symbol = inlineDefaultsConstructor,
         typeArgumentsCount = 0,
         constructorTypeArgumentsCount = 0
-    ).apply { // @formatter:off
-        putValueArgument(0, IrVarargImpl(
+    ).apply {
+        arguments[symbol.owner.parameters.first { it.name.asString() == "modes" }] = IrVarargImpl(
             startOffset = SYNTHETIC_OFFSET,
             endOffset = SYNTHETIC_OFFSET,
-            type = irBuiltIns.arrayClass.typeWith(irBuiltIns.stringType),
-            varargElementType = irBuiltIns.stringType,
-            elements = intrinsics.map { it.toIrConst(irBuiltIns.stringType) })
-        )
-    } // @formatter:on
+            type = irBuiltIns.arrayClass.typeWith(inlineDefaultsModeType.defaultType),
+            varargElementType = inlineDefaultsModeType.defaultType,
+            elements = modes.map { mode ->
+                mode.getEnumValue(inlineDefaultsModeType) { enumName }
+            })
+    }
 
-    internal fun createListOf(
-        type: IrType, values: List<IrExpression>
-    ): IrCallImpl = IrCallImplWithShape(
+    @OptIn(UnsafeDuringIrConstructionAPI::class)
+    internal fun createListOf( // @formatter:off
+        type: IrType,
+        values: List<IrExpression>
+    ): IrCallImpl = IrCallImplWithShape( // @formatter:on
         startOffset = SYNTHETIC_OFFSET,
         endOffset = SYNTHETIC_OFFSET,
         type = listType.typeWith(type),
@@ -212,17 +220,19 @@ internal data class IntrospektPluginContext(
         contextParameterCount = 0,
         hasDispatchReceiver = false,
         hasExtensionReceiver = false
-    ).apply { // @formatter:off
-        putTypeArgument(0, type)
-        putValueArgument(0, IrVarargImpl(
+    ).apply {
+        val function = listOfFunction.owner
+        typeArguments[0] = type
+        arguments[function.parameters.first { it.name.asString() == "elements" }] = IrVarargImpl(
             startOffset = SYNTHETIC_OFFSET,
             endOffset = SYNTHETIC_OFFSET,
             type = irBuiltIns.arrayClass.typeWith(type),
             varargElementType = type,
             elements = values
-        ))
-    } // @formatter:on
+        )
+    }
 
+    @OptIn(UnsafeDuringIrConstructionAPI::class)
     internal fun createMapOf( // @formatter:off
         keyType: IrType,
         valueType: IrType,
@@ -237,18 +247,18 @@ internal data class IntrospektPluginContext(
         contextParameterCount = 0,
         hasDispatchReceiver = false,
         hasExtensionReceiver = false
-    ).apply { // @formatter:off
-        putTypeArgument(0, keyType)
-        putTypeArgument(1, valueType)
+    ).apply {
+        val function = mapOfFunction.owner
+        typeArguments[0] = keyType
+        typeArguments[1] = valueType
         val pairType = pairType.typeWith(keyType, valueType)
-        putValueArgument(0, IrVarargImpl(
+        arguments[function.parameters.first { it.name.asString() == "pairs" }] = IrVarargImpl(
             startOffset = SYNTHETIC_OFFSET,
             endOffset = SYNTHETIC_OFFSET,
             type = irBuiltIns.arrayClass.typeWith(pairType),
             varargElementType = pairType,
-            elements = values.map { it.toStdPair().instantiate(this@IntrospektPluginContext, keyType, valueType) }
-        ))
-    } // @formatter:on
+            elements = values.map { it.toStdPair().instantiate(this@IntrospektPluginContext, keyType, valueType) })
+    }
 
     private fun Any.getConstIrType(): IrType? = when (this) {
         is Byte -> irBuiltIns.byteType

@@ -19,6 +19,7 @@ package dev.karmakrafts.introspekt.compiler.util
 import dev.karmakrafts.introspekt.compiler.IntrospektPluginContext
 import org.jetbrains.kotlin.ir.declarations.IrFunction
 import org.jetbrains.kotlin.ir.expressions.impl.IrCallImpl
+import org.jetbrains.kotlin.ir.expressions.impl.IrCallImplWithShape
 import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.IrType
@@ -42,24 +43,26 @@ internal enum class IntrinsicResultType( // @formatter:off
 }
 
 internal enum class IntrospektIntrinsic( // @formatter:off
+    val typeArgumentsCount: Int,
+    val valueArgumentsCount: Int,
     val supportsInlining: Boolean,
     val resultType: IntrinsicResultType,
     val functionId: CallableId
 ) { // @formatter:on
     // @formatter:off
-    SL_HERE                 (true,  IntrinsicResultType.SOURCE_LOCATION,    IntrospektNames.SourceLocation.Companion.here),
-    SL_HERE_HASH            (true,  IntrinsicResultType.INT,                IntrospektNames.SourceLocation.Companion.hereHash),
-    SL_CURRENT_FUNCTION     (true,  IntrinsicResultType.SOURCE_LOCATION,    IntrospektNames.SourceLocation.Companion.currentFunction),
-    SL_CURRENT_FUNCTION_HASH(true,  IntrinsicResultType.INT,                IntrospektNames.SourceLocation.Companion.currentFunctionHash),
-    SL_CURRENT_CLASS        (true,  IntrinsicResultType.SOURCE_LOCATION,    IntrospektNames.SourceLocation.Companion.currentClass),
-    SL_CURRENT_CLASS_HASH   (true,  IntrinsicResultType.INT,                IntrospektNames.SourceLocation.Companion.currentClassHash),
-    SL_OF_CLASS             (false, IntrinsicResultType.SOURCE_LOCATION,    IntrospektNames.SourceLocation.Companion.ofClass),
-    SL_OF_FUNCTION          (false, IntrinsicResultType.SOURCE_LOCATION,    IntrospektNames.SourceLocation.Companion.ofFunction),
-    FI_CURRENT              (true,  IntrinsicResultType.FUNCTION_INFO,      IntrospektNames.FunctionInfo.Companion.current),
-    FI_OF                   (false, IntrinsicResultType.FUNCTION_INFO,      IntrospektNames.FunctionInfo.Companion.of),
-    CI_CURRENT              (true,  IntrinsicResultType.CLASS_INFO,         IntrospektNames.ClassInfo.Companion.current),
-    CI_OF                   (false, IntrinsicResultType.CLASS_INFO,         IntrospektNames.ClassInfo.Companion.of),
-    TI_OF                   (false, IntrinsicResultType.TYPE_INFO,          IntrospektNames.TypeInfo.Companion.of);
+    SL_HERE                 (0, 0, true,  IntrinsicResultType.SOURCE_LOCATION,    IntrospektNames.SourceLocation.Companion.here),
+    SL_HERE_HASH            (0, 0, true,  IntrinsicResultType.INT,                IntrospektNames.SourceLocation.Companion.hereHash),
+    SL_CURRENT_FUNCTION     (0, 0, true,  IntrinsicResultType.SOURCE_LOCATION,    IntrospektNames.SourceLocation.Companion.currentFunction),
+    SL_CURRENT_FUNCTION_HASH(0, 0, true,  IntrinsicResultType.INT,                IntrospektNames.SourceLocation.Companion.currentFunctionHash),
+    SL_CURRENT_CLASS        (0, 0, true,  IntrinsicResultType.SOURCE_LOCATION,    IntrospektNames.SourceLocation.Companion.currentClass),
+    SL_CURRENT_CLASS_HASH   (0, 0, true,  IntrinsicResultType.INT,                IntrospektNames.SourceLocation.Companion.currentClassHash),
+    SL_OF_CLASS             (1, 0, false, IntrinsicResultType.SOURCE_LOCATION,    IntrospektNames.SourceLocation.Companion.ofClass),
+    SL_OF_FUNCTION          (0, 1, false, IntrinsicResultType.SOURCE_LOCATION,    IntrospektNames.SourceLocation.Companion.ofFunction),
+    FI_CURRENT              (0, 0, true,  IntrinsicResultType.FUNCTION_INFO,      IntrospektNames.FunctionInfo.Companion.current),
+    FI_OF                   (0, 1, false, IntrinsicResultType.FUNCTION_INFO,      IntrospektNames.FunctionInfo.Companion.of),
+    CI_CURRENT              (0, 0, true,  IntrinsicResultType.CLASS_INFO,         IntrospektNames.ClassInfo.Companion.current),
+    CI_OF                   (1, 0, false, IntrinsicResultType.CLASS_INFO,         IntrospektNames.ClassInfo.Companion.of),
+    TI_OF                   (1, 0, false, IntrinsicResultType.TYPE_INFO,          IntrospektNames.TypeInfo.Companion.of);
     // @formatter:on
 
     private fun IntrospektPluginContext.getType(): IrType = resultType(this)
@@ -74,16 +77,22 @@ internal enum class IntrospektIntrinsic( // @formatter:off
         startOffset: Int = SYNTHETIC_OFFSET,
         endOffset: Int = SYNTHETIC_OFFSET
     ): IrCallImpl = with(context) { // @formatter:on
-        IrCallImpl( // @formatter:off
+        val dispatchReceiver = functionId.classId?.let(::referenceClass)?.let { classSymbol ->
+            check(classSymbol.owner.isCompanion) { "Intrinsic parent must be a companion object or the top level scope" }
+            classSymbol.getObjectInstance()
+        }
+        IrCallImplWithShape( // @formatter:off
             startOffset = startOffset,
             endOffset = endOffset,
             type = getType(),
-            symbol = getSymbol()
+            symbol = getSymbol(),
+            typeArgumentsCount = typeArgumentsCount,
+            valueArgumentsCount = valueArgumentsCount,
+            contextParameterCount = 0,
+            hasDispatchReceiver = dispatchReceiver != null,
+            hasExtensionReceiver = false
         ).apply { // @formatter:on
-            functionId.classId?.let(::referenceClass)?.let { classSymbol ->
-                check(classSymbol.owner.isCompanion) { "Intrinsic parent must be a companion object or the top level scope" }
-                dispatchReceiver = classSymbol.getObjectInstance()
-            }
+            this.dispatchReceiver = dispatchReceiver
         }
     }
 }

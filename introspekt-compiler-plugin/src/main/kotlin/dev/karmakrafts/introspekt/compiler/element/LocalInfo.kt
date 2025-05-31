@@ -28,6 +28,7 @@ import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.declarations.IrVariable
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.impl.IrCallImplWithShape
+import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.defaultType
 import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
 import org.jetbrains.kotlin.ir.util.kotlinFqName
@@ -42,6 +43,7 @@ internal class LocalInfo(
     val isMutable: Boolean,
     override val annotations: Map<TypeInfo, List<AnnotationUsageInfo>>
 ) : ElementInfo, AnnotatedElement {
+    @OptIn(UnsafeDuringIrConstructionAPI::class)
     override fun instantiateCached( // @formatter:off
         module: IrModuleFragment,
         file: IrFile,
@@ -59,19 +61,19 @@ internal class LocalInfo(
             hasDispatchReceiver = true,
             hasExtensionReceiver = false
         ).apply {
-            var index = 0
-            // location
-            putValueArgument(index++, location.instantiateCached(context))
-            // qualifiedName
-            putValueArgument(index++, qualifiedName.toIrConst(irBuiltIns.stringType))
-            // name
-            putValueArgument(index++, name.toIrConst(irBuiltIns.stringType))
-            // type
-            putValueArgument(index++, this@LocalInfo.type.instantiateCached(module, file, source, context))
-            // isMutable
-            putValueArgument(index++, isMutable.toIrConst(irBuiltIns.booleanType))
-            // annotations
-            putValueArgument(index, instantiateAnnotations(module, file, source, context))
+            val function = symbol.owner
+            arguments[function.parameters.first { it.name.asString() == "location" }] =
+                location.instantiateCached(context)
+            arguments[function.parameters.first { it.name.asString() == "qualifiedName" }] =
+                qualifiedName.toIrConst(irBuiltIns.stringType)
+            arguments[function.parameters.first { it.name.asString() == "name" }] =
+                name.toIrConst(irBuiltIns.stringType)
+            arguments[function.parameters.first { it.name.asString() == "type" }] =
+                this@LocalInfo.type.instantiateCached(module, file, source, context)
+            arguments[function.parameters.first { it.name.asString() == "isMutable" }] =
+                isMutable.toIrConst(irBuiltIns.booleanType)
+            arguments[function.parameters.first { it.name.asString() == "annotations" }] =
+                instantiateAnnotations(module, file, source, context)
             dispatchReceiver = localInfoCompanionType.getObjectInstance()
         }
     }

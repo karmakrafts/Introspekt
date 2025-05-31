@@ -18,8 +18,8 @@ package dev.karmakrafts.introspekt.compiler
 
 import dev.karmakrafts.introspekt.compiler.transformer.ClassInfoTransformer
 import dev.karmakrafts.introspekt.compiler.transformer.FunctionInfoTransformer
-import dev.karmakrafts.introspekt.compiler.transformer.IntrinsicCalleeParameterTransformer
-import dev.karmakrafts.introspekt.compiler.transformer.IntrinsicCallerParameterTransformer
+import dev.karmakrafts.introspekt.compiler.transformer.InlineDefaultCalleeTransformer
+import dev.karmakrafts.introspekt.compiler.transformer.InlineDefaultCallerTransformer
 import dev.karmakrafts.introspekt.compiler.transformer.IntrinsicContext
 import dev.karmakrafts.introspekt.compiler.transformer.SourceLocationTransformer
 import dev.karmakrafts.introspekt.compiler.transformer.TraceContext
@@ -48,8 +48,8 @@ internal class IntrospektIrGenerationExtension(
         for (file in moduleFragment.files) {
             val source = sourceProvider(file.path)
             val context = IntrinsicContext(introspektContext)
-            file.acceptVoid(IntrinsicCalleeParameterTransformer(introspektContext))
-            file.acceptVoid(IntrinsicCallerParameterTransformer(introspektContext))
+            file.acceptVoid(InlineDefaultCalleeTransformer(introspektContext))
+            file.acceptVoid(InlineDefaultCallerTransformer(introspektContext))
             // Reduce intrinsics in type dependence order
             file.transform(ClassInfoTransformer(introspektContext, moduleFragment, file, source), context)
             file.transform(FunctionInfoTransformer(introspektContext, moduleFragment, file, source), context)

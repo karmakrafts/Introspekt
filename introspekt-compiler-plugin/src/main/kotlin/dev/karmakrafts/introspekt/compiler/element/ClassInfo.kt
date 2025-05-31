@@ -102,6 +102,7 @@ internal data class ClassInfo(
     inline val qualifiedName: String
         get() = type.type.classFqName?.asString() ?: "n/a"
 
+    @OptIn(UnsafeDuringIrConstructionAPI::class)
     override fun instantiateCached( // @formatter:off
         module: IrModuleFragment,
         file: IrFile,
@@ -118,54 +119,39 @@ internal data class ClassInfo(
             contextParameterCount = 0,
             hasDispatchReceiver = true,
             hasExtensionReceiver = false
-        ).apply { // @formatter:off
-            var index = 0
-            // type
-            putValueArgument(index++, this@ClassInfo.type.instantiateCached(module, file, source, context))
-            // typeParameterNames
-            putValueArgument(index++, createListOf(
-                type = irBuiltIns.stringType,
-                values = typeParameterNames.map { it.toIrConst(irBuiltIns.stringType) })
-            )
-            // annotations
-            putValueArgument(index++, instantiateAnnotations(module, file, source, context))
-            // functions
-            putValueArgument(index++, createListOf(
-                type = functionInfoType.defaultType,
-                values = functions.map { it.instantiateCached(module, file, source, context) })
-            )
-            // properties
-            putValueArgument(index++, createListOf(
-                type = propertyInfoType.defaultType,
-                values = properties.map { it.instantiateCached(module, file, source, context) }
-            ))
-            // companionObjects
-            putValueArgument(index++, createListOf(
-                type = classInfoType.defaultType,
-                values = companionObjects.map { it.instantiateCached(module, file, source, context) })
-            )
-            // superTypes
-            putValueArgument(index++, createListOf(
-                type = simpleTypeInfoType.defaultType,
-                values = superTypes.map { it.instantiateCached(module, file, source, context) }
-            ))
-            // isInterface
-            putValueArgument(index++, isInterface.toIrConst(irBuiltIns.booleanType))
-            // isObject
-            putValueArgument(index++, isObject.toIrConst(irBuiltIns.booleanType))
-            // isCompanionObject
-            putValueArgument(index++, isCompanionObject.toIrConst(irBuiltIns.booleanType))
-            // isExpect
-            putValueArgument(index++, isExpect.toIrConst(irBuiltIns.booleanType))
-            // visibility
-            putValueArgument(index++, visibility.getEnumValue(visibilityModifierType) { getVisibilityName() })
-            // modality
-            putValueArgument(index++, modality.getEnumValue(modalityModifierType) { name })
-            // classModifier
-            putValueArgument(index, classType?.getEnumValue(classModifierType, ClassModifier::name)
-                ?: null.toIrConst(classModifierType.defaultType))
+        ).apply {
+            val function = symbol.owner
+            arguments[function.parameters.first { it.name.asString() == "type" }] =
+                this@ClassInfo.type.instantiateCached(module, file, source, context)
+            arguments[function.parameters.first { it.name.asString() == "typeParameterNames" }] =
+                createListOf(irBuiltIns.stringType, typeParameterNames.map { it.toIrConst(irBuiltIns.stringType) })
+            arguments[function.parameters.first { it.name.asString() == "annotations" }] =
+                instantiateAnnotations(module, file, source, context)
+            arguments[function.parameters.first { it.name.asString() == "functions" }] = createListOf(
+                functionInfoType.defaultType, functions.map { it.instantiateCached(module, file, source, context) })
+            arguments[function.parameters.first { it.name.asString() == "properties" }] = createListOf(
+                propertyInfoType.defaultType, properties.map { it.instantiateCached(module, file, source, context) })
+            arguments[function.parameters.first { it.name.asString() == "companionObjects" }] = createListOf(
+                classInfoType.defaultType, companionObjects.map { it.instantiateCached(module, file, source, context) })
+            arguments[function.parameters.first { it.name.asString() == "superTypes" }] = createListOf(
+                simpleTypeInfoType.defaultType, superTypes.map { it.instantiateCached(module, file, source, context) })
+            arguments[function.parameters.first { it.name.asString() == "isInterface" }] =
+                isInterface.toIrConst(irBuiltIns.booleanType)
+            arguments[function.parameters.first { it.name.asString() == "isObject" }] =
+                isObject.toIrConst(irBuiltIns.booleanType)
+            arguments[function.parameters.first { it.name.asString() == "isCompanionObject" }] =
+                isCompanionObject.toIrConst(irBuiltIns.booleanType)
+            arguments[function.parameters.first { it.name.asString() == "isExpect" }] =
+                isExpect.toIrConst(irBuiltIns.booleanType)
+            arguments[function.parameters.first { it.name.asString() == "visibility" }] =
+                visibility.getEnumValue(visibilityModifierType) { getVisibilityName() }
+            arguments[function.parameters.first { it.name.asString() == "modality" }] =
+                modality.getEnumValue(modalityModifierType) { name }
+            arguments[function.parameters.first { it.name.asString() == "classModifier" }] =
+                classType?.getEnumValue(classModifierType, ClassModifier::name)
+                    ?: null.toIrConst(classModifierType.defaultType)
             dispatchReceiver = classInfoCompanionType.getObjectInstance()
-        } // @formatter:on
+        }
     }
 
     // Duplicated class properties are not relevant to identity hash

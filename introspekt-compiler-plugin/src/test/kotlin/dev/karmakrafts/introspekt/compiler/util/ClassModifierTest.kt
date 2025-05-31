@@ -18,7 +18,6 @@ package dev.karmakrafts.introspekt.compiler.util
 
 import dev.karmakrafts.introspekt.compiler.introspektPipeline
 import dev.karmakrafts.iridium.runCompilerTest
-import io.kotest.matchers.shouldBe
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import kotlin.test.Test
 

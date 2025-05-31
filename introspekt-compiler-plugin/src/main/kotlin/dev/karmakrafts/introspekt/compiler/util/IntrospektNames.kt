@@ -99,10 +99,15 @@ object IntrospektNames {
         val id: ClassId = ClassId(packageName, name)
     }
 
-    object CaptureCaller {
-        val name: Name = Name.identifier("CaptureCaller")
+    object InlineDefaults {
+        val name: Name = Name.identifier("InlineDefaults")
         val id: ClassId = ClassId(packageName, name)
         val fqName: FqName = id.asSingleFqName()
+
+        object Mode {
+            val fqName: FqName = FqName("InlineDefaults.Mode")
+            val id: ClassId = ClassId(packageName, fqName, false)
+        }
     }
 
     // -------------------- dev.karmakrafts.introspekt.util

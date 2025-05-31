@@ -17,10 +17,13 @@
 package dev.karmakrafts.introspekt.compiler.transformer
 
 import dev.karmakrafts.introspekt.compiler.IntrospektPluginContext
+import dev.karmakrafts.introspekt.compiler.util.InlineDefaultMode
 import dev.karmakrafts.introspekt.compiler.util.IntrospektIntrinsic
 import dev.karmakrafts.introspekt.compiler.util.IntrospektNames
-import dev.karmakrafts.introspekt.compiler.util.getAnnotationValues
+import dev.karmakrafts.introspekt.compiler.util.getInlineDefaultModes
 import org.jetbrains.kotlin.ir.IrElement
+import org.jetbrains.kotlin.ir.declarations.IrParameterKind
+import org.jetbrains.kotlin.ir.declarations.IrValueParameter
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.IrConstructorCall
 import org.jetbrains.kotlin.ir.expressions.IrFunctionAccessExpression
@@ -29,33 +32,40 @@ import org.jetbrains.kotlin.ir.util.target
 import org.jetbrains.kotlin.ir.visitors.IrVisitorVoid
 import org.jetbrains.kotlin.ir.visitors.acceptChildrenVoid
 
-/**
- * Invoked before the main intrinsic passes but after the de-defaulting pass
- * to adjust all callsites of functions with an injected @CaptureCaller annotation.
- */
-internal class IntrinsicCallerParameterTransformer(
+internal class InlineDefaultCallerTransformer(
     private val pluginContext: IntrospektPluginContext
 ) : IrVisitorVoid() {
     override fun visitElement(element: IrElement) {
         element.acceptChildrenVoid(this)
     }
 
+    private fun inlineIntrinsicDefault( // @formatter:off
+        expression: IrFunctionAccessExpression,
+        parameter: IrValueParameter,
+        type: IntrospektIntrinsic
+    ) { // @formatter:on
+        // Inline intrinsic call to specified intrinsic type
+        expression.arguments[parameter] = type.createCall( // @formatter:off
+            context = pluginContext,
+            startOffset = expression.startOffset,
+            endOffset = expression.endOffset
+        ) // @formatter:on
+    }
+
     private fun transformCall(expression: IrFunctionAccessExpression) {
         val function = expression.target
-        if (!function.hasAnnotation(IntrospektNames.CaptureCaller.id)) return
-        val intrinsicStrings = function.getAnnotationValues<String>(IntrospektNames.CaptureCaller.fqName, "intrinsics")
-        intrinsicStrings.filterNotNull().map { stringValue ->
-            val (index, name) = stringValue.split(":")
-            Pair(index.toInt(), IntrospektIntrinsic.valueOf(name))
-        }.forEach { (index, type) ->
-            if (expression.arguments[index] != null) return@forEach
-            expression.putValueArgument(
-                index, type.createCall(
-                    context = pluginContext,
-                    startOffset = expression.startOffset,
-                    endOffset = expression.endOffset,
-                )
-            )
+        if (!function.hasAnnotation(IntrospektNames.InlineDefaults.id)) return
+        val modes = function.getInlineDefaultModes()
+        val parameters = function.parameters.filter { it.kind == IrParameterKind.Regular }
+        check(parameters.size == modes.size) { "Number of inline modes must match parameter count" }
+        val modeIterator = modes.iterator()
+        for (parameter in parameters) {
+            val argument = expression.arguments[parameter]
+            if (argument != null) continue // Skip any parameters that already have a call site argument
+            when (val mode = modeIterator.next()) {
+                InlineDefaultMode.None -> continue
+                is InlineDefaultMode.Intrinsic -> inlineIntrinsicDefault(expression, parameter, mode.type)
+            }
         }
     }
 

@@ -101,6 +101,7 @@ internal data class FunctionInfo(
         }
     }
 
+    @OptIn(UnsafeDuringIrConstructionAPI::class)
     override fun instantiateCached( // @formatter:off
         module: IrModuleFragment,
         file: IrFile,
@@ -117,41 +118,33 @@ internal data class FunctionInfo(
             contextParameterCount = 0,
             hasDispatchReceiver = true,
             hasExtensionReceiver = false
-        ).apply { // @formatter:off
-            var index = 0
-            // location
-            putValueArgument(index++, location.instantiateCached(context))
-            // qualifiedName
-            putValueArgument(index++, qualifiedName.toIrConst(irBuiltIns.stringType))
-            // name
-            putValueArgument(index++, name.toIrConst(irBuiltIns.stringType))
-            // typeParameterNames
-            putValueArgument(index++, createListOf(
-                type = irBuiltIns.stringType,
-                values = typeParameterNames.map { it.toIrConst(irBuiltIns.stringType) })
-            )
-            // returnType
-            putValueArgument(index++, returnType.instantiateCached(module, file, source, context))
-            // parameters
-            putValueArgument(index++, createListOf(
-                type = irBuiltIns.kClassClass.starProjectedType,
-                values = parameters.map { it.instantiateCached(module, file, source, context) })
-            )
-            // visibility
-            putValueArgument(index++, visibility.getEnumValue(visibilityModifierType) { getVisibilityName() })
-            // modality
-            putValueArgument(index++, modality.getEnumValue(modalityModifierType) { name })
-            // locals
-            putValueArgument(index++, createListOf(
-                type = localInfoType.defaultType,
-                values = locals.map { it.instantiateCached(module, file, source, context) }
-            ))
-            // isExpect
-            putValueArgument(index++, isExpect.toIrConst(irBuiltIns.booleanType))
-            // annotations
-            putValueArgument(index, instantiateAnnotations(module, file, source, context))
+        ).apply {
+            val function = symbol.owner
+            arguments[function.parameters.first { it.name.asString() == "location" }] =
+                location.instantiateCached(context)
+            arguments[function.parameters.first { it.name.asString() == "qualifiedName" }] =
+                qualifiedName.toIrConst(irBuiltIns.stringType)
+            arguments[function.parameters.first { it.name.asString() == "name" }] =
+                name.toIrConst(irBuiltIns.stringType)
+            arguments[function.parameters.first { it.name.asString() == "typeParameterNames" }] = createListOf(
+                irBuiltIns.stringType, typeParameterNames.map { it.toIrConst(irBuiltIns.stringType) })
+            arguments[function.parameters.first { it.name.asString() == "returnType" }] =
+                returnType.instantiateCached(module, file, source, context)
+            arguments[function.parameters.first { it.name.asString() == "parameters" }] = createListOf(
+                irBuiltIns.kClassClass.starProjectedType,
+                parameters.map { it.instantiateCached(module, file, source, context) })
+            arguments[function.parameters.first { it.name.asString() == "visibility" }] =
+                visibility.getEnumValue(visibilityModifierType) { getVisibilityName() }
+            arguments[function.parameters.first { it.name.asString() == "modality" }] =
+                modality.getEnumValue(modalityModifierType) { name }
+            arguments[function.parameters.first { it.name.asString() == "locals" }] = createListOf(
+                localInfoType.defaultType, locals.map { it.instantiateCached(module, file, source, context) })
+            arguments[function.parameters.first { it.name.asString() == "isExpect" }] =
+                isExpect.toIrConst(irBuiltIns.booleanType)
+            arguments[function.parameters.first { it.name.asString() == "annotations" }] =
+                instantiateAnnotations(module, file, source, context)
             dispatchReceiver = functionInfoCompanionType.getObjectInstance()
-        } // @formatter:on
+        }
     }
 
     // Annotations are not relevant to identity hash

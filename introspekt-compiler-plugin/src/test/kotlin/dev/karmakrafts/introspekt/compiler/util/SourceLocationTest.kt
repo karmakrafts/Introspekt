@@ -18,7 +18,6 @@ package dev.karmakrafts.introspekt.compiler.util
 
 import dev.karmakrafts.introspekt.compiler.introspektPipeline
 import dev.karmakrafts.iridium.runCompilerTest
-import io.kotest.matchers.shouldBe
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrFunction
 import org.jetbrains.kotlin.ir.declarations.IrProperty
@@ -42,10 +41,8 @@ class SourceLocationTest {
         compiler shouldNotReport { error() }
         result irMatches {
             getChild<IrFunction> { it.name.asString() == "bar" }.getFunctionLocation(
-                    element,
-                    element.files.first(),
-                    this@runCompilerTest.sourceLines
-                ).shouldBe(SourceLocation(moduleName, this@runCompilerTest.fileName, 2, 5))
+                element, element.files.first(), this@runCompilerTest.sourceLines
+            ) shouldBe SourceLocation(moduleName, this@runCompilerTest.fileName, 2, 5)
         }
     }
 
@@ -64,10 +61,8 @@ class SourceLocationTest {
         compiler shouldNotReport { error() }
         result irMatches {
             getChild<IrProperty> { it.name.asString() == "bar" }.getLocation(
-                    element,
-                    element.files.first(),
-                    this@runCompilerTest.sourceLines
-                ).shouldBe(SourceLocation(moduleName, this@runCompilerTest.fileName, 2, 5))
+                element, element.files.first(), this@runCompilerTest.sourceLines
+            ) shouldBe SourceLocation(moduleName, this@runCompilerTest.fileName, 2, 5)
         }
     }
 
@@ -86,10 +81,8 @@ class SourceLocationTest {
         compiler shouldNotReport { error() }
         result irMatches {
             getChild<IrClass> { it.name.asString() == "Bar" }.getLocation(
-                    element,
-                    element.files.first(),
-                    this@runCompilerTest.sourceLines
-                ).shouldBe(SourceLocation(moduleName, this@runCompilerTest.fileName, 2, 5))
+                element, element.files.first(), this@runCompilerTest.sourceLines
+            ) shouldBe SourceLocation(moduleName, this@runCompilerTest.fileName, 2, 5)
         }
     }
 

@@ -19,8 +19,6 @@ package dev.karmakrafts.introspekt.compiler
 import dev.karmakrafts.introspekt.compiler.util.IntrospektIntrinsic
 import dev.karmakrafts.introspekt.compiler.util.getIntrinsicType
 import dev.karmakrafts.iridium.setupCompilerTest
-import io.kotest.matchers.shouldBe
-import io.kotest.matchers.shouldNotBe
 import org.jetbrains.kotlin.ir.declarations.IrFunction
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.util.parentClassOrNull
