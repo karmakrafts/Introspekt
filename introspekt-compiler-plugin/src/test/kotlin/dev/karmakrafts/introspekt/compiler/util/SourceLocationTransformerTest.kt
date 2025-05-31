@@ -20,7 +20,6 @@ import dev.karmakrafts.introspekt.compiler.introspektTransformerPipeline
 import dev.karmakrafts.introspekt.compiler.isCachedSourceLocation
 import dev.karmakrafts.iridium.matcher.IrElementMatcher
 import dev.karmakrafts.iridium.runCompilerTest
-import dev.karmakrafts.iridium.util.renderIrTree
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.declarations.IrParameterKind
 import org.jetbrains.kotlin.ir.expressions.IrCall
@@ -38,7 +37,6 @@ class SourceLocationTransformerTest {
         locationArg shouldNotBe null
         locationArg!!::class shouldBe IrCallImpl::class
         (locationArg as IrCallImpl) matches { isCachedSourceLocation("test", "test", 7, 5) }
-        println(element.renderIrTree(Int.MAX_VALUE))
     }
 
     @Test

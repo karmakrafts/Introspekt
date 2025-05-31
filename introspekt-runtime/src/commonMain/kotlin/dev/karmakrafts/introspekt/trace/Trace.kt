@@ -16,8 +16,8 @@
 
 package dev.karmakrafts.introspekt.trace
 
-import dev.karmakrafts.introspekt.InlineDefaults
 import dev.karmakrafts.introspekt.GeneratedIntrospektApi
+import dev.karmakrafts.introspekt.InlineDefaults
 import dev.karmakrafts.introspekt.IntrospektCompilerApi
 import dev.karmakrafts.introspekt.util.SourceLocation
 import kotlin.uuid.Uuid
@@ -32,12 +32,12 @@ annotation class Trace( // @formatter:off
 ) { // @formatter:on
     companion object {
         @OptIn(GeneratedIntrospektApi::class)
-        @InlineDefaults(
+        @InlineDefaults( // @formatter:off
             InlineDefaults.Mode.NONE,
             InlineDefaults.Mode.NONE,
             InlineDefaults.Mode.NONE,
             InlineDefaults.Mode.SL_HERE
-        )
+        ) // @formatter:on
         @IntrospektCompilerApi
         fun event(
             message: String,
@@ -50,7 +50,8 @@ annotation class Trace( // @formatter:off
                 id = id,
                 message = message,
                 data = data
-            )) // @formatter:on
+            )
+            ) // @formatter:on
         }
     }
 
