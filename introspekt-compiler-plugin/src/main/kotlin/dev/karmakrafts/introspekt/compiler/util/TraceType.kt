@@ -16,31 +16,66 @@
 
 package dev.karmakrafts.introspekt.compiler.util
 
+import dev.karmakrafts.introspekt.compiler.IntrospektPluginContext
 import org.jetbrains.kotlin.ir.declarations.IrAnnotationContainer
 import org.jetbrains.kotlin.ir.expressions.IrCall
+import org.jetbrains.kotlin.ir.expressions.impl.IrCallImpl
+import org.jetbrains.kotlin.ir.expressions.impl.IrCallImplWithShape
+import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
+import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
+import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
 import org.jetbrains.kotlin.ir.util.classId
 import org.jetbrains.kotlin.ir.util.hasAnnotation
 import org.jetbrains.kotlin.ir.util.parentClassOrNull
 import org.jetbrains.kotlin.ir.util.target
+import org.jetbrains.kotlin.name.CallableId
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.Name
+import java.util.*
 
 internal enum class TraceType( // @formatter:off
+    private val valueArgumentsCount: Int,
     val classId: ClassId,
     val functionName: Name
 ) { // @formatter:on
     // @formatter:off
-    SPAN_ENTER      (IntrospektNames.TraceSpan.Companion.id,        IntrospektNames.Functions.enter),
-    SPAN_LEAVE      (IntrospektNames.TraceSpan.Companion.id,        IntrospektNames.Functions.leave),
-    FUNCTION_ENTER  (IntrospektNames.TraceCollector.Companion.id,   IntrospektNames.Functions.enterFunction),
-    FUNCTION_LEAVE  (IntrospektNames.TraceCollector.Companion.id,   IntrospektNames.Functions.leaveFunction),
-    PROPERTY_LOAD   (IntrospektNames.TraceCollector.Companion.id,   IntrospektNames.Functions.loadProperty),
-    PROPERTY_STORE  (IntrospektNames.TraceCollector.Companion.id,   IntrospektNames.Functions.storeProperty),
-    LOCAL_LOAD      (IntrospektNames.TraceCollector.Companion.id,   IntrospektNames.Functions.loadLocal),
-    LOCAL_STORE     (IntrospektNames.TraceCollector.Companion.id,   IntrospektNames.Functions.storeLocal),
-    CALL            (IntrospektNames.TraceCollector.Companion.id,   IntrospektNames.Functions.call),
-    EVENT           (IntrospektNames.Trace.Companion.id,            IntrospektNames.Functions.event);
+    SPAN_ENTER      (4, IntrospektNames.TraceSpan.Companion.id,        IntrospektNames.Functions.enter),
+    SPAN_LEAVE      (1, IntrospektNames.TraceSpan.Companion.id,        IntrospektNames.Functions.leave),
+    FUNCTION_ENTER  (1, IntrospektNames.TraceCollector.Companion.id,   IntrospektNames.Functions.enterFunction),
+    FUNCTION_LEAVE  (1, IntrospektNames.TraceCollector.Companion.id,   IntrospektNames.Functions.leaveFunction),
+    PROPERTY_LOAD   (1, IntrospektNames.TraceCollector.Companion.id,   IntrospektNames.Functions.loadProperty),
+    PROPERTY_STORE  (1, IntrospektNames.TraceCollector.Companion.id,   IntrospektNames.Functions.storeProperty),
+    LOCAL_LOAD      (1, IntrospektNames.TraceCollector.Companion.id,   IntrospektNames.Functions.loadLocal),
+    LOCAL_STORE     (1, IntrospektNames.TraceCollector.Companion.id,   IntrospektNames.Functions.storeLocal),
+    CALL            (1, IntrospektNames.TraceCollector.Companion.id,   IntrospektNames.Functions.call),
+    EVENT           (4, IntrospektNames.Trace.Companion.id,            IntrospektNames.Functions.event);
     // @formatter:on
+
+    companion object {
+        private val functionSymbolCache: EnumMap<TraceType, IrSimpleFunctionSymbol> = EnumMap(TraceType::class.java)
+        private val classSymbolCache: EnumMap<TraceType, IrClassSymbol> = EnumMap(TraceType::class.java)
+    }
+
+    fun createCall(context: IntrospektPluginContext): IrCallImpl = with(context) {
+        val symbol = functionSymbolCache.getOrPut(this@TraceType) {
+            referenceFunctions(CallableId(classId, functionName)).first()
+        }
+        IrCallImplWithShape(
+            startOffset = SYNTHETIC_OFFSET,
+            endOffset = SYNTHETIC_OFFSET,
+            type = irBuiltIns.unitType,
+            symbol = symbol,
+            typeArgumentsCount = 0,
+            valueArgumentsCount = valueArgumentsCount,
+            contextParameterCount = 0,
+            hasDispatchReceiver = true,
+            hasExtensionReceiver = false
+        ).apply {
+            dispatchReceiver = classSymbolCache.getOrPut(this@TraceType) {
+                referenceClass(classId)!!
+            }.getObjectInstance()
+        }
+    }
 }
 
 internal fun IrCall.getTraceType(): TraceType? {

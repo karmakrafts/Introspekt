@@ -17,6 +17,8 @@
 package dev.karmakrafts.introspekt.trace
 
 import co.touchlab.stately.collections.ConcurrentMutableList
+import dev.karmakrafts.introspekt.GeneratedIntrospektApi
+import dev.karmakrafts.introspekt.InlineDefaults
 import dev.karmakrafts.introspekt.IntrospektCompilerApi
 import dev.karmakrafts.introspekt.element.CallInfo
 import dev.karmakrafts.introspekt.element.FunctionInfo
@@ -55,14 +57,18 @@ interface TraceCollector {
         }
 
         @IntrospektCompilerApi
-        internal fun enterFunction(function: FunctionInfo) {
+        @OptIn(GeneratedIntrospektApi::class)
+        @InlineDefaults(InlineDefaults.Mode.FI_CURRENT)
+        internal fun enterFunction(function: FunctionInfo = FunctionInfo.current()) {
             for (collector in collectors) {
                 collector.enterFunction(function)
             }
         }
 
         @IntrospektCompilerApi
-        internal fun leaveFunction(function: FunctionInfo) {
+        @OptIn(GeneratedIntrospektApi::class)
+        @InlineDefaults(InlineDefaults.Mode.FI_CURRENT)
+        internal fun leaveFunction(function: FunctionInfo = FunctionInfo.current()) {
             for (collector in collectors) {
                 collector.leaveFunction(function)
             }

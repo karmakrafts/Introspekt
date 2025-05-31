@@ -44,6 +44,15 @@ internal class IntrospektIrGenerationExtension(
         pluginContext: IrPluginContext
     ) { // @formatter:on
         val introspektContext = IntrospektPluginContext(pluginContext)
+        val traceContext = TraceContext(introspektContext)
+
+        val injectionTransformer = TraceInjectionTransformer()
+        moduleFragment.accept(injectionTransformer, traceContext)
+        injectionTransformer.injectCallbacks(introspektContext)
+
+        val removalTransformer = TraceRemovalTransformer()
+        moduleFragment.accept(removalTransformer, traceContext)
+        removalTransformer.removeCalls()
 
         for (file in moduleFragment.files) {
             val source = sourceProvider(file.path)
@@ -56,13 +65,5 @@ internal class IntrospektIrGenerationExtension(
             file.transform(TypeInfoTransformer(introspektContext, moduleFragment, file, source), context)
             file.transform(SourceLocationTransformer(introspektContext, moduleFragment, file, source), context)
         }
-
-        val traceContext = TraceContext(introspektContext)
-
-        val removalTransformer = TraceRemovalTransformer()
-        moduleFragment.accept(removalTransformer, traceContext)
-        removalTransformer.removeCalls()
-
-        moduleFragment.accept(TraceInjectionTransformer(), traceContext)
     }
 }

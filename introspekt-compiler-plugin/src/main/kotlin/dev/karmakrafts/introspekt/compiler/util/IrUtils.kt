@@ -25,21 +25,26 @@ import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.descriptors.Visibilities
 import org.jetbrains.kotlin.descriptors.Visibility
 import org.jetbrains.kotlin.ir.IrElement
+import org.jetbrains.kotlin.ir.IrStatement
 import org.jetbrains.kotlin.ir.declarations.IrAnnotationContainer
 import org.jetbrains.kotlin.ir.declarations.IrClass
+import org.jetbrains.kotlin.ir.declarations.IrDeclarationParent
 import org.jetbrains.kotlin.ir.declarations.IrEnumEntry
 import org.jetbrains.kotlin.ir.declarations.IrFile
 import org.jetbrains.kotlin.ir.declarations.IrFunction
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.declarations.IrParameterKind
+import org.jetbrains.kotlin.ir.expressions.IrBlockBody
 import org.jetbrains.kotlin.ir.expressions.IrClassReference
 import org.jetbrains.kotlin.ir.expressions.IrConst
 import org.jetbrains.kotlin.ir.expressions.IrConstructorCall
+import org.jetbrains.kotlin.ir.expressions.IrContainerExpression
 import org.jetbrains.kotlin.ir.expressions.IrErrorExpression
 import org.jetbrains.kotlin.ir.expressions.IrExpression
 import org.jetbrains.kotlin.ir.expressions.IrExpressionBody
 import org.jetbrains.kotlin.ir.expressions.IrGetEnumValue
 import org.jetbrains.kotlin.ir.expressions.IrGetField
+import org.jetbrains.kotlin.ir.expressions.IrStatementContainer
 import org.jetbrains.kotlin.ir.expressions.IrVararg
 import org.jetbrains.kotlin.ir.expressions.impl.IrClassReferenceImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrGetEnumValueImpl
@@ -54,10 +59,81 @@ import org.jetbrains.kotlin.ir.types.defaultType
 import org.jetbrains.kotlin.ir.types.starProjectedType
 import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
 import org.jetbrains.kotlin.ir.util.isOverridable
+import org.jetbrains.kotlin.ir.visitors.IrVisitorVoid
+import org.jetbrains.kotlin.ir.visitors.acceptChildrenVoid
+import org.jetbrains.kotlin.ir.visitors.acceptVoid
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.utils.filterIsInstanceAnd
 
 private const val UNDEFINED_OFFSET: Int = -1
+
+internal fun IrStatement.findContainer(root: IrElement): IrStatementContainer? {
+    var target: IrStatementContainer? = null
+    root.acceptVoid(object : IrVisitorVoid() {
+        override fun visitElement(element: IrElement) {
+            if (target != null) return
+            element.acceptChildrenVoid(this)
+        }
+
+        override fun visitBlockBody(body: IrBlockBody) {
+            super.visitBlockBody(body)
+            if (this@findContainer !in body.statements) return
+            target = body
+        }
+
+        override fun visitContainerExpression(expression: IrContainerExpression) {
+            super.visitContainerExpression(expression)
+            if (this@findContainer !in expression.statements) return
+            target = expression
+        }
+    })
+    return target
+}
+
+internal fun IrExpression.findBody(root: IrElement): IrExpressionBody? {
+    var target: IrExpressionBody? = null
+    root.acceptVoid(object : IrVisitorVoid() {
+        override fun visitElement(element: IrElement) {
+            if (target != null) return
+            element.acceptChildrenVoid(this)
+        }
+
+        override fun visitExpressionBody(body: IrExpressionBody) {
+            super.visitExpressionBody(body)
+            if (this@findBody != body.expression) return
+            target = body
+        }
+    })
+    return target
+}
+
+internal inline fun <reified T : IrElement> IrElement.findChild(crossinline predicate: (T) -> Boolean): T? {
+    var target: T? = null
+    acceptVoid(object : IrVisitorVoid() {
+        override fun visitElement(element: IrElement) {
+            if (target != null) return
+            element.acceptChildrenVoid(this)
+            if (element !is T || !predicate(element)) return
+            target = element
+        }
+    })
+    return target
+}
+
+internal inline fun <reified T : IrElement> IrElement.getChild(crossinline predicate: (T) -> Boolean): T =
+    findChild<T>(predicate)!!
+
+internal inline fun <reified T : IrElement> IrElement.findChildren(crossinline predicate: (T) -> Boolean): List<T> {
+    val targets = ArrayList<T>()
+    acceptVoid(object : IrVisitorVoid() {
+        override fun visitElement(element: IrElement) {
+            element.acceptChildrenVoid(this)
+            if (element !is T || !predicate(element)) return
+            targets += element
+        }
+    })
+    return targets
+}
 
 @OptIn(UnsafeDuringIrConstructionAPI::class)
 internal fun IrElement?.unwrapAnyAnnotationValue(): Any? {

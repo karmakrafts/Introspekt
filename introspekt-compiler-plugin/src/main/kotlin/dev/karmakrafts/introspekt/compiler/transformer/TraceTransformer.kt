@@ -26,6 +26,8 @@ import org.jetbrains.kotlin.ir.util.primaryConstructor
 import org.jetbrains.kotlin.ir.visitors.IrVisitor
 
 internal abstract class TraceTransformer : IrVisitor<Unit, TraceContext>() {
+    open fun visitTraceableFunction(declaration: IrFunction, data: TraceContext) {}
+
     override fun visitElement(element: IrElement, data: TraceContext) {
         element.acceptChildren(this, data)
     }
@@ -41,6 +43,7 @@ internal abstract class TraceTransformer : IrVisitor<Unit, TraceContext>() {
     override fun visitFunction(declaration: IrFunction, data: TraceContext) {
         data.pushTraceType(declaration)
         super.visitFunction(declaration, data)
+        visitTraceableFunction(declaration, data)
         data.popTraceType()
     }
 

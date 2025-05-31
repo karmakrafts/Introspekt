@@ -17,75 +17,76 @@
 package dev.karmakrafts.introspekt.compiler.transformer
 
 import dev.karmakrafts.introspekt.compiler.introspektTransformerPipeline
+import dev.karmakrafts.introspekt.compiler.util.findChildren
 import dev.karmakrafts.iridium.runCompilerTest
 import org.jetbrains.kotlin.ir.declarations.IrFunction
 import org.jetbrains.kotlin.ir.expressions.IrCall
+import org.jetbrains.kotlin.ir.expressions.impl.IrBlockBodyImpl
 import org.jetbrains.kotlin.ir.util.target
 import kotlin.test.Test
 
-class TraceRemovalTransformerTest {
+class TraceInjectionTransformerTest {
     @Test
-    fun `Remove enter trace span callback`() = runCompilerTest {
+    fun `Inject enter function callback`() = runCompilerTest {
         introspektTransformerPipeline()
         // @formatter:off
         source("""
             import dev.karmakrafts.introspekt.trace.Trace
-            import dev.karmakrafts.introspekt.trace.TraceSpan
-            import kotlin.uuid.ExperimentalUuidApi
-            @OptIn(ExperimentalUuidApi::class)
-            @Trace(Trace.Target.FUNCTION_ENTER, Trace.Target.FUNCTION_LEAVE)
+            @Trace(Trace.Target.FUNCTION_ENTER)
             fun test() {
-                TraceSpan.enter("🦊")
+                println("HELLO, WORLD!")
             }
         """.trimIndent())
         // @formatter:on
         compiler shouldNotReport { error() }
         result irMatches {
-            getChild<IrFunction> { it.name.asString() == "test" } matches {
-                containsNoChild<IrCall> { it.target.name.asString() == "enter" }
+            containsChild<IrCall> { call ->
+                call.target.name.asString() == "enterFunction"
             }
         }
     }
 
     @Test
-    fun `Remove leave trace span callback`() = runCompilerTest {
+    fun `Inject leave function callback`() = runCompilerTest {
         introspektTransformerPipeline()
         // @formatter:off
         source("""
             import dev.karmakrafts.introspekt.trace.Trace
-            import dev.karmakrafts.introspekt.trace.TraceSpan
-            @Trace(Trace.Target.FUNCTION_ENTER, Trace.Target.FUNCTION_LEAVE)
+            @Trace(Trace.Target.FUNCTION_LEAVE)
             fun test() {
-                TraceSpan.leave()
+                println("HELLO, WORLD!")
             }
         """.trimIndent())
         // @formatter:on
         compiler shouldNotReport { error() }
         result irMatches {
-            getChild<IrFunction> { it.name.asString() == "test" } matches {
-                containsNoChild<IrCall> { it.target.name.asString() == "leave" }
+            containsChild<IrCall> { call ->
+                call.target.name.asString() == "leaveFunction"
             }
         }
     }
 
     @Test
-    fun `Remove trace event callback`() = runCompilerTest {
+    fun `Inject leave function callback with multiple return paths`() = runCompilerTest {
         introspektTransformerPipeline()
         // @formatter:off
         source("""
             import dev.karmakrafts.introspekt.trace.Trace
-            import kotlin.uuid.ExperimentalUuidApi
-            @OptIn(ExperimentalUuidApi::class)
-            @Trace(Trace.Target.FUNCTION_ENTER, Trace.Target.FUNCTION_LEAVE)
-            fun test() {
-                Trace.event("Have you seen the 🦊?")
+            @Trace(Trace.Target.FUNCTION_LEAVE)
+            fun test(s: String) {
+                if(s == "X") return
+                println("HELLO, WORLD!")
             }
         """.trimIndent())
         // @formatter:on
         compiler shouldNotReport { error() }
         result irMatches {
             getChild<IrFunction> { it.name.asString() == "test" } matches {
-                containsNoChild<IrCall> { it.target.name.asString() == "event" }
+                val body = element.body
+                body shouldNotBe null
+                body!!::class shouldBe IrBlockBodyImpl::class
+                val blockBody = body as IrBlockBodyImpl
+                blockBody.findChildren<IrCall> { it.target.name.asString() == "leaveFunction" }.size shouldBe 2
             }
         }
     }
