@@ -43,10 +43,6 @@ internal enum class TraceType( // @formatter:off
     SPAN_LEAVE      (1, IntrospektNames.TraceSpan.Companion.id,        IntrospektNames.Functions.leave),
     FUNCTION_ENTER  (1, IntrospektNames.TraceCollector.Companion.id,   IntrospektNames.Functions.enterFunction),
     FUNCTION_LEAVE  (1, IntrospektNames.TraceCollector.Companion.id,   IntrospektNames.Functions.leaveFunction),
-    PROPERTY_LOAD   (1, IntrospektNames.TraceCollector.Companion.id,   IntrospektNames.Functions.loadProperty),
-    PROPERTY_STORE  (1, IntrospektNames.TraceCollector.Companion.id,   IntrospektNames.Functions.storeProperty),
-    LOCAL_LOAD      (1, IntrospektNames.TraceCollector.Companion.id,   IntrospektNames.Functions.loadLocal),
-    LOCAL_STORE     (1, IntrospektNames.TraceCollector.Companion.id,   IntrospektNames.Functions.storeLocal),
     CALL            (3, IntrospektNames.TraceCollector.Companion.id,   IntrospektNames.Functions.call),
     EVENT           (4, IntrospektNames.Trace.Companion.id,            IntrospektNames.Functions.event);
     // @formatter:on

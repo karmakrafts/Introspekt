@@ -26,7 +26,11 @@ import kotlin.uuid.Uuid
  * Injects trace callbacks for [TraceCollector] into the annotated function or the constructors associated initializers.
  */
 @Retention(AnnotationRetention.BINARY)
-@Target(AnnotationTarget.FUNCTION, AnnotationTarget.CONSTRUCTOR, AnnotationTarget.CLASS)
+@Target( // @formatter:off
+    AnnotationTarget.FUNCTION,
+    AnnotationTarget.CONSTRUCTOR,
+    AnnotationTarget.CLASS
+) // @formatter:on
 annotation class Trace( // @formatter:off
     vararg val targets: Target
 ) { // @formatter:on
@@ -61,10 +65,6 @@ annotation class Trace( // @formatter:off
         SPAN_LEAVE,
         FUNCTION_ENTER,
         FUNCTION_LEAVE,
-        PROPERTY_LOAD,
-        PROPERTY_STORE,
-        LOCAL_LOAD,
-        LOCAL_STORE,
         CALL,
         EVENT;
         // @formatter:on

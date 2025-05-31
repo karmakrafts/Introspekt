@@ -21,8 +21,6 @@ import dev.karmakrafts.introspekt.GeneratedIntrospektApi
 import dev.karmakrafts.introspekt.InlineDefaults
 import dev.karmakrafts.introspekt.IntrospektCompilerApi
 import dev.karmakrafts.introspekt.element.FunctionInfo
-import dev.karmakrafts.introspekt.element.LocalInfo
-import dev.karmakrafts.introspekt.element.PropertyInfo
 import dev.karmakrafts.introspekt.util.SourceLocation
 
 interface TraceCollector {
@@ -89,34 +87,6 @@ interface TraceCollector {
                 collector.call(callee, caller, location)
             }
         }
-
-        @IntrospektCompilerApi
-        internal fun loadProperty(property: PropertyInfo) {
-            for (collector in collectors) {
-                collector.loadProperty(property)
-            }
-        }
-
-        @IntrospektCompilerApi
-        internal fun storeProperty(property: PropertyInfo) {
-            for (collector in collectors) {
-                collector.storeProperty(property)
-            }
-        }
-
-        @IntrospektCompilerApi
-        internal fun loadLocal(local: LocalInfo) {
-            for (collector in collectors) {
-                collector.loadLocal(local)
-            }
-        }
-
-        @IntrospektCompilerApi
-        internal fun storeLocal(local: LocalInfo) {
-            for (collector in collectors) {
-                collector.storeLocal(local)
-            }
-        }
     }
 
     fun enterSpan(span: TraceSpan)
@@ -130,12 +100,4 @@ interface TraceCollector {
     fun call(callee: FunctionInfo, caller: FunctionInfo, location: SourceLocation)
 
     fun event(event: TraceEvent)
-
-    fun loadProperty(property: PropertyInfo)
-
-    fun storeProperty(property: PropertyInfo)
-
-    fun loadLocal(local: LocalInfo)
-
-    fun storeLocal(local: LocalInfo)
 }

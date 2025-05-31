@@ -96,8 +96,7 @@ internal class TraceInjectionTransformer : TraceTransformer() {
                             call.target.getFunctionInfo(module, file, source)
                                 .instantiateCached(module, file, source, context)
                     })
-                            },
-                order = InjectionOrder.AFTER
+                }
             ) // @formatter:on
         }
     }

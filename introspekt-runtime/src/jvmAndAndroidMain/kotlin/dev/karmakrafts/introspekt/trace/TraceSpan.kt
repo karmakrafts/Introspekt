@@ -16,7 +16,7 @@
 
 package dev.karmakrafts.introspekt.trace
 
-import java.util.Stack
+import java.util.*
 
 private val traceSpanStack: ThreadLocal<Stack<TraceSpan>> = ThreadLocal.withInitial { Stack() }
 

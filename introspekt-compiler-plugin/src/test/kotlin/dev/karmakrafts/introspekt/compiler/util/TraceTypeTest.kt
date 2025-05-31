@@ -23,7 +23,6 @@ import kotlin.test.Ignore
 import kotlin.test.Test
 
 class TraceTypeTest {
-    @Ignore
     @Test
     fun `Get trace type`() = setupCompilerTest {
         introspektPipeline()

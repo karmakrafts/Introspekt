@@ -53,10 +53,6 @@ object IntrospektNames {
         val call: Name = Name.identifier("call")
         val enterFunction: Name = Name.identifier("enterFunction")
         val leaveFunction: Name = Name.identifier("leaveFunction")
-        val loadProperty: Name = Name.identifier("loadProperty")
-        val storeProperty: Name = Name.identifier("storeProperty")
-        val loadLocal: Name = Name.identifier("loadLocal")
-        val storeLocal: Name = Name.identifier("storeLocal")
     }
 
     object Kotlin {
@@ -92,11 +88,6 @@ object IntrospektNames {
         val name: Name = Name.identifier("IntrospektIntrinsic")
         val id: ClassId = ClassId(packageName, name)
         val fqName: FqName = id.asSingleFqName()
-    }
-
-    object IntrospektCompilerApi {
-        val name: Name = Name.identifier("IntrospektCompilerApi")
-        val id: ClassId = ClassId(packageName, name)
     }
 
     object InlineDefaults {
@@ -260,27 +251,15 @@ object IntrospektNames {
         object Companion {
             val fqName: FqName = FqName("TraceCollector.Companion")
             val id: ClassId = ClassId(tracePackageName, fqName, false)
-
-            val enterFunction: CallableId = CallableId(tracePackageName, fqName, Functions.enterFunction)
-            val leaveFunction: CallableId = CallableId(tracePackageName, fqName, Functions.leaveFunction)
-            val call: CallableId = CallableId(tracePackageName, fqName, Functions.call)
-            val loadProperty: CallableId = CallableId(tracePackageName, fqName, Functions.loadProperty)
-            val storeProperty: CallableId = CallableId(tracePackageName, fqName, Functions.storeProperty)
-            val loadLocal: CallableId = CallableId(tracePackageName, fqName, Functions.loadLocal)
-            val storeLocal: CallableId = CallableId(tracePackageName, fqName, Functions.storeLocal)
         }
     }
 
     object TraceSpan {
         val name: Name = Name.identifier("TraceSpan")
-        val id: ClassId = ClassId(tracePackageName, name)
 
         object Companion {
             val fqName: FqName = FqName("TraceSpan.Companion")
             val id: ClassId = ClassId(tracePackageName, fqName, false)
-
-            val enter: CallableId = CallableId(tracePackageName, fqName, Functions.enter)
-            val leave: CallableId = CallableId(tracePackageName, fqName, Functions.leave)
         }
     }
 
@@ -292,8 +271,6 @@ object IntrospektNames {
         object Companion {
             val fqName: FqName = FqName("Trace.Companion")
             val id: ClassId = ClassId(tracePackageName, fqName, false)
-
-            val event: CallableId = CallableId(tracePackageName, fqName, Functions.event)
         }
     }
 }
