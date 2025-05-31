@@ -277,6 +277,7 @@ object IntrospektNames {
 
         object Companion {
             val fqName: FqName = FqName("TraceSpan.Companion")
+            val id: ClassId = ClassId(tracePackageName, fqName, false)
 
             val enter: CallableId = CallableId(tracePackageName, fqName, Functions.enter)
             val leave: CallableId = CallableId(tracePackageName, fqName, Functions.leave)

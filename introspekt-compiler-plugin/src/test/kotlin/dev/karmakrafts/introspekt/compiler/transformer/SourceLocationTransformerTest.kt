@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package dev.karmakrafts.introspekt.compiler.util
+package dev.karmakrafts.introspekt.compiler.transformer
 
 import dev.karmakrafts.introspekt.compiler.introspektTransformerPipeline
 import dev.karmakrafts.introspekt.compiler.isCachedSourceLocation
+import dev.karmakrafts.introspekt.compiler.util.IntrospektNames
 import dev.karmakrafts.iridium.matcher.IrElementMatcher
 import dev.karmakrafts.iridium.runCompilerTest
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment

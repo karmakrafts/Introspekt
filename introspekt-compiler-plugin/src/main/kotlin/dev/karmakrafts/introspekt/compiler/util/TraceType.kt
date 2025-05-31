@@ -18,28 +18,28 @@ package dev.karmakrafts.introspekt.compiler.util
 
 import org.jetbrains.kotlin.ir.declarations.IrAnnotationContainer
 import org.jetbrains.kotlin.ir.expressions.IrCall
+import org.jetbrains.kotlin.ir.util.classId
 import org.jetbrains.kotlin.ir.util.hasAnnotation
-import org.jetbrains.kotlin.ir.util.kotlinFqName
 import org.jetbrains.kotlin.ir.util.parentClassOrNull
 import org.jetbrains.kotlin.ir.util.target
-import org.jetbrains.kotlin.name.FqName
+import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.Name
 
 internal enum class TraceType( // @formatter:off
-    val className: FqName,
+    val classId: ClassId,
     val functionName: Name
 ) { // @formatter:on
     // @formatter:off
-    SPAN_ENTER      (IntrospektNames.TraceSpan.Companion.fqName,        IntrospektNames.Functions.enter),
-    SPAN_LEAVE      (IntrospektNames.TraceSpan.Companion.fqName,        IntrospektNames.Functions.leave),
-    FUNCTION_ENTER  (IntrospektNames.TraceCollector.Companion.fqName,   IntrospektNames.Functions.enterFunction),
-    FUNCTION_LEAVE  (IntrospektNames.TraceCollector.Companion.fqName,   IntrospektNames.Functions.leaveFunction),
-    PROPERTY_LOAD   (IntrospektNames.TraceCollector.Companion.fqName,   IntrospektNames.Functions.loadProperty),
-    PROPERTY_STORE  (IntrospektNames.TraceCollector.Companion.fqName,   IntrospektNames.Functions.storeProperty),
-    LOCAL_LOAD      (IntrospektNames.TraceCollector.Companion.fqName,   IntrospektNames.Functions.loadLocal),
-    LOCAL_STORE     (IntrospektNames.TraceCollector.Companion.fqName,   IntrospektNames.Functions.storeLocal),
-    CALL            (IntrospektNames.TraceCollector.Companion.fqName,   IntrospektNames.Functions.call),
-    EVENT           (IntrospektNames.Trace.Companion.fqName,            IntrospektNames.Functions.event);
+    SPAN_ENTER      (IntrospektNames.TraceSpan.Companion.id,        IntrospektNames.Functions.enter),
+    SPAN_LEAVE      (IntrospektNames.TraceSpan.Companion.id,        IntrospektNames.Functions.leave),
+    FUNCTION_ENTER  (IntrospektNames.TraceCollector.Companion.id,   IntrospektNames.Functions.enterFunction),
+    FUNCTION_LEAVE  (IntrospektNames.TraceCollector.Companion.id,   IntrospektNames.Functions.leaveFunction),
+    PROPERTY_LOAD   (IntrospektNames.TraceCollector.Companion.id,   IntrospektNames.Functions.loadProperty),
+    PROPERTY_STORE  (IntrospektNames.TraceCollector.Companion.id,   IntrospektNames.Functions.storeProperty),
+    LOCAL_LOAD      (IntrospektNames.TraceCollector.Companion.id,   IntrospektNames.Functions.loadLocal),
+    LOCAL_STORE     (IntrospektNames.TraceCollector.Companion.id,   IntrospektNames.Functions.storeLocal),
+    CALL            (IntrospektNames.TraceCollector.Companion.id,   IntrospektNames.Functions.call),
+    EVENT           (IntrospektNames.Trace.Companion.id,            IntrospektNames.Functions.event);
     // @formatter:on
 }
 
@@ -47,8 +47,8 @@ internal fun IrCall.getTraceType(): TraceType? {
     val function = target
     val functionName = function.name
     val parentClass = function.parentClassOrNull ?: return null
-    val className = parentClass.kotlinFqName
-    return TraceType.entries.find { it.className == className && it.functionName == functionName }
+    val classId = parentClass.classId ?: return null
+    return TraceType.entries.find { it.classId == classId && it.functionName == functionName }
 }
 
 internal fun IrAnnotationContainer.isTraceable(): Boolean = hasAnnotation(IntrospektNames.Trace.id)

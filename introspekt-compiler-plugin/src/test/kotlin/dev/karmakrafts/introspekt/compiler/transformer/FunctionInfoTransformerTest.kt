@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package dev.karmakrafts.introspekt.compiler.element
+package dev.karmakrafts.introspekt.compiler.transformer
 
 import dev.karmakrafts.introspekt.compiler.introspektTransformerPipeline
 import dev.karmakrafts.introspekt.compiler.isCachedFunctionInfo
