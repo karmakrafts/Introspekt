@@ -27,6 +27,54 @@ import kotlin.test.Test
 
 class TraceInjectionTransformerTest {
     @Test
+    fun `Inject call callback`() = runCompilerTest {
+        introspektTransformerPipeline()
+        // @formatter:off
+        source("""
+            import dev.karmakrafts.introspekt.trace.Trace
+            @Trace(Trace.Target.CALL)
+            fun test() {
+                println("HELLO, WORLD!")
+            }
+        """.trimIndent())
+        // @formatter:on
+        compiler shouldNotReport { error() }
+        result irMatches {
+            containsChild<IrCall> { call ->
+                call.target.name.asString() == "call"
+            }
+        }
+    }
+
+    @Test
+    fun `Inject multiple call callbacks`() = runCompilerTest {
+        introspektTransformerPipeline()
+        // @formatter:off
+        source("""
+            import dev.karmakrafts.introspekt.trace.Trace
+            @Trace(Trace.Target.CALL)
+            fun test() {
+                println("HELLO")
+                println("WORLD")
+                println("THIS")
+                println("IS")
+                println("🦊")
+            }
+        """.trimIndent())
+        // @formatter:on
+        compiler shouldNotReport { error() }
+        result irMatches {
+            getChild<IrFunction> { it.name.asString() == "test" } matches {
+                val body = element.body
+                body shouldNotBe null
+                body!!::class shouldBe IrBlockBodyImpl::class
+                val blockBody = body as IrBlockBodyImpl
+                blockBody.findChildren<IrCall> { it.target.name.asString() == "call" }.size shouldBe 5
+            }
+        }
+    }
+
+    @Test
     fun `Inject enter function callback`() = runCompilerTest {
         introspektTransformerPipeline()
         // @formatter:off

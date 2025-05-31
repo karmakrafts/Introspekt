@@ -20,7 +20,6 @@ import co.touchlab.stately.collections.ConcurrentMutableList
 import dev.karmakrafts.introspekt.GeneratedIntrospektApi
 import dev.karmakrafts.introspekt.InlineDefaults
 import dev.karmakrafts.introspekt.IntrospektCompilerApi
-import dev.karmakrafts.introspekt.element.CallInfo
 import dev.karmakrafts.introspekt.element.FunctionInfo
 import dev.karmakrafts.introspekt.element.LocalInfo
 import dev.karmakrafts.introspekt.element.PropertyInfo
@@ -75,9 +74,19 @@ interface TraceCollector {
         }
 
         @IntrospektCompilerApi
-        internal fun call(callSite: CallInfo) {
+        @OptIn(GeneratedIntrospektApi::class)
+        @InlineDefaults( // @formatter:off
+            InlineDefaults.Mode.NONE,
+            InlineDefaults.Mode.FI_CURRENT,
+            InlineDefaults.Mode.SL_HERE
+        ) // @formatter:on
+        internal fun call(
+            callee: FunctionInfo,
+            caller: FunctionInfo = FunctionInfo.current(),
+            location: SourceLocation = SourceLocation.here()
+        ) {
             for (collector in collectors) {
-                collector.call(callSite)
+                collector.call(callee, caller, location)
             }
         }
 
@@ -118,7 +127,7 @@ interface TraceCollector {
 
     fun leaveFunction(function: FunctionInfo)
 
-    fun call(call: CallInfo)
+    fun call(callee: FunctionInfo, caller: FunctionInfo, location: SourceLocation)
 
     fun event(event: TraceEvent)
 

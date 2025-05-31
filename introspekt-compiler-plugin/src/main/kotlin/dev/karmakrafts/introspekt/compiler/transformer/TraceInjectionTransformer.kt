@@ -17,21 +17,26 @@
 package dev.karmakrafts.introspekt.compiler.transformer
 
 import dev.karmakrafts.introspekt.compiler.IntrospektPluginContext
+import dev.karmakrafts.introspekt.compiler.element.getFunctionInfo
 import dev.karmakrafts.introspekt.compiler.util.InjectionOrder
 import dev.karmakrafts.introspekt.compiler.util.TraceType
 import dev.karmakrafts.introspekt.compiler.util.getTraceType
 import dev.karmakrafts.introspekt.compiler.util.inject
+import org.jetbrains.kotlin.ir.IrElement
+import org.jetbrains.kotlin.ir.declarations.IrFile
 import org.jetbrains.kotlin.ir.declarations.IrFunction
+import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.expressions.IrBlockBody
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.IrReturn
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.isUnit
+import org.jetbrains.kotlin.ir.util.target
 
 internal class TraceInjectionTransformer : TraceTransformer() {
     private val functionTraceTypes: Set<TraceType> = setOf(TraceType.FUNCTION_ENTER, TraceType.FUNCTION_LEAVE)
     private val functions: ArrayList<Pair<IrFunction, List<TraceType>>> = ArrayList()
-    private val calls: ArrayList<IrCall> = ArrayList()
+    private val calls: ArrayList<Pair<IrElement, IrCall>> = ArrayList()
 
     override fun visitCall(expression: IrCall, data: TraceContext) {
         super.visitCall(expression, data)
@@ -39,7 +44,7 @@ internal class TraceInjectionTransformer : TraceTransformer() {
         if (allowedTraceTypes.isEmpty()) return
         if (expression.getTraceType() != null) return
         if (TraceType.CALL !in allowedTraceTypes) return
-        calls += expression
+        calls += Pair(data.container, expression)
     }
 
     override fun visitTraceableFunction(declaration: IrFunction, data: TraceContext) {
@@ -74,12 +79,36 @@ internal class TraceInjectionTransformer : TraceTransformer() {
         }
     }
 
-    private fun injectCallCallbacks(context: IntrospektPluginContext) {
-        // TODO: ...
+    @OptIn(UnsafeDuringIrConstructionAPI::class)
+    private fun injectCallCallbacks( // @formatter:off
+        context: IntrospektPluginContext,
+        module: IrModuleFragment,
+        file: IrFile,
+        source: List<String>
+    ) { // @formatter:on
+        for ((container, call) in calls) {
+            container.inject( // @formatter:off
+                needleSelector = { it == call },
+                injection = {
+                    listOf(TraceType.CALL.createCall(context).apply {
+                        val function = symbol.owner
+                        arguments[function.parameters.first { it.name.asString() == "callee" }] =
+                            call.target.getFunctionInfo(module, file, source)
+                                .instantiateCached(module, file, source, context)
+                    })
+                            },
+                order = InjectionOrder.AFTER
+            ) // @formatter:on
+        }
     }
 
-    fun injectCallbacks(context: IntrospektPluginContext) {
+    fun injectCallbacks( // @formatter:off
+        context: IntrospektPluginContext,
+        module: IrModuleFragment,
+        file: IrFile,
+        source: List<String>
+    ) { // @formatter:on
         injectFunctionCallbacks(context)
-        injectCallCallbacks(context)
+        injectCallCallbacks(context, module, file, source)
     }
 }

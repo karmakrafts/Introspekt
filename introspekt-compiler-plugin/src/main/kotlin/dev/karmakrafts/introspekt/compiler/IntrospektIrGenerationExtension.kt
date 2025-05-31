@@ -44,26 +44,27 @@ internal class IntrospektIrGenerationExtension(
         pluginContext: IrPluginContext
     ) { // @formatter:on
         val introspektContext = IntrospektPluginContext(pluginContext)
+        val intrinsicContext = IntrinsicContext(introspektContext)
         val traceContext = TraceContext(introspektContext)
-
-        val injectionTransformer = TraceInjectionTransformer()
-        moduleFragment.accept(injectionTransformer, traceContext)
-        injectionTransformer.injectCallbacks(introspektContext)
-
-        val removalTransformer = TraceRemovalTransformer()
-        moduleFragment.accept(removalTransformer, traceContext)
-        removalTransformer.removeCalls()
 
         for (file in moduleFragment.files) {
             val source = sourceProvider(file.path)
-            val context = IntrinsicContext(introspektContext)
+
+            val injectionTransformer = TraceInjectionTransformer()
+            file.accept(injectionTransformer, traceContext)
+            injectionTransformer.injectCallbacks(introspektContext, moduleFragment, file, source)
+
+            val removalTransformer = TraceRemovalTransformer()
+            file.accept(removalTransformer, traceContext)
+            removalTransformer.removeCalls(introspektContext)
+
             file.acceptVoid(InlineDefaultCalleeTransformer(introspektContext))
             file.acceptVoid(InlineDefaultCallerTransformer(introspektContext))
             // Reduce intrinsics in type dependence order
-            file.transform(ClassInfoTransformer(introspektContext, moduleFragment, file, source), context)
-            file.transform(FunctionInfoTransformer(introspektContext, moduleFragment, file, source), context)
-            file.transform(TypeInfoTransformer(introspektContext, moduleFragment, file, source), context)
-            file.transform(SourceLocationTransformer(introspektContext, moduleFragment, file, source), context)
+            file.transform(ClassInfoTransformer(introspektContext, moduleFragment, file, source), intrinsicContext)
+            file.transform(FunctionInfoTransformer(introspektContext, moduleFragment, file, source), intrinsicContext)
+            file.transform(TypeInfoTransformer(introspektContext, moduleFragment, file, source), intrinsicContext)
+            file.transform(SourceLocationTransformer(introspektContext, moduleFragment, file, source), intrinsicContext)
         }
     }
 }

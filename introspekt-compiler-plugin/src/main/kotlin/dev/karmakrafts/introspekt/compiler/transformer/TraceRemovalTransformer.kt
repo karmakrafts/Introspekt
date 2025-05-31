@@ -16,13 +16,18 @@
 
 package dev.karmakrafts.introspekt.compiler.transformer
 
+import dev.karmakrafts.introspekt.compiler.IntrospektPluginContext
 import dev.karmakrafts.introspekt.compiler.util.TraceType
 import dev.karmakrafts.introspekt.compiler.util.getTraceType
+import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.expressions.IrCall
+import org.jetbrains.kotlin.ir.expressions.IrExpressionBody
 import org.jetbrains.kotlin.ir.expressions.IrStatementContainer
+import org.jetbrains.kotlin.ir.expressions.impl.IrCompositeImpl
+import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
 
 internal class TraceRemovalTransformer : TraceTransformer() {
-    private val callsToRemove: ArrayList<Pair<IrStatementContainer, IrCall>> = ArrayList()
+    private val callsToRemove: ArrayList<Pair<IrElement, IrCall>> = ArrayList()
 
     companion object {
         private val types: Set<TraceType> = setOf( // @formatter:off
@@ -47,9 +52,18 @@ internal class TraceRemovalTransformer : TraceTransformer() {
         callsToRemove += Pair(container, expression)
     }
 
-    fun removeCalls() {
+    fun removeCalls(context: IntrospektPluginContext) {
         for ((container, call) in callsToRemove) {
-            container.statements -= call
+            when (container) {
+                is IrStatementContainer -> container.statements -= call
+                // Stub the expression with an empty composite
+                is IrExpressionBody -> container.expression = IrCompositeImpl( // @formatter:off
+                    startOffset = SYNTHETIC_OFFSET,
+                    endOffset = SYNTHETIC_OFFSET,
+                    type = context.irBuiltIns.unitType
+                ) // @formatter:on
+                else -> error("Unsupported container type ${container::class} for TraceRemovalTransformer")
+            }
         }
     }
 }

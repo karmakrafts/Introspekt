@@ -19,9 +19,9 @@ package dev.karmakrafts.introspekt.compiler.transformer
 import dev.karmakrafts.introspekt.compiler.IntrospektPluginContext
 import dev.karmakrafts.introspekt.compiler.util.TraceType
 import dev.karmakrafts.introspekt.compiler.util.getTraceType
+import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.declarations.IrAnnotationContainer
 import org.jetbrains.kotlin.ir.declarations.IrClass
-import org.jetbrains.kotlin.ir.expressions.IrStatementContainer
 import java.util.*
 
 internal class TraceContext(
@@ -29,12 +29,15 @@ internal class TraceContext(
 ) {
     private val traceTypeStack: Stack<List<TraceType>> = Stack()
     internal val classStack: Stack<IrClass> = Stack()
-    internal val containerStack: Stack<IrStatementContainer> = Stack()
+    internal val containerStack: Stack<IrElement> = Stack()
 
     inline val traceType: List<TraceType>
         get() = traceTypeStack.firstOrNull() ?: emptyList()
 
-    inline val containerOrNull: IrStatementContainer?
+    inline val container: IrElement
+        get() = containerStack.first()
+
+    inline val containerOrNull: IrElement?
         get() = containerStack.firstOrNull()
 
     inline val classOrNull: IrClass?

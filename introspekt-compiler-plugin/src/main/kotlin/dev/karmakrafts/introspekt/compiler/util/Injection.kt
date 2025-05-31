@@ -16,8 +16,8 @@
 
 package dev.karmakrafts.introspekt.compiler.util
 
+import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.IrStatement
-import org.jetbrains.kotlin.ir.declarations.IrFunction
 import org.jetbrains.kotlin.ir.expressions.IrExpression
 import org.jetbrains.kotlin.ir.expressions.impl.IrCompositeImpl
 import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
@@ -75,7 +75,7 @@ internal enum class InjectionOrder(
     // @formatter:on
 }
 
-internal fun IrFunction.inject( // @formatter:off
+internal fun IrElement.inject( // @formatter:off
     needleSelector: (IrStatement) -> Boolean,
     injection: () -> List<IrStatement>,
     order: InjectionOrder = InjectionOrder.AFTER
