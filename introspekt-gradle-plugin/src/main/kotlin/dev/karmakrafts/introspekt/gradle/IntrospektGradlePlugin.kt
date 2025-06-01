@@ -26,10 +26,10 @@ import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
 import javax.inject.Inject
 
 /**
- * Gradle plugin for integrating the Trakkit compiler plugin with Kotlin projects.
+ * Gradle plugin for integrating the Introspekt compiler plugin with Kotlin projects.
  *
  * This plugin implements the [KotlinCompilerPluginSupportPlugin] interface to register
- * the Trakkit compiler plugin with the Kotlin compiler during project builds. It handles
+ * the Introspekt compiler plugin with the Kotlin compiler during project builds. It handles
  * the integration between Gradle and the Kotlin compiler plugin infrastructure.
  *
  * @property providerFactory The Gradle [ProviderFactory] used to create providers for plugin options.
@@ -47,7 +47,7 @@ open class IntrospektGradlePlugin @Inject constructor(
      * @param target The Gradle project to which this plugin is being applied.
      */
     override fun apply(target: Project) {
-        target.logger.info("Trakkit Compiler Plugin ${BuildInfo.version}")
+        target.logger.info("Introspekt Compiler Plugin ${BuildInfo.version}")
         super.apply(target) // Allow compiler plugin to be registered
     }
 

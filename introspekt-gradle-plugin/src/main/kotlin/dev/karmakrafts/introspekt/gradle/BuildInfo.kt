@@ -19,22 +19,22 @@ package dev.karmakrafts.introspekt.gradle
 import org.jetbrains.kotlin.gradle.plugin.SubpluginArtifact
 
 /**
- * Internal object containing build information and constants for the Trakkit Gradle plugin.
+ * Internal object containing build information and constants for the Introspekt Gradle plugin.
  * This object provides access to plugin metadata such as group ID, plugin name, and version.
  */
 internal object BuildInfo {
     /**
-     * The group ID for the Trakkit plugin artifacts.
+     * The group ID for the Introspekt plugin artifacts.
      */
     const val GROUP: String = "dev.karmakrafts.introspekt"
 
     /**
-     * The name of the Trakkit compiler plugin.
+     * The name of the Introspekt compiler plugin.
      */
     const val PLUGIN_NAME: String = "introspekt-compiler-plugin"
 
     /**
-     * The version of the Trakkit plugin, read from the 'trakkit.version' resource file.
+     * The version of the Introspekt plugin, read from the 'introspekt.version' resource file.
      * This is used to ensure version consistency across the plugin components.
      */
     val version: String = BuildInfo::class.java.getResourceAsStream("/introspekt.version")?.bufferedReader().use {

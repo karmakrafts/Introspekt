@@ -67,7 +67,7 @@ internal data class IntrospektPluginContext(
     // AnnotationUsageInfo
     internal val annotationUsageInfoType: IrClassSymbol =
         requireNotNull(pluginContext.referenceClass(IntrospektNames.AnnotationUsageInfo.id)) {
-            "Cannot find AnnotationInfo type, Trakkit runtime library is most likely missing"
+            "Cannot find AnnotationInfo type, Introspekt runtime library is most likely missing"
         }
     internal val annotationUsageInfoConstructor: IrConstructorSymbol =
         requireNotNull(pluginContext.referenceConstructors(IntrospektNames.AnnotationUsageInfo.id)).first()
@@ -75,11 +75,11 @@ internal data class IntrospektPluginContext(
     // SourceLocation
     internal val sourceLocationType: IrClassSymbol =
         requireNotNull(pluginContext.referenceClass(IntrospektNames.SourceLocation.id)) {
-            "Cannot find SourceLocation type, Trakkit runtime library is most likely missing"
+            "Cannot find SourceLocation type, Introspekt runtime library is most likely missing"
         }
     internal val sourcLocationCompanionType: IrClassSymbol =
         requireNotNull(pluginContext.referenceClass(IntrospektNames.SourceLocation.Companion.id)) {
-            "Cannot find SourceLocation.Companion type, Trakkit runtime library is most likely missing"
+            "Cannot find SourceLocation.Companion type, Introspekt runtime library is most likely missing"
         }
     internal val sourceLocationGetOrCreate: IrSimpleFunctionSymbol =
         pluginContext.referenceFunctions(IntrospektNames.SourceLocation.Companion.getOrCreate).first()
@@ -87,11 +87,11 @@ internal data class IntrospektPluginContext(
     // FunctionInfo
     internal val functionInfoType: IrClassSymbol =
         requireNotNull(pluginContext.referenceClass(IntrospektNames.FunctionInfo.id)) {
-            "Cannot find FunctionInfo type, Trakkit runtime library is most likely missing"
+            "Cannot find FunctionInfo type, Introspekt runtime library is most likely missing"
         }
     internal val functionInfoCompanionType: IrClassSymbol =
         requireNotNull(pluginContext.referenceClass(IntrospektNames.FunctionInfo.Companion.id)) {
-            "Cannot find FunctionInfo.Commpanion type, Trakkit runtime library is most likely missing"
+            "Cannot find FunctionInfo.Commpanion type, Introspekt runtime library is most likely missing"
         }
     internal val functionInfoGetOrCreate: IrSimpleFunctionSymbol =
         pluginContext.referenceFunctions(IntrospektNames.FunctionInfo.Companion.getOrCreate).first()
@@ -99,11 +99,11 @@ internal data class IntrospektPluginContext(
     // PropertyInfo
     internal val propertyInfoType: IrClassSymbol =
         requireNotNull(pluginContext.referenceClass(IntrospektNames.PropertyInfo.id)) {
-            "Cannot find PropertyInfo type, Trakkit runtime library is most likely missing"
+            "Cannot find PropertyInfo type, Introspekt runtime library is most likely missing"
         }
     internal val propertyInfoCompanionType: IrClassSymbol =
         requireNotNull(pluginContext.referenceClass(IntrospektNames.PropertyInfo.Companion.id)) {
-            "Cannot find PropertyInfo.Companion type, Trakkit runtime library is most likely missing"
+            "Cannot find PropertyInfo.Companion type, Introspekt runtime library is most likely missing"
         }
     internal val propertyInfoGetOrCreate: IrSimpleFunctionSymbol =
         pluginContext.referenceFunctions(IntrospektNames.PropertyInfo.Companion.getOrCreate).first()
@@ -111,11 +111,11 @@ internal data class IntrospektPluginContext(
     // FieldInfo
     internal val fieldInfoType: IrClassSymbol =
         requireNotNull(pluginContext.referenceClass(IntrospektNames.FieldInfo.id)) {
-            "Cannot find FieldInfo type, Trakkit runtime library is most likely missing"
+            "Cannot find FieldInfo type, Introspekt runtime library is most likely missing"
         }
     internal val fieldInfoCompanionType: IrClassSymbol =
         requireNotNull(pluginContext.referenceClass(IntrospektNames.FieldInfo.Companion.id)) {
-            "Cannot find FieldInfo.Companion type, Trakkit runtime library is most likely missing"
+            "Cannot find FieldInfo.Companion type, Introspekt runtime library is most likely missing"
         }
     internal val fieldInfoGetOrCreate: IrSimpleFunctionSymbol =
         pluginContext.referenceFunctions(IntrospektNames.FieldInfo.Companion.getOrCreate).first()
@@ -123,11 +123,11 @@ internal data class IntrospektPluginContext(
     // ClassInfo
     internal val classInfoType: IrClassSymbol =
         requireNotNull(pluginContext.referenceClass(IntrospektNames.ClassInfo.id)) {
-            "Cannot find ClassInfo type, Trakkit runtime library is most likely missing"
+            "Cannot find ClassInfo type, Introspekt runtime library is most likely missing"
         }
     internal val classInfoCompanionType: IrClassSymbol =
         requireNotNull(pluginContext.referenceClass(IntrospektNames.ClassInfo.Companion.id)) {
-            "Cannot find ClassInfo.Companion type, Trakkit runtime library is most likely missing"
+            "Cannot find ClassInfo.Companion type, Introspekt runtime library is most likely missing"
         }
     internal val classInfoGetOrCreate: IrSimpleFunctionSymbol =
         pluginContext.referenceFunctions(IntrospektNames.ClassInfo.Companion.getOrCreate).first()
@@ -135,11 +135,11 @@ internal data class IntrospektPluginContext(
     // LocalInfo
     internal val localInfoType: IrClassSymbol =
         requireNotNull(pluginContext.referenceClass(IntrospektNames.LocalInfo.id)) {
-            "Cannot find LocalInfo type, Trakkit runtime library is most likely missing"
+            "Cannot find LocalInfo type, Introspekt runtime library is most likely missing"
         }
     internal val localInfoCompanionType: IrClassSymbol =
         requireNotNull(pluginContext.referenceClass(IntrospektNames.LocalInfo.Companion.id)) {
-            "Cannot find LocalInfo.Companion type, Trakkit runtime library is most likely missing"
+            "Cannot find LocalInfo.Companion type, Introspekt runtime library is most likely missing"
         }
     internal val localInfoGetOrCreate: IrSimpleFunctionSymbol =
         pluginContext.referenceFunctions(IntrospektNames.LocalInfo.Companion.getOrCreate).first()
@@ -147,11 +147,11 @@ internal data class IntrospektPluginContext(
     // ParameterInfo
     internal val parameterInfoType: IrClassSymbol =
         requireNotNull(pluginContext.referenceClass(IntrospektNames.ParameterInfo.id)) {
-            "Cannot find LocalInfo type, Trakkit runtime library is most likely missing"
+            "Cannot find LocalInfo type, Introspekt runtime library is most likely missing"
         }
     internal val parameterInfoCompanionType: IrClassSymbol =
         requireNotNull(pluginContext.referenceClass(IntrospektNames.ParameterInfo.Companion.id)) {
-            "Cannot find LocalInfo.Companion type, Trakkit runtime library is most likely missing"
+            "Cannot find LocalInfo.Companion type, Introspekt runtime library is most likely missing"
         }
     internal val parameterInfoGetOrCreate: IrSimpleFunctionSymbol =
         pluginContext.referenceFunctions(IntrospektNames.ParameterInfo.Companion.getOrCreate).first()
@@ -159,17 +159,17 @@ internal data class IntrospektPluginContext(
     // TypeInfo
     internal val typeInfoType: IrClassSymbol =
         requireNotNull(pluginContext.referenceClass(IntrospektNames.TypeInfo.id)) {
-            "Cannot find TypeInfo type, Trakkit runtime library is most likely missing"
+            "Cannot find TypeInfo type, Introspekt runtime library is most likely missing"
         }
 
     // SimpleTypeInfo
     internal val simpleTypeInfoType: IrClassSymbol =
         requireNotNull(pluginContext.referenceClass(IntrospektNames.SimpleTypeInfo.id)) {
-            "Cannot find SimpleTypeInfo type, Trakkit runtime library is most likely missing"
+            "Cannot find SimpleTypeInfo type, Introspekt runtime library is most likely missing"
         }
     internal val typeInfoCompanionType: IrClassSymbol =
         requireNotNull(pluginContext.referenceClass(IntrospektNames.TypeInfo.Companion.id)) {
-            "Cannot find SimpleTypeInfo.Companion type, Trakkit runtime library is most likely missing"
+            "Cannot find SimpleTypeInfo.Companion type, Introspekt runtime library is most likely missing"
         }
     internal val typeInfoGetOrCreate: IrSimpleFunctionSymbol =
         pluginContext.referenceFunctions(IntrospektNames.TypeInfo.Companion.getOrCreate).first()
