@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import dev.karmakrafts.conventions.signPublications
+import dev.karmakrafts.conventions.configureJava
 import kotlin.io.path.createDirectories
 import kotlin.io.path.deleteIfExists
 import kotlin.io.path.div
@@ -26,6 +26,8 @@ plugins {
     signing
     `maven-publish`
 }
+
+configureJava(libs.versions.java)
 
 java {
     withSourcesJar()

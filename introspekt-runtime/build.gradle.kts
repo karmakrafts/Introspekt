@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import dev.karmakrafts.conventions.configureJava
 import java.time.ZonedDateTime
 
 plugins {
@@ -23,6 +24,8 @@ plugins {
     signing
     `maven-publish`
 }
+
+configureJava(libs.versions.java)
 
 kotlin {
     withSourcesJar(true)

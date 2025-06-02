@@ -14,12 +14,16 @@
  * limitations under the License.
  */
 
+import dev.karmakrafts.conventions.configureJava
+
 plugins {
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.kotlin.kapt)
     signing
     `maven-publish`
 }
+
+configureJava(libs.versions.java)
 
 java {
     withSourcesJar()

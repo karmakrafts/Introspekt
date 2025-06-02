@@ -39,10 +39,6 @@ plugins {
 group = "dev.karmakrafts.introspekt"
 version = GitLabCI.getDefaultVersion(libs.versions.introspekt)
 
-allprojects {
-    configureJava(rootProject.libs.versions.java)
-}
-
 @OptIn(ExperimentalEncodingApi::class)
 subprojects {
     apply<MavenPublishPlugin>()
