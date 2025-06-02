@@ -15,6 +15,7 @@
  */
 
 import dev.karmakrafts.conventions.configureJava
+import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import java.time.ZonedDateTime
 
 plugins {
@@ -27,6 +28,7 @@ plugins {
 
 configureJava(libs.versions.java)
 
+@OptIn(ExperimentalWasmDsl::class)
 kotlin {
     withSourcesJar(true)
     compilerOptions {
@@ -58,6 +60,10 @@ kotlin {
         browser()
         nodejs()
     }
+    wasmJs {
+        browser()
+        nodejs()
+    }
     applyDefaultHierarchyTemplate()
     sourceSets {
         commonTest {
@@ -71,13 +77,14 @@ kotlin {
                 api(libs.stately.concurrent.collections)
             }
         }
+
         val jvmAndAndroidMain by creating { dependsOn(commonMain) }
-        val jvmMain by getting {
-            dependsOn(jvmAndAndroidMain)
-        }
-        val androidMain by getting {
-            dependsOn(jvmAndAndroidMain)
-        }
+        val jvmMain by getting { dependsOn(jvmAndAndroidMain) }
+        val androidMain by getting { dependsOn(jvmAndAndroidMain) }
+
+        val jsAndWasmMain by creating { dependsOn(commonMain) }
+        val jsMain by getting { dependsOn(jsAndWasmMain) }
+        val wasmJsMain by getting { dependsOn(jsAndWasmMain) }
     }
 }
 
