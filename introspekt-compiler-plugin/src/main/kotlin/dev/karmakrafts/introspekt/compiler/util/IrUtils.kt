@@ -190,7 +190,7 @@ internal fun IrAnnotationContainer.getRawAnnotationValue(
         .find { it.name.asString() == name }
         ?: return null
     // @formatter:on
-    return annotation.getValueArgument(parameter.indexInOldValueParameters)
+    return annotation.arguments[parameter]
 }
 
 internal inline fun <reified T> IrAnnotationContainer.getAnnotationValue( // @formatter:off
@@ -211,13 +211,13 @@ internal fun IrConstructorCall.getAnnotationValues(): Map<String, Any?> {
     val parameters = constructor.parameters.filter { it.kind == IrParameterKind.Regular }
     if (parameters.isEmpty()) return emptyMap()
     val parameterNames = parameters.map { it.name.asString() }
-    check(parameterNames.size == valueArgumentsCount) { "Missing annotation parameter info" }
+    check(parameterNames.size == parameters.size) { "Missing annotation parameter info" }
     val values = HashMap<String, Any?>()
-    val firstParamIndex = parameters.first().indexInOldValueParameters
+    val firstParamIndex = parameters.first().indexInParameters
     val lastParamIndex = firstParamIndex + parameters.size
     var paramIndex = 0
     for (index in firstParamIndex..<lastParamIndex) {
-        val value = getValueArgument(index)
+        val value = arguments[index]
         values[parameterNames[paramIndex]] = value.unwrapAnyAnnotationValue()
         paramIndex++
     }

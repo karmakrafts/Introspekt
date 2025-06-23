@@ -42,7 +42,7 @@ internal class FunctionInfoTransformer(
     @OptIn(UnsafeDuringIrConstructionAPI::class)
     private fun emitOf(expression: IrCall): IrElement {
         val parameter = expression.target.parameters.first { it.kind == IrParameterKind.Regular }
-        val argument = expression.getValueArgument(parameter.indexInOldValueParameters)
+        val argument = expression.arguments[parameter]
         check(argument is IrFunctionReference) { "Parameter must be a function reference" }
         return requireNotNull(argument.reflectionTarget) {
             "Parameter reference must have a reflection target"

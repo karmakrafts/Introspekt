@@ -68,25 +68,25 @@ internal inline fun IrElementMatcher<out IrCall>.isCachedSourceLocation( // @for
     val function = element.target
     function.kotlinFqName shouldBe IntrospektNames.SourceLocation.Companion.getOrCreate.asSingleFqName()
 
-    val moduleParam = function.valueParameters.first { it.name.asString() == "module" }
+    val moduleParam = function.parameters.first { it.name.asString() == "module" }
     moduleParam.type matches { string() }
     val moduleArg = element.arguments[moduleParam]!!
     moduleArg::class shouldBe IrConstImpl::class
     (moduleArg as IrConstImpl).value shouldBe module
 
-    val fileParam = function.valueParameters.first { it.name.asString() == "file" }
+    val fileParam = function.parameters.first { it.name.asString() == "file" }
     fileParam.type matches { string() }
     val fileArg = element.arguments[moduleParam]!!
     fileArg::class shouldBe IrConstImpl::class
     (fileArg as IrConstImpl).value shouldBe file
 
-    val lineParam = function.valueParameters.first { it.name.asString() == "line" }
+    val lineParam = function.parameters.first { it.name.asString() == "line" }
     lineParam.type matches { int() }
     val lineArg = element.arguments[lineParam]!!
     lineArg::class shouldBe IrConstImpl::class
     (lineArg as IrConstImpl).value shouldBe line
 
-    val columnParam = function.valueParameters.first { it.name.asString() == "column" }
+    val columnParam = function.parameters.first { it.name.asString() == "column" }
     columnParam.type matches { int() }
     val columnArg = element.arguments[columnParam]!!
     columnArg::class shouldBe IrConstImpl::class

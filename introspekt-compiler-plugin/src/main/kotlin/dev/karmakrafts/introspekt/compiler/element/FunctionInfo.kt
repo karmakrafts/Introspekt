@@ -31,7 +31,7 @@ import org.jetbrains.kotlin.ir.declarations.IrAnonymousInitializer
 import org.jetbrains.kotlin.ir.declarations.IrFile
 import org.jetbrains.kotlin.ir.declarations.IrFunction
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
-import org.jetbrains.kotlin.ir.declarations.IrParameterKind.Regular
+import org.jetbrains.kotlin.ir.declarations.IrParameterKind
 import org.jetbrains.kotlin.ir.declarations.IrVariable
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.impl.IrCallImplWithShape
@@ -171,7 +171,7 @@ internal fun IrFunction.getFunctionInfo( // @formatter:off
     file: IrFile,
     source: List<String>,
 ): FunctionInfo {
-    val regularParams = valueParameters.filter { it.kind == Regular }
+    val regularParams = parameters.filter { it.kind == IrParameterKind.Regular }
     return FunctionInfo.getOrCreate(
         location = getFunctionLocation(module, file, source),
         qualifiedName = kotlinFqName.asString(),
@@ -200,7 +200,7 @@ internal fun IrAnonymousInitializer.getFunctionInfo( // @formatter:off
     source: List<String>
 ): FunctionInfo { // @formatter:on
     val constructor = requireNotNull(parentAsClass.primaryConstructor) { "Missing primary class constructor" }
-    val regularParams = constructor.valueParameters.filter { it.kind == Regular }
+    val regularParams = constructor.parameters.filter { it.kind == IrParameterKind.Regular }
     return FunctionInfo.getOrCreate( // @formatter:off
         location = getLocation(module, file, source),
         qualifiedName = constructor.kotlinFqName.asString(),

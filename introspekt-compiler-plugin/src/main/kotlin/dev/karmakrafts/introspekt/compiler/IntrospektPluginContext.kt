@@ -22,6 +22,7 @@ import dev.karmakrafts.introspekt.compiler.util.getEnumValue
 import dev.karmakrafts.introspekt.compiler.util.toClassReference
 import dev.karmakrafts.introspekt.compiler.util.toStdPair
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
+import org.jetbrains.kotlin.ir.declarations.IrParameterKind
 import org.jetbrains.kotlin.ir.declarations.IrTypeParameter
 import org.jetbrains.kotlin.ir.expressions.IrClassReference
 import org.jetbrains.kotlin.ir.expressions.IrExpression
@@ -50,13 +51,13 @@ internal data class IntrospektPluginContext(
     // listOf
     @OptIn(UnsafeDuringIrConstructionAPI::class)
     private val listOfFunction: IrSimpleFunctionSymbol = pluginContext.referenceFunctions(IntrospektNames.Kotlin.listOf)
-        .find { symbol -> symbol.owner.valueParameters.any { it.isVararg } }!!
+        .find { symbol -> symbol.owner.parameters.filter { it.kind == IrParameterKind.Regular }.any { it.isVararg } }!!
     private val listType: IrClassSymbol = pluginContext.referenceClass(IntrospektNames.Kotlin.List.id)!!
 
     // mapOf
     @OptIn(UnsafeDuringIrConstructionAPI::class)
     private val mapOfFunction: IrSimpleFunctionSymbol = pluginContext.referenceFunctions(IntrospektNames.Kotlin.mapOf)
-        .find { symbol -> symbol.owner.valueParameters.any { it.isVararg } }!!
+        .find { symbol -> symbol.owner.parameters.filter { it.kind == IrParameterKind.Regular }.any { it.isVararg } }!!
     private val mapType: IrClassSymbol = pluginContext.referenceClass(IntrospektNames.Kotlin.Map.id)!!
 
     // Pair

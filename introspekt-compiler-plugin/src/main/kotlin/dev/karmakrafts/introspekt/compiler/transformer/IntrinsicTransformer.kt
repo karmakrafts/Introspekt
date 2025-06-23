@@ -67,9 +67,13 @@ internal abstract class IntrinsicTransformer(
     }
 
     override fun visitCall(expression: IrCall, data: IntrinsicContext): IrElement {
-        val intrinsicType = expression.target.getIntrinsicType() ?: return super.visitCall(expression, data)
-        if (intrinsicType !in intrinsics) return super.visitCall(expression, data)
-        return visitIntrinsic(intrinsicType, expression, data)
+        val transformedCall = super.visitCall(expression, data)
+        if (transformedCall is IrCall) {
+            val intrinsicType = transformedCall.target.getIntrinsicType() ?: return transformedCall
+            if (intrinsicType !in intrinsics) return transformedCall
+            return visitIntrinsic(intrinsicType, expression, data)
+        }
+        return transformedCall
     }
 
     abstract fun visitIntrinsic(type: IntrospektIntrinsic, expression: IrCall, context: IntrinsicContext): IrElement
