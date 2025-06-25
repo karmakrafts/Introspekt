@@ -102,4 +102,4 @@ publish-documentation:
   script:
     - ./gradlew -DpublishDocs.root=/var/www/docs/introspekt publishDocs
   tags:
-    - linux
+    - docs
