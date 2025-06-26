@@ -54,12 +54,14 @@ security:
     when: always
     reports:
       dependency_scanning: report.json
+  before_script:
+    - ./gradlew dependenciesForAll --write-locks --no-parallel > dependencies.txt
   script:
     - trivy repo ./ --exit-code 0
-    - trivy repo ./ --exit-code 0 --format template --template "@/contrib/gitlab.tpl" --output report.json
+    - trivy repo ./ --exit-code 0 --format template --template "@/Volumes/Data/contrib/gitlab.tpl" --output report.json
     - trivy repo ./ --exit-code 1 --severity CRITICAL
   tags:
-    - linux
+    - macos
 
 # ------------------------------ Build
 
