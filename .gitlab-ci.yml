@@ -28,7 +28,8 @@ variables:
     when: never
 
 .if-port: &if-port
-  - if: '$CI_COMMIT_TAG =~ /^\d+\\.\d+\\.\d+-\d+\\.\d+.*/'
+  - if: '$CI_COMMIT_TAG =~ /^\d+\\.\d+\\.\d+-.*$/'
+  - if: '$CI_COMMIT_BRANCH =~ /^kotlin.*/'
   - if: $CI_PIPELINE_SOURCE == "schedule"
     when: never
 
@@ -51,7 +52,7 @@ security:
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       allow_failure: true
-    - if: '$CI_COMMIT_TAG =~ /^\d+.\d+.\d+.*/'
+    - if: '$CI_COMMIT_TAG =~ /^\d+\\.\d+\\.\d+.*/'
       allow_failure: false
     - if: $CI_PIPELINE_SOURCE == "schedule"
       allow_failure: false
