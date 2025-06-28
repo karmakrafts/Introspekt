@@ -29,7 +29,6 @@ variables:
 
 .if-port: &if-port
   - if: '$CI_COMMIT_TAG =~ /^\d+\\.\d+\\.\d+-.*$/'
-  - if: '$CI_COMMIT_BRANCH =~ /^kotlin.*/'
   - if: $CI_PIPELINE_SOURCE == "schedule"
     when: never
 
@@ -88,8 +87,8 @@ publish-gitlab:
   stage: publish
   rules:
     - *if-main
-    - *if-release
     - *if-port
+    - *if-release
   script:
     - ./gradlew publishAllPublicationsToGitLabRepository
   tags:
@@ -99,8 +98,8 @@ publish-central:
   stage: publish
   rules:
     - *if-main
-    - *if-release
     - *if-port
+    - *if-release
   script:
     - ./gradlew publishToSonatype closeAndReleaseStagingRepositories
   tags:
