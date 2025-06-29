@@ -16,98 +16,234 @@
 
 package dev.karmakrafts.introspekt.compiler.transformer
 
-import dev.karmakrafts.introspekt.compiler.IntrospektPluginContext
 import dev.karmakrafts.introspekt.compiler.element.getFunctionInfo
-import dev.karmakrafts.introspekt.compiler.util.InjectionOrder
 import dev.karmakrafts.introspekt.compiler.util.TraceType
-import dev.karmakrafts.introspekt.compiler.util.getTraceType
-import dev.karmakrafts.introspekt.compiler.util.inject
+import org.jetbrains.kotlin.GeneratedDeclarationKey
 import org.jetbrains.kotlin.ir.IrElement
-import org.jetbrains.kotlin.ir.declarations.IrFile
+import org.jetbrains.kotlin.ir.IrStatement
+import org.jetbrains.kotlin.ir.declarations.IrDeclarationOrigin
+import org.jetbrains.kotlin.ir.declarations.IrDeclarationParent
 import org.jetbrains.kotlin.ir.declarations.IrFunction
-import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
+import org.jetbrains.kotlin.ir.declarations.impl.IrVariableImpl
 import org.jetbrains.kotlin.ir.expressions.IrBlockBody
 import org.jetbrains.kotlin.ir.expressions.IrCall
+import org.jetbrains.kotlin.ir.expressions.IrConstructorCall
+import org.jetbrains.kotlin.ir.expressions.IrExpression
+import org.jetbrains.kotlin.ir.expressions.IrExpressionBody
+import org.jetbrains.kotlin.ir.expressions.IrFunctionAccessExpression
 import org.jetbrains.kotlin.ir.expressions.IrReturn
+import org.jetbrains.kotlin.ir.expressions.IrReturnableBlock
+import org.jetbrains.kotlin.ir.expressions.impl.IrBlockImpl
+import org.jetbrains.kotlin.ir.expressions.impl.IrCompositeImpl
+import org.jetbrains.kotlin.ir.expressions.impl.IrGetValueImpl
+import org.jetbrains.kotlin.ir.expressions.impl.IrReturnImpl
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
+import org.jetbrains.kotlin.ir.symbols.impl.IrVariableSymbolImpl
+import org.jetbrains.kotlin.ir.types.isNothing
+import org.jetbrains.kotlin.ir.types.isNullableNothing
 import org.jetbrains.kotlin.ir.types.isUnit
+import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
+import org.jetbrains.kotlin.ir.util.isAnonymousObject
+import org.jetbrains.kotlin.ir.util.parentClassOrNull
+import org.jetbrains.kotlin.ir.util.patchDeclarationParents
 import org.jetbrains.kotlin.ir.util.target
+import org.jetbrains.kotlin.ir.visitors.IrTransformer
+import org.jetbrains.kotlin.name.Name
+import java.util.*
 
 internal class TraceInjectionTransformer : TraceTransformer() {
-    private val functionTraceTypes: Set<TraceType> = setOf(TraceType.FUNCTION_ENTER, TraceType.FUNCTION_LEAVE)
-    private val functions: ArrayList<Pair<IrFunction, List<TraceType>>> = ArrayList()
-    private val calls: ArrayList<Pair<IrElement, IrCall>> = ArrayList()
+    companion object : GeneratedDeclarationKey() {
+        private val declOrigin: IrDeclarationOrigin = IrDeclarationOrigin.GeneratedByPlugin(this)
+        private val callTypes: EnumSet<TraceType> = EnumSet.of(TraceType.BEFORE_CALL, TraceType.AFTER_CALL)
+        private val functionTypes: EnumSet<TraceType> = EnumSet.of(TraceType.FUNCTION_ENTER, TraceType.FUNCTION_LEAVE)
+    }
 
-    override fun visitCall(expression: IrCall, data: TraceContext) {
-        super.visitCall(expression, data)
-        val allowedTraceTypes = data.traceType
-        if (allowedTraceTypes.isEmpty()) return
-        if (expression.getTraceType() != null) return
-        if (TraceType.CALL !in allowedTraceTypes) return
-        calls += Pair(data.container, expression)
+    @OptIn(UnsafeDuringIrConstructionAPI::class)
+    private fun IrCall.withCallee(callee: IrFunctionAccessExpression, data: TraceContext): IrCall {
+        val context = data.pluginContext
+        val moduleFragment = context.irModule
+        val file = context.irFile
+        val source = context.source
+        arguments[symbol.owner.parameters.single { it.name.asString() == "callee" }] =
+            callee.target.getFunctionInfo(moduleFragment, file, source)
+                .instantiateCached(moduleFragment, file, source, context)
+        return this
+    }
+
+    private fun transformSimpleCall(call: IrFunctionAccessExpression, data: TraceContext): IrElement {
+        return IrCompositeImpl( // @formatter:off
+            startOffset = SYNTHETIC_OFFSET,
+            endOffset = SYNTHETIC_OFFSET,
+            type = call.type
+        ).apply { // @formatter:on
+            statements += TraceType.BEFORE_CALL.createCall(data.pluginContext).withCallee(call, data)
+            statements += call
+        }
+    }
+
+    private fun transformComplexCall(
+        parent: IrDeclarationParent, call: IrFunctionAccessExpression, hasBefore: Boolean, data: TraceContext
+    ): IrElement {
+        val resultType = call.type
+        if (resultType.isUnit() || resultType.isNothing() || resultType.isNullableNothing()) {
+            // If the call result is a Unit or Nothing, we can omit storing the result
+            return IrCompositeImpl( // @formatter:off
+                startOffset = SYNTHETIC_OFFSET,
+                endOffset = SYNTHETIC_OFFSET,
+                type = data.pluginContext.irBuiltIns.unitType
+            ).apply { // @formatter:on
+                statements += TraceType.BEFORE_CALL.createCall(data.pluginContext).withCallee(call, data)
+                statements += call
+                statements += TraceType.AFTER_CALL.createCall(data.pluginContext).withCallee(call, data)
+            }
+        }
+        val result = IrVariableImpl(
+            startOffset = SYNTHETIC_OFFSET,
+            endOffset = SYNTHETIC_OFFSET,
+            origin = declOrigin,
+            symbol = IrVariableSymbolImpl(),
+            name = Name.identifier("__result_${call.hashCode()}__"),
+            type = resultType,
+            isVar = false,
+            isConst = false,
+            isLateinit = false
+        ).apply {
+            initializer = call
+        }
+        return IrBlockImpl( // @formatter:off
+            startOffset = SYNTHETIC_OFFSET,
+            endOffset = SYNTHETIC_OFFSET,
+            type = resultType
+        ).apply { // @formatter:on
+            if (hasBefore) statements += TraceType.BEFORE_CALL.createCall(data.pluginContext).withCallee(call, data)
+            statements += result
+            statements += TraceType.AFTER_CALL.createCall(data.pluginContext).withCallee(call, data)
+            statements += IrGetValueImpl( // @formatter:off
+                startOffset = SYNTHETIC_OFFSET,
+                endOffset = SYNTHETIC_OFFSET,
+                symbol = result.symbol
+            ) // @formatter:on
+            patchDeclarationParents(parent)
+        }
+    }
+
+    override fun visitFunctionAccess(expression: IrFunctionAccessExpression, data: TraceContext): IrElement {
+        if (expression is IrConstructorCall && expression.target.parentClassOrNull?.isAnonymousObject == true) return expression
+        val transformedCall = super.visitFunctionAccess(expression, data)
+        if (transformedCall is IrFunctionAccessExpression) {
+            val allowedTraceTypes = data.traceType?.intersect(callTypes) ?: return transformedCall
+            if (allowedTraceTypes.isEmpty()) return transformedCall
+            val parent = data.declParentOrNull ?: return transformedCall
+            return if (TraceType.AFTER_CALL !in allowedTraceTypes) transformSimpleCall(transformedCall, data)
+            else transformComplexCall(parent, transformedCall, TraceType.BEFORE_CALL in allowedTraceTypes, data)
+        }
+        return transformedCall
+    }
+
+    private inline fun IrStatement.injectBeforeReturns(
+        data: TraceContext, crossinline statements: () -> List<IrStatement>
+    ): IrStatement {
+        return transform(object : IrTransformer<TraceContext>() {
+            override fun visitFunction(declaration: IrFunction, data: TraceContext): IrStatement {
+                data.returnTargetStack.push(declaration.symbol)
+                val transformedFunction = super.visitFunction(declaration, data)
+                data.returnTargetStack.pop()
+                return transformedFunction
+            }
+
+            override fun visitReturnableBlock(expression: IrReturnableBlock, data: TraceContext): IrExpression {
+                data.returnTargetStack.push(expression.symbol)
+                val transformedBlock = super.visitReturnableBlock(expression, data)
+                data.returnTargetStack.pop()
+                return transformedBlock
+            }
+
+            override fun visitReturn(expression: IrReturn, data: TraceContext): IrExpression {
+                val transformedReturn = super.visitReturn(expression, data)
+                if (transformedReturn is IrReturn) {
+                    val composite = IrCompositeImpl(
+                        startOffset = SYNTHETIC_OFFSET, endOffset = SYNTHETIC_OFFSET, type = transformedReturn.type
+                    ).apply {
+                        this.statements += statements()
+                        this.statements += transformedReturn.value // Unfold expression from original return
+                    }
+                    return IrReturnImpl(
+                        startOffset = SYNTHETIC_OFFSET,
+                        endOffset = SYNTHETIC_OFFSET,
+                        type = composite.type,
+                        returnTargetSymbol = data.returnTargetOrNull!!,
+                        value = composite
+                    )
+                }
+                return transformedReturn
+            }
+        }, data) as IrStatement
+    }
+
+    private fun transformFunctionStatements( // @formatter:off
+        function: IrFunction,
+        statements: List<IrStatement>,
+        traceTypes: Set<TraceType>,
+        data: TraceContext
+    ): List<IrStatement> { // @formatter:on
+        val newStatements = ArrayList<IrStatement>()
+        if (TraceType.FUNCTION_ENTER in traceTypes) {
+            newStatements += TraceType.FUNCTION_ENTER.createCall(data.pluginContext)
+        }
+        newStatements += statements.map {
+            it.injectBeforeReturns(data) {
+                listOf(TraceType.FUNCTION_LEAVE.createCall(data.pluginContext))
+            }
+        }
+        // If this is a unit function, we expect there to be an implicit return at the end of function scope
+        if (function.returnType.isUnit()) {
+            newStatements += TraceType.FUNCTION_LEAVE.createCall(data.pluginContext)
+        }
+        return newStatements
+    }
+
+    override fun visitFunction(declaration: IrFunction, data: TraceContext): IrStatement {
+        data.returnTargetStack.push(declaration.symbol)
+        val transformedFunction = super.visitFunction(declaration, data)
+        data.returnTargetStack.pop()
+        return transformedFunction
+    }
+
+    override fun visitReturnableBlock(expression: IrReturnableBlock, data: TraceContext): IrExpression {
+        data.returnTargetStack.push(expression.symbol)
+        val transformedBlock = super.visitReturnableBlock(expression, data)
+        data.returnTargetStack.pop()
+        return transformedBlock
     }
 
     override fun visitTraceableFunction(declaration: IrFunction, data: TraceContext) {
-        val allowedTraceTypes = data.traceType
-        if (allowedTraceTypes.isEmpty()) return
-        val functionTraceTypes = allowedTraceTypes.intersect(functionTraceTypes).toList()
-        if (functionTraceTypes.isEmpty()) return
-        functions += Pair(declaration, functionTraceTypes)
-    }
-
-    @OptIn(UnsafeDuringIrConstructionAPI::class)
-    private fun injectFunctionCallbacks(context: IntrospektPluginContext) {
-        for ((function, types) in functions) {
-            val body = function.body ?: continue
-            val blockBody = body as? IrBlockBody ?: continue
-            for (type in types) when (type) {
-                TraceType.FUNCTION_ENTER -> blockBody.statements.add(0, type.createCall(context))
-                TraceType.FUNCTION_LEAVE -> {
-                    // Inject before every explicit return
-                    function.inject(
-                        needleSelector = { it is IrReturn },
-                        injection = { listOf(type.createCall(context)) },
-                        order = InjectionOrder.BEFORE
+        val allowedTraceTyped = data.traceType?.intersect(functionTypes) ?: return
+        if (allowedTraceTyped.isEmpty()) return // If we don't have any allowed tracing in the current scope, return
+        when (val body = declaration.body) {
+            // When we have an expression body, we need to turn it into a block-body to house multiple statements
+            is IrExpressionBody -> {
+                val newBody = data.pluginContext.irFactory.createBlockBody( // @formatter:off
+                    startOffset = SYNTHETIC_OFFSET,
+                    endOffset = SYNTHETIC_OFFSET
+                ).apply { // @formatter:on
+                    statements.addAll(
+                        transformFunctionStatements(
+                            declaration, listOf(body.expression), allowedTraceTyped, data
+                        )
                     )
-                    // Special case for implicit Unit returns
-                    if (!function.returnType.isUnit()) continue
-                    blockBody.statements.add(blockBody.statements.size, type.createCall(context))
                 }
-
-                else -> error("Function callback injection does not support target $type")
+                declaration.body = newBody // Swap out function bodies
             }
+            // When we have a block body in place already, we can just clear its statement list and re-add everything
+            is IrBlockBody -> {
+                val transformedStatements = transformFunctionStatements(
+                    declaration, body.statements, allowedTraceTyped, data
+                )
+                body.statements.clear()
+                body.statements.addAll(transformedStatements)
+            }
+            // Otherwise do nothing to the function
+            else -> {}
         }
-    }
-
-    @OptIn(UnsafeDuringIrConstructionAPI::class)
-    private fun injectCallCallbacks( // @formatter:off
-        context: IntrospektPluginContext,
-        module: IrModuleFragment,
-        file: IrFile,
-        source: List<String>
-    ) { // @formatter:on
-        for ((container, call) in calls) {
-            container.inject( // @formatter:off
-                needleSelector = { it == call },
-                injection = {
-                    listOf(TraceType.CALL.createCall(context).apply {
-                        val function = symbol.owner
-                        arguments[function.parameters.first { it.name.asString() == "callee" }] =
-                            call.target.getFunctionInfo(module, file, source)
-                                .instantiateCached(module, file, source, context)
-                    })
-                }
-            ) // @formatter:on
-        }
-    }
-
-    fun injectCallbacks( // @formatter:off
-        context: IntrospektPluginContext,
-        module: IrModuleFragment,
-        file: IrFile,
-        source: List<String>
-    ) { // @formatter:on
-        injectFunctionCallbacks(context)
-        injectCallCallbacks(context, module, file, source)
     }
 }

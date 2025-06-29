@@ -39,8 +39,8 @@ internal data class StdPair( // @formatter:off
         IrConstructorCallImpl(
             startOffset = SYNTHETIC_OFFSET,
             endOffset = SYNTHETIC_OFFSET,
-            type = pairType.typeWith(firstType, secondType),
-            symbol = pairConstructor,
+            type = introspektSymbols.pairType.typeWith(firstType, secondType),
+            symbol = introspektSymbols.pairConstructor,
             typeArgumentsCount = 2,
             constructorTypeArgumentsCount = 2
         ).apply {

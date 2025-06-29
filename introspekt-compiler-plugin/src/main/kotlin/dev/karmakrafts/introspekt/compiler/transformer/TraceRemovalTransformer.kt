@@ -16,19 +16,14 @@
 
 package dev.karmakrafts.introspekt.compiler.transformer
 
-import dev.karmakrafts.introspekt.compiler.IntrospektPluginContext
 import dev.karmakrafts.introspekt.compiler.util.TraceType
 import dev.karmakrafts.introspekt.compiler.util.getTraceType
 import org.jetbrains.kotlin.ir.IrElement
-import org.jetbrains.kotlin.ir.expressions.IrCall
-import org.jetbrains.kotlin.ir.expressions.IrExpressionBody
-import org.jetbrains.kotlin.ir.expressions.IrStatementContainer
+import org.jetbrains.kotlin.ir.expressions.IrFunctionAccessExpression
 import org.jetbrains.kotlin.ir.expressions.impl.IrCompositeImpl
 import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
 
 internal class TraceRemovalTransformer : TraceTransformer() {
-    private val callsToRemove: ArrayList<Pair<IrElement, IrCall>> = ArrayList()
-
     companion object {
         private val types: Set<TraceType> = setOf( // @formatter:off
             TraceType.SPAN_ENTER,
@@ -37,33 +32,24 @@ internal class TraceRemovalTransformer : TraceTransformer() {
         ) // @formatter:on
     }
 
-    override fun visitCall(expression: IrCall, data: TraceContext) {
-        super.visitCall(expression, data)
-        // Find out if the target function is a trace function and if so, which type
-        val callTraceType = expression.getTraceType() ?: return
-        // If the called trace function isn't supposed to be handled by this transformer, we return early
-        if (callTraceType !in types) return
-        // Find out the trace types of the current parent scope (function or constructor)
-        val parentTraceType = data.traceType
-        // If the called trace function is present in the current trace scope, return early as calls may stay
-        if (callTraceType in parentTraceType) return
-
-        val container = data.containerOrNull ?: return
-        callsToRemove += Pair(container, expression)
-    }
-
-    fun removeCalls(context: IntrospektPluginContext) {
-        for ((container, call) in callsToRemove) {
-            when (container) {
-                is IrStatementContainer -> container.statements -= call
-                // Stub the expression with an empty composite
-                is IrExpressionBody -> container.expression = IrCompositeImpl( // @formatter:off
-                    startOffset = SYNTHETIC_OFFSET,
-                    endOffset = SYNTHETIC_OFFSET,
-                    type = context.irBuiltIns.unitType
-                ) // @formatter:on
-                else -> error("Unsupported container type ${container::class} for TraceRemovalTransformer")
-            }
+    override fun visitFunctionAccess(expression: IrFunctionAccessExpression, data: TraceContext): IrElement {
+        val transformedCall = super.visitFunctionAccess(expression, data)
+        if (transformedCall is IrFunctionAccessExpression) {
+            // Find out if the target function is a trace function and if so, which type
+            val callTraceType = transformedCall.getTraceType() ?: return transformedCall
+            // If the called trace function isn't supposed to be handled by this transformer, we return early
+            if (callTraceType !in types) return transformedCall
+            // Find out the trace types of the current parent scope (function or constructor)
+            val allowedTraceTypes = data.traceType ?: return transformedCall
+            // If the called trace function is present in the current trace scope, return early as calls may stay
+            if (callTraceType in allowedTraceTypes) return transformedCall
+            // Otherwise we remove the call by stubbing it with an empty composite expression
+            return IrCompositeImpl( // @formatter:off
+                startOffset = SYNTHETIC_OFFSET,
+                endOffset = SYNTHETIC_OFFSET,
+                type = data.pluginContext.irBuiltIns.unitType
+            ) // @formatter:on
         }
+        return transformedCall
     }
 }

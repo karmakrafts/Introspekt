@@ -112,10 +112,10 @@ internal data class ClassInfo(
         IrCallImplWithShape(
             startOffset = SYNTHETIC_OFFSET,
             endOffset = SYNTHETIC_OFFSET,
-            type = classInfoType.defaultType,
-            symbol = classInfoGetOrCreate,
+            type = introspektSymbols.classInfoType.defaultType,
+            symbol = introspektSymbols.classInfoGetOrCreate,
             typeArgumentsCount = 0,
-            valueArgumentsCount = 17,
+            valueArgumentsCount = 14,
             contextParameterCount = 0,
             hasDispatchReceiver = true,
             hasExtensionReceiver = false
@@ -128,13 +128,13 @@ internal data class ClassInfo(
             arguments[function.parameters.first { it.name.asString() == "annotations" }] =
                 instantiateAnnotations(module, file, source, context)
             arguments[function.parameters.first { it.name.asString() == "functions" }] = createListOf(
-                functionInfoType.defaultType, functions.map { it.instantiateCached(module, file, source, context) })
+                introspektSymbols.functionInfoType.defaultType, functions.map { it.instantiateCached(module, file, source, context) })
             arguments[function.parameters.first { it.name.asString() == "properties" }] = createListOf(
-                propertyInfoType.defaultType, properties.map { it.instantiateCached(module, file, source, context) })
+                introspektSymbols.propertyInfoType.defaultType, properties.map { it.instantiateCached(module, file, source, context) })
             arguments[function.parameters.first { it.name.asString() == "companionObjects" }] = createListOf(
-                classInfoType.defaultType, companionObjects.map { it.instantiateCached(module, file, source, context) })
+                introspektSymbols.classInfoType.defaultType, companionObjects.map { it.instantiateCached(module, file, source, context) })
             arguments[function.parameters.first { it.name.asString() == "superTypes" }] = createListOf(
-                simpleTypeInfoType.defaultType, superTypes.map { it.instantiateCached(module, file, source, context) })
+                introspektSymbols.typeInfoType.defaultType, superTypes.map { it.instantiateCached(module, file, source, context) })
             arguments[function.parameters.first { it.name.asString() == "isInterface" }] =
                 isInterface.toIrConst(irBuiltIns.booleanType)
             arguments[function.parameters.first { it.name.asString() == "isObject" }] =
@@ -144,13 +144,13 @@ internal data class ClassInfo(
             arguments[function.parameters.first { it.name.asString() == "isExpect" }] =
                 isExpect.toIrConst(irBuiltIns.booleanType)
             arguments[function.parameters.first { it.name.asString() == "visibility" }] =
-                visibility.getEnumValue(visibilityModifierType) { getVisibilityName() }
+                visibility.getEnumValue(introspektSymbols.visibilityModifierType) { getVisibilityName() }
             arguments[function.parameters.first { it.name.asString() == "modality" }] =
-                modality.getEnumValue(modalityModifierType) { name }
+                modality.getEnumValue(introspektSymbols.modalityModifierType) { name }
             arguments[function.parameters.first { it.name.asString() == "classModifier" }] =
-                classType?.getEnumValue(classModifierType, ClassModifier::name)
-                    ?: null.toIrConst(classModifierType.defaultType)
-            dispatchReceiver = classInfoCompanionType.getObjectInstance()
+                classType?.getEnumValue(introspektSymbols.classModifierType, ClassModifier::name)
+                    ?: null.toIrConst(introspektSymbols.classModifierType.defaultType)
+            dispatchReceiver = introspektSymbols.classInfoCompanionType.getObjectInstance()
         }
     }
 

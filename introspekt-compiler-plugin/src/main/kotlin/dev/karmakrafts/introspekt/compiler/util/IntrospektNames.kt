@@ -50,7 +50,8 @@ object IntrospektNames {
 
         val event: Name = Name.identifier("event")
 
-        val call: Name = Name.identifier("call")
+        val beforeCall: Name = Name.identifier("beforeCall")
+        val afterCall: Name = Name.identifier("afterCall")
         val enterFunction: Name = Name.identifier("enterFunction")
         val leaveFunction: Name = Name.identifier("leaveFunction")
     }

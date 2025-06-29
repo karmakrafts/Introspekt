@@ -19,29 +19,38 @@ package dev.karmakrafts.introspekt.compiler.transformer
 import dev.karmakrafts.introspekt.compiler.IntrospektPluginContext
 import dev.karmakrafts.introspekt.compiler.util.TraceType
 import dev.karmakrafts.introspekt.compiler.util.getTraceType
-import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.declarations.IrAnnotationContainer
 import org.jetbrains.kotlin.ir.declarations.IrClass
+import org.jetbrains.kotlin.ir.declarations.IrDeclarationParent
+import org.jetbrains.kotlin.ir.declarations.IrFunction
+import org.jetbrains.kotlin.ir.symbols.IrReturnTargetSymbol
 import java.util.*
 
 internal class TraceContext(
-    private val pluginContext: IntrospektPluginContext
+    val pluginContext: IntrospektPluginContext
 ) {
     private val traceTypeStack: Stack<List<TraceType>> = Stack()
-    internal val classStack: Stack<IrClass> = Stack()
-    internal val containerStack: Stack<IrElement> = Stack()
+    val functionStack: Stack<IrFunction> = Stack()
+    val classStack: Stack<IrClass> = Stack()
+    val returnTargetStack: Stack<IrReturnTargetSymbol> = Stack()
 
-    inline val traceType: List<TraceType>
-        get() = traceTypeStack.firstOrNull() ?: emptyList()
+    inline val returnTargetOrNull: IrReturnTargetSymbol?
+        get() = returnTargetStack.lastOrNull()
 
-    inline val container: IrElement
-        get() = containerStack.first()
-
-    inline val containerOrNull: IrElement?
-        get() = containerStack.firstOrNull()
+    inline val traceType: List<TraceType>?
+        get() {
+            for (type in traceTypeStack.reversed()) {
+                if (type.isEmpty()) continue
+                return type
+            }
+            return null
+        }
 
     inline val classOrNull: IrClass?
-        get() = classStack.firstOrNull()
+        get() = classStack.lastOrNull()
+
+    inline val declParentOrNull: IrDeclarationParent?
+        get() = functionStack.lastOrNull() ?: classStack.lastOrNull() ?: pluginContext.irFile
 
     fun pushTraceType(declaration: IrAnnotationContainer) {
         traceTypeStack.push(declaration.getTraceType())

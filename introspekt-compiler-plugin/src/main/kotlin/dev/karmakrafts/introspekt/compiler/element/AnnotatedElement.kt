@@ -33,11 +33,11 @@ internal sealed interface AnnotatedElement {
         context: IntrospektPluginContext
     ): IrExpression = with(context) { // @formatter:on
         createMapOf( // @formatter:off
-            keyType = irBuiltIns.kClassClass.typeWith(annotationType.defaultType),
-            valueType = annotationUsageInfoType.defaultType,
+            keyType = introspektSymbols.typeInfoType.defaultType,
+            valueType = irBuiltIns.listClass.typeWith(introspektSymbols.annotationUsageInfoType.defaultType),
             values = annotations.map { (type, infos) ->
                 type.instantiateCached(module, file, source, context) to createListOf(
-                    type = annotationUsageInfoType.defaultType,
+                    type = introspektSymbols.annotationUsageInfoType.defaultType,
                     values = infos.map { it.instantiate(module, file, source, context) }
                 )
             }

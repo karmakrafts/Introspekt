@@ -56,8 +56,8 @@ internal class FieldInfo(
         IrCallImplWithShape(
             startOffset = SYNTHETIC_OFFSET,
             endOffset = SYNTHETIC_OFFSET,
-            type = fieldInfoType.defaultType,
-            symbol = fieldInfoGetOrCreate,
+            type = introspektSymbols.fieldInfoType.defaultType,
+            symbol = introspektSymbols.fieldInfoGetOrCreate,
             typeArgumentsCount = 0,
             valueArgumentsCount = 9,
             contextParameterCount = 0,
@@ -74,7 +74,7 @@ internal class FieldInfo(
             arguments[function.parameters.first { it.name.asString() == "type" }] =
                 this@FieldInfo.type.instantiateCached(module, file, source, context)
             arguments[function.parameters.first { it.name.asString() == "visibility" }] =
-                visibility.getEnumValue(visibilityModifierType) { getVisibilityName() }
+                visibility.getEnumValue(introspektSymbols.visibilityModifierType) { getVisibilityName() }
             arguments[function.parameters.first { it.name.asString() == "isStatic" }] =
                 isStatic.toIrConst(irBuiltIns.booleanType)
             arguments[function.parameters.first { it.name.asString() == "isExternal" }] =
@@ -83,7 +83,7 @@ internal class FieldInfo(
                 isFinal.toIrConst(irBuiltIns.booleanType)
             arguments[function.parameters.first { it.name.asString() == "annotations" }] =
                 instantiateAnnotations(module, file, source, context)
-            dispatchReceiver = fieldInfoCompanionType.getObjectInstance()
+            dispatchReceiver = introspektSymbols.fieldInfoCompanionType.getObjectInstance()
         }
     }
 }

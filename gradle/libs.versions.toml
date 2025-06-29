@@ -5,7 +5,7 @@ androidGradle = "8.9.3" # https://developer.android.com/reference/tools/gradle-a
 androidCompileSDK = "35"
 androidMinimalSDK = "28"
 
-introspekt = "1.4.1-2.1.21"
+introspekt = "1.4.1"
 kotlin = "2.1.21" # https://github.com/JetBrains/kotlin/releases
 dokka = "2.0.0" # https://github.com/Kotlin/dokka/releases
 karmaConventions = "1.5.4"

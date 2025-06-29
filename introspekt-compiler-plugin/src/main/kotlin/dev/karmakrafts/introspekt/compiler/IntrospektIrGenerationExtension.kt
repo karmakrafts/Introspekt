@@ -43,28 +43,24 @@ internal class IntrospektIrGenerationExtension(
         moduleFragment: IrModuleFragment,
         pluginContext: IrPluginContext
     ) { // @formatter:on
-        val introspektContext = IntrospektPluginContext(pluginContext)
-        val intrinsicContext = IntrinsicContext(introspektContext)
-        val traceContext = TraceContext(introspektContext)
-
+        val introspektSymbols = IntrospektSymbols(pluginContext)
         for (file in moduleFragment.files) {
             val source = sourceProvider(file.path)
-
-            val injectionTransformer = TraceInjectionTransformer()
-            file.accept(injectionTransformer, traceContext)
-            injectionTransformer.injectCallbacks(introspektContext, moduleFragment, file, source)
-
-            val removalTransformer = TraceRemovalTransformer()
-            file.accept(removalTransformer, traceContext)
-            removalTransformer.removeCalls(introspektContext)
-
+            val introspektContext =
+                IntrospektPluginContext(pluginContext, moduleFragment, file, source, introspektSymbols)
+            // Handle tracing code generation/patching
+            val traceContext = TraceContext(introspektContext)
+            file.transform(TraceInjectionTransformer(), traceContext)
+            file.transform(TraceRemovalTransformer(), traceContext)
+            // Handle default parameter inlining for intrinsics
             file.acceptVoid(InlineDefaultCalleeTransformer(introspektContext))
             file.acceptVoid(InlineDefaultCallerTransformer(introspektContext))
             // Reduce intrinsics in type dependence order
-            file.transform(ClassInfoTransformer(introspektContext, moduleFragment, file, source), intrinsicContext)
-            file.transform(FunctionInfoTransformer(introspektContext, moduleFragment, file, source), intrinsicContext)
-            file.transform(TypeInfoTransformer(introspektContext, moduleFragment, file, source), intrinsicContext)
-            file.transform(SourceLocationTransformer(introspektContext, moduleFragment, file, source), intrinsicContext)
+            val intrinsicContext = IntrinsicContext(introspektContext)
+            file.transform(ClassInfoTransformer(), intrinsicContext)
+            file.transform(FunctionInfoTransformer(), intrinsicContext)
+            file.transform(TypeInfoTransformer(), intrinsicContext)
+            file.transform(SourceLocationTransformer(), intrinsicContext)
         }
     }
 }

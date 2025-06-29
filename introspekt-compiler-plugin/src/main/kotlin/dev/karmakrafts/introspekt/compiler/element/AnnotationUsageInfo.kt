@@ -46,8 +46,8 @@ internal data class AnnotationUsageInfo( // @formatter:off
         IrConstructorCallImpl(
             startOffset = SYNTHETIC_OFFSET,
             endOffset = SYNTHETIC_OFFSET,
-            type = annotationUsageInfoType.defaultType,
-            symbol = annotationUsageInfoConstructor,
+            type = introspektSymbols.annotationUsageInfoType.defaultType,
+            symbol = introspektSymbols.annotationUsageInfoConstructor,
             typeArgumentsCount = 0,
             constructorTypeArgumentsCount = 0
         ).apply {

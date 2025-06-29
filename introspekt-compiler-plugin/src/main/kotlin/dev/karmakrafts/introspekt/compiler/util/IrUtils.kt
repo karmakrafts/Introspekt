@@ -143,7 +143,8 @@ internal fun IrElement?.unwrapAnyAnnotationValue(): Any? {
         is IrGetEnumValue -> symbol.owner.name.asString() // Enum values are unwrapped to their constant names
         is IrClassReference -> classType
         is IrConst -> value
-        is IrVararg -> elements.map { element ->
+        is IrVararg -> if(elements.isEmpty()) null
+        else elements.map { element ->
             check(element is IrExpression) { "Annotation vararg element must be an expression" }
             element.unwrapAnyAnnotationValue()
         }.toList()
@@ -154,15 +155,15 @@ internal fun IrElement?.unwrapAnyAnnotationValue(): Any? {
 
 @Suppress("UNCHECKED_CAST")
 internal inline fun <reified T> IrElement?.unwrapAnnotationValue(): T? {
-    val value = unwrapAnyAnnotationValue()
+    val value = unwrapAnyAnnotationValue() ?: return null
     val javaType = T::class.java
     return (if (javaType.isEnum) (javaType.enumConstants as Array<Enum<*>>).find { it.name == value as? String }
     else value) as? T
 }
 
 @Suppress("UNCHECKED_CAST")
-internal inline fun <reified T> IrElement?.unwrapAnnotationValues(): List<T?> {
-    val values = unwrapAnyAnnotationValue() as List<Any?>? ?: return emptyList()
+internal inline fun <reified T> IrElement?.unwrapAnnotationValues(): List<T?>? {
+    val values = unwrapAnyAnnotationValue() as? List<Any?> ?: return null
     val javaType = T::class.java
     val isEnum = javaType.isEnum
     return values.map { value ->
@@ -197,13 +198,13 @@ internal inline fun <reified T> IrAnnotationContainer.getAnnotationValue( // @fo
     type: FqName,
     name: String,
     index: Int = 0
-): T? = getRawAnnotationValue(type, name, index).unwrapAnnotationValue<T>() // @formatter:on
+): T? = getRawAnnotationValue(type, name, index)?.unwrapAnnotationValue<T>() // @formatter:on
 
 internal inline fun <reified T> IrAnnotationContainer.getAnnotationValues( // @formatter:off
     type: FqName,
     name: String,
     index: Int = 0
-): List<T?> = getRawAnnotationValue(type, name, index).unwrapAnnotationValues<T>() // @formatter:on
+): List<T?>? = getRawAnnotationValue(type, name, index)?.unwrapAnnotationValues<T>() // @formatter:on
 
 @OptIn(UnsafeDuringIrConstructionAPI::class)
 internal fun IrConstructorCall.getAnnotationValues(): Map<String, Any?> {

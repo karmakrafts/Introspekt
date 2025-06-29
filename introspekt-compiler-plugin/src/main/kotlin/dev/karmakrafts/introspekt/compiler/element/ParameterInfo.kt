@@ -50,8 +50,8 @@ internal class ParameterInfo(
         IrCallImplWithShape(
             startOffset = SYNTHETIC_OFFSET,
             endOffset = SYNTHETIC_OFFSET,
-            type = parameterInfoType.defaultType,
-            symbol = parameterInfoGetOrCreate,
+            type = introspektSymbols.parameterInfoType.defaultType,
+            symbol = introspektSymbols.parameterInfoGetOrCreate,
             typeArgumentsCount = 0,
             valueArgumentsCount = 5,
             contextParameterCount = 0,
@@ -69,7 +69,7 @@ internal class ParameterInfo(
                 this@ParameterInfo.type.instantiateCached(module, file, source, context)
             arguments[function.parameters.first { it.name.asString() == "annotations" }] =
                 instantiateAnnotations(module, file, source, context)
-            dispatchReceiver = parameterInfoCompanionType.getObjectInstance()
+            dispatchReceiver = introspektSymbols.parameterInfoCompanionType.getObjectInstance()
         }
     }
 }

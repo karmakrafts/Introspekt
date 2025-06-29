@@ -16,23 +16,19 @@
 
 package dev.karmakrafts.introspekt.compiler.transformer
 
-import dev.karmakrafts.introspekt.compiler.IntrospektPluginContext
 import dev.karmakrafts.introspekt.compiler.element.getTypeInfo
 import dev.karmakrafts.introspekt.compiler.util.IntrospektIntrinsic
 import org.jetbrains.kotlin.ir.IrElement
-import org.jetbrains.kotlin.ir.declarations.IrFile
-import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.expressions.IrCall
 
-internal class TypeInfoTransformer(
-    private val pluginContext: IntrospektPluginContext,
-    private val moduleFragment: IrModuleFragment,
-    private val file: IrFile,
-    private val source: List<String>
-) : IntrinsicTransformer(
+internal class TypeInfoTransformer : IntrinsicTransformer(
     setOf(IntrospektIntrinsic.TI_OF)
 ) {
-    private fun emitOf(expression: IrCall): IrElement {
+    private fun emitOf(expression: IrCall, context: IntrinsicContext): IrElement {
+        val pluginContext = context.pluginContext
+        val moduleFragment = pluginContext.irModule
+        val file = pluginContext.irFile
+        val source = pluginContext.source
         return requireNotNull(expression.typeArguments.first()) {
             "Missing class type parameter"
         }.getTypeInfo(moduleFragment, file, source).instantiateCached(moduleFragment, file, source, pluginContext)
@@ -43,7 +39,7 @@ internal class TypeInfoTransformer(
         expression: IrCall,
         context: IntrinsicContext
     ): IrElement = when (type) { // @formatter:on
-        IntrospektIntrinsic.TI_OF -> emitOf(expression)
+        IntrospektIntrinsic.TI_OF -> emitOf(expression, context)
         else -> error("Unsupported intrinsic for TypeInfoTransformer")
     }
 }
