@@ -61,8 +61,9 @@ internal class InlineDefaultCallerTransformer(
         val modeIterator = modes.iterator()
         for (parameter in parameters) {
             val argument = expression.arguments[parameter]
+            val mode = modeIterator.next()
             if (argument != null) continue // Skip any parameters that already have a call site argument
-            when (val mode = modeIterator.next()) {
+            when (mode) {
                 InlineDefaultMode.None -> continue
                 is InlineDefaultMode.Intrinsic -> inlineIntrinsicDefault(expression, parameter, mode.type)
             }

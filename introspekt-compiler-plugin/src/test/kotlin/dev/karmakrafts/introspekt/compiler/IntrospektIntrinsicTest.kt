@@ -54,7 +54,8 @@ class IntrospektIntrinsicTest {
             resetAssertions()
             compiler shouldNotReport { error() }
             result irMatches {
-                val introspektContext = IntrospektPluginContext(pluginContext)
+                val introspektSymbols = IntrospektSymbols(pluginContext)
+                val introspektContext = IntrospektPluginContext(pluginContext, element, element.files.first(), this@setupCompilerTest.sourceLines, introspektSymbols)
 
                 val call = intrinsicType.createCall(introspektContext)
                 call.type shouldBe intrinsicType.resultType(introspektContext)

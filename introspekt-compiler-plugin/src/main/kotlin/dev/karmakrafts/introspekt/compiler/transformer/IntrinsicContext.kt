@@ -52,16 +52,15 @@ internal data class IntrinsicContext(val pluginContext: IntrospektPluginContext)
     ): SourceLocation {
         return functionOrNull?.getFunctionLocation(module, file, source)
             ?: initializerOrNull?.getLocation(module, file, source)
-            ?: error("Not inside any function or initializer")
+            ?: SourceLocation.undefined
     } // @formatter:on
 
     fun getFunctionInfo( // @formatter:off
         module: IrModuleFragment,
         file: IrFile,
         source: List<String>
-    ): FunctionInfo {
+    ): FunctionInfo? {
         return functionOrNull?.getFunctionInfo(module, file, source)
             ?: initializerOrNull?.getFunctionInfo(module, file, source)
-            ?: error("Not inside any function or initializer")
     } // @formatter:on
 }

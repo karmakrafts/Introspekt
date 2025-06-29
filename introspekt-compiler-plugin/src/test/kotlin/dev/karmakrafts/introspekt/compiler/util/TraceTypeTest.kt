@@ -39,7 +39,7 @@ class TraceTypeTest {
             """.trimIndent())
             // @formatter:on
             result irMatches {
-                getChild<IrFunction> { it.name.asString() == "test" }.getTraceType() shouldContain listOf(traceType)
+                getChild<IrFunction> { it.name.asString() == "test" }.getTraceType()!! shouldContain listOf(traceType)
             }
             evaluate()
         }

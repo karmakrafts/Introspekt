@@ -78,7 +78,8 @@ annotation class Trace( // @formatter:off
         SPAN_LEAVE,
         FUNCTION_ENTER,
         FUNCTION_LEAVE,
-        CALL,
+        BEFORE_CALL,
+        AFTER_CALL,
         EVENT;
         // @formatter:on
     }

@@ -34,10 +34,10 @@ import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.declarations.IrParameterKind
 import org.jetbrains.kotlin.ir.declarations.IrVariable
 import org.jetbrains.kotlin.ir.expressions.IrCall
+import org.jetbrains.kotlin.ir.expressions.IrSyntheticBody
 import org.jetbrains.kotlin.ir.expressions.impl.IrCallImplWithShape
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.defaultType
-import org.jetbrains.kotlin.ir.types.starProjectedType
 import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
 import org.jetbrains.kotlin.ir.util.kotlinFqName
 import org.jetbrains.kotlin.ir.util.parentAsClass
@@ -111,8 +111,8 @@ internal data class FunctionInfo(
         IrCallImplWithShape(
             startOffset = SYNTHETIC_OFFSET,
             endOffset = SYNTHETIC_OFFSET,
-            type = functionInfoType.defaultType,
-            symbol = functionInfoGetOrCreate,
+            type = introspektSymbols.functionInfoType.defaultType,
+            symbol = introspektSymbols.functionInfoGetOrCreate,
             valueArgumentsCount = 11,
             typeArgumentsCount = 0,
             contextParameterCount = 0,
@@ -131,19 +131,20 @@ internal data class FunctionInfo(
             arguments[function.parameters.first { it.name.asString() == "returnType" }] =
                 returnType.instantiateCached(module, file, source, context)
             arguments[function.parameters.first { it.name.asString() == "parameters" }] = createListOf(
-                irBuiltIns.kClassClass.starProjectedType,
+                introspektSymbols.parameterInfoType.defaultType,
                 parameters.map { it.instantiateCached(module, file, source, context) })
             arguments[function.parameters.first { it.name.asString() == "visibility" }] =
-                visibility.getEnumValue(visibilityModifierType) { getVisibilityName() }
+                visibility.getEnumValue(introspektSymbols.visibilityModifierType) { getVisibilityName() }
             arguments[function.parameters.first { it.name.asString() == "modality" }] =
-                modality.getEnumValue(modalityModifierType) { name }
+                modality.getEnumValue(introspektSymbols.modalityModifierType) { name }
             arguments[function.parameters.first { it.name.asString() == "locals" }] = createListOf(
-                localInfoType.defaultType, locals.map { it.instantiateCached(module, file, source, context) })
+                introspektSymbols.localInfoType.defaultType,
+                locals.map { it.instantiateCached(module, file, source, context) })
             arguments[function.parameters.first { it.name.asString() == "isExpect" }] =
                 isExpect.toIrConst(irBuiltIns.booleanType)
             arguments[function.parameters.first { it.name.asString() == "annotations" }] =
                 instantiateAnnotations(module, file, source, context)
-            dispatchReceiver = functionInfoCompanionType.getObjectInstance()
+            dispatchReceiver = introspektSymbols.functionInfoCompanionType.getObjectInstance()
         }
     }
 
@@ -185,6 +186,7 @@ internal fun IrFunction.getFunctionInfo( // @formatter:off
         hashTransform = { hash -> 31 * hash + parent.hashCode() }
     ) { // @formatter:on
         annotations = this@getFunctionInfo.annotations.toAnnotationMap(module, file, source)
+        if (body is IrSyntheticBody) return@getOrCreate // We skip synthetic bodies
         this@getFunctionInfo.body?.let { body ->
             locals = body.statements.filterIsInstance<IrVariable>().map { variable ->
                 variable.getLocalInfo(module, file, source, this@getFunctionInfo)

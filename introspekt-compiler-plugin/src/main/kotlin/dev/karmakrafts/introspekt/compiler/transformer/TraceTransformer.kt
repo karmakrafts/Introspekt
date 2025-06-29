@@ -16,48 +16,44 @@
 
 package dev.karmakrafts.introspekt.compiler.transformer
 
-import org.jetbrains.kotlin.ir.IrElement
+import org.jetbrains.kotlin.ir.IrStatement
 import org.jetbrains.kotlin.ir.declarations.IrAnonymousInitializer
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrFunction
-import org.jetbrains.kotlin.ir.expressions.IrBlockBody
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.util.primaryConstructor
-import org.jetbrains.kotlin.ir.visitors.IrVisitor
+import org.jetbrains.kotlin.ir.visitors.IrTransformer
 
-internal abstract class TraceTransformer : IrVisitor<Unit, TraceContext>() {
+internal abstract class TraceTransformer : IrTransformer<TraceContext>() {
     open fun visitTraceableFunction(declaration: IrFunction, data: TraceContext) {}
 
-    override fun visitElement(element: IrElement, data: TraceContext) {
-        element.acceptChildren(this, data)
-    }
-
-    override fun visitClass(declaration: IrClass, data: TraceContext) {
+    override fun visitClass(declaration: IrClass, data: TraceContext): IrStatement {
         data.classStack.push(declaration)
         data.pushTraceType(declaration)
-        super.visitClass(declaration, data)
+        val transformedClass = super.visitClass(declaration, data)
         data.popTraceType()
         data.classStack.pop()
+        return transformedClass
     }
 
-    override fun visitFunction(declaration: IrFunction, data: TraceContext) {
+    override fun visitFunction(declaration: IrFunction, data: TraceContext): IrStatement {
+        data.functionStack.push(declaration)
         data.pushTraceType(declaration)
-        super.visitFunction(declaration, data)
-        visitTraceableFunction(declaration, data)
+        val transformedFunction = super.visitFunction(declaration, data)
+        if (transformedFunction is IrFunction) {
+            visitTraceableFunction(transformedFunction, data)
+        }
         data.popTraceType()
+        data.functionStack.pop()
+        return transformedFunction
     }
 
     @OptIn(UnsafeDuringIrConstructionAPI::class)
-    override fun visitAnonymousInitializer(declaration: IrAnonymousInitializer, data: TraceContext) {
-        val constructor = data.classOrNull?.primaryConstructor ?: return
+    override fun visitAnonymousInitializer(declaration: IrAnonymousInitializer, data: TraceContext): IrStatement {
+        val constructor = data.classOrNull?.primaryConstructor ?: return declaration
         data.pushTraceType(constructor)
-        super.visitAnonymousInitializer(declaration, data)
+        val transformedInitializer = super.visitAnonymousInitializer(declaration, data)
         data.popTraceType()
-    }
-
-    override fun visitBlockBody(body: IrBlockBody, data: TraceContext) {
-        data.containerStack.push(body)
-        super.visitBlockBody(body, data)
-        data.containerStack.pop()
+        return transformedInitializer
     }
 }

@@ -92,8 +92,8 @@ internal data class PropertyInfo(
         IrCallImplWithShape(
             startOffset = SYNTHETIC_OFFSET,
             endOffset = SYNTHETIC_OFFSET,
-            type = propertyInfoType.defaultType,
-            symbol = propertyInfoGetOrCreate,
+            type = introspektSymbols.propertyInfoType.defaultType,
+            symbol = introspektSymbols.propertyInfoGetOrCreate,
             typeArgumentsCount = 0,
             valueArgumentsCount = 12,
             contextParameterCount = 0,
@@ -110,23 +110,23 @@ internal data class PropertyInfo(
             arguments[function.parameters.first { it.name.asString() == "isMutable" }] =
                 isMutable.toIrConst(irBuiltIns.booleanType)
             arguments[function.parameters.first { it.name.asString() == "visibility" }] =
-                visibility.getEnumValue(visibilityModifierType) { getVisibilityName() }
+                visibility.getEnumValue(introspektSymbols.visibilityModifierType) { getVisibilityName() }
             arguments[function.parameters.first { it.name.asString() == "modality" }] =
-                modality.getEnumValue(modalityModifierType) { name }
+                modality.getEnumValue(introspektSymbols.modalityModifierType) { name }
             arguments[function.parameters.first { it.name.asString() == "isExpect" }] =
                 isExpect.toIrConst(irBuiltIns.booleanType)
             arguments[function.parameters.first { it.name.asString() == "isDelegated" }] =
                 isDelegated.toIrConst(irBuiltIns.booleanType)
             arguments[function.parameters.first { it.name.asString() == "backingField" }] =
                 backingField?.instantiateCached(module, file, source, context)
-                    ?: null.toIrConst(fieldInfoType.defaultType)
+                    ?: null.toIrConst(introspektSymbols.fieldInfoType.defaultType)
             arguments[function.parameters.first { it.name.asString() == "getter" }] =
-                getter?.instantiateCached(module, file, source, context) ?: null.toIrConst(functionInfoType.defaultType)
+                getter?.instantiateCached(module, file, source, context) ?: null.toIrConst(introspektSymbols.functionInfoType.defaultType)
             arguments[function.parameters.first { it.name.asString() == "setter" }] =
-                setter?.instantiateCached(module, file, source, context) ?: null.toIrConst(functionInfoType.defaultType)
+                setter?.instantiateCached(module, file, source, context) ?: null.toIrConst(introspektSymbols.functionInfoType.defaultType)
             arguments[function.parameters.first { it.name.asString() == "annotations" }] =
                 instantiateAnnotations(module, file, source, context)
-            dispatchReceiver = propertyInfoCompanionType.getObjectInstance()
+            dispatchReceiver = introspektSymbols.propertyInfoCompanionType.getObjectInstance()
         }
     }
 

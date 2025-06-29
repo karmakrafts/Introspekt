@@ -19,6 +19,7 @@ package dev.karmakrafts.introspekt.compiler.util
 import dev.karmakrafts.introspekt.compiler.IntrospektPluginContext
 import org.jetbrains.kotlin.ir.declarations.IrAnnotationContainer
 import org.jetbrains.kotlin.ir.expressions.IrCall
+import org.jetbrains.kotlin.ir.expressions.IrFunctionAccessExpression
 import org.jetbrains.kotlin.ir.expressions.impl.IrCallImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrCallImplWithShape
 import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
@@ -43,7 +44,8 @@ internal enum class TraceType( // @formatter:off
     SPAN_LEAVE      (1, IntrospektNames.TraceSpan.Companion.id,        IntrospektNames.Functions.leave),
     FUNCTION_ENTER  (1, IntrospektNames.TraceCollector.Companion.id,   IntrospektNames.Functions.enterFunction),
     FUNCTION_LEAVE  (1, IntrospektNames.TraceCollector.Companion.id,   IntrospektNames.Functions.leaveFunction),
-    CALL            (3, IntrospektNames.TraceCollector.Companion.id,   IntrospektNames.Functions.call),
+    BEFORE_CALL     (3, IntrospektNames.TraceCollector.Companion.id,   IntrospektNames.Functions.beforeCall),
+    AFTER_CALL      (3, IntrospektNames.TraceCollector.Companion.id,   IntrospektNames.Functions.afterCall),
     EVENT           (4, IntrospektNames.Trace.Companion.id,            IntrospektNames.Functions.event);
     // @formatter:on
 
@@ -74,7 +76,7 @@ internal enum class TraceType( // @formatter:off
     }
 }
 
-internal fun IrCall.getTraceType(): TraceType? {
+internal fun IrFunctionAccessExpression.getTraceType(): TraceType? {
     val function = target
     val functionName = function.name
     val parentClass = function.parentClassOrNull ?: return null
@@ -82,9 +84,9 @@ internal fun IrCall.getTraceType(): TraceType? {
     return TraceType.entries.find { it.classId == classId && it.functionName == functionName }
 }
 
-internal fun IrAnnotationContainer.isTraceable(): Boolean = hasAnnotation(IntrospektNames.Trace.id)
+internal fun IrAnnotationContainer.isTraceable(): Boolean = hasAnnotation(IntrospektNames.Trace.fqName)
 
 internal fun IrAnnotationContainer.getTraceType(): List<TraceType> {
-    return if (!isTraceable()) emptyList()
-    else getAnnotationValues<TraceType>(IntrospektNames.Trace.fqName, "targets").filterNotNull()
+    if(!isTraceable()) return emptyList()
+    return getAnnotationValues<TraceType>(IntrospektNames.Trace.fqName, "targets")?.filterNotNull() ?: TraceType.entries
 }

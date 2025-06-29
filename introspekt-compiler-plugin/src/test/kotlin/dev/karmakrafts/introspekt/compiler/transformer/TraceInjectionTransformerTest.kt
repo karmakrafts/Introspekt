@@ -19,6 +19,8 @@ package dev.karmakrafts.introspekt.compiler.transformer
 import dev.karmakrafts.introspekt.compiler.introspektTransformerPipeline
 import dev.karmakrafts.introspekt.compiler.util.findChildren
 import dev.karmakrafts.iridium.runCompilerTest
+import dev.karmakrafts.iridium.util.renderIrTree
+import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrFunction
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.impl.IrBlockBodyImpl
@@ -27,21 +29,156 @@ import kotlin.test.Test
 
 class TraceInjectionTransformerTest {
     @Test
-    fun `Inject call callback`() = runCompilerTest {
+    fun `Inject call callback into suspend operator in companion object`() = runCompilerTest {
         introspektTransformerPipeline()
         // @formatter:off
         source("""
             import dev.karmakrafts.introspekt.trace.Trace
-            @Trace(Trace.Target.CALL)
-            fun test() {
+            class Test
+            object Receiver
+            fun <R> foo(i: Int = 0, block: Receiver.() -> R): R = Receiver.block()
+            class MyClass {
+                companion object {
+                    @Trace(Trace.Target.AFTER_CALL)
+                    suspend operator fun Test.plus(other: Test): Test {
+                        println("HELLO, WORLD!")
+                        foo { println("HELLO, WORLD!") }
+                        return other
+                    }
+                }
+            }
+        """.trimIndent())
+        // @formatter:on
+        compiler shouldNotReport { error() }
+        result irMatches {
+            getChild<IrClass> { it.name.asString() == "MyClass" } matches {
+                getChild<IrClass> { it.name.asString() == "Companion" } matches {
+                    println(element.renderIrTree(Int.MAX_VALUE))
+                    containsChild<IrCall> { call ->
+                        call.target.name.asString() == "afterCall"
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `Inject call callback into suspend operator`() = runCompilerTest {
+        introspektTransformerPipeline()
+        // @formatter:off
+        source("""
+            import dev.karmakrafts.introspekt.trace.Trace
+            class Test
+            object Receiver
+            fun <R> foo(i: Int = 0, block: Receiver.() -> R): R = Receiver.block()
+            @Trace(Trace.Target.AFTER_CALL)
+            suspend operator fun Test.plus(other: Test): Test {
                 println("HELLO, WORLD!")
+                foo { println("HELLO, WORLD!") }
+                return other
             }
         """.trimIndent())
         // @formatter:on
         compiler shouldNotReport { error() }
         result irMatches {
             containsChild<IrCall> { call ->
-                call.target.name.asString() == "call"
+                call.target.name.asString() == "afterCall"
+            }
+        }
+    }
+
+    @Test
+    fun `Inject call callback into suspend function`() = runCompilerTest {
+        introspektTransformerPipeline()
+        // @formatter:off
+        source("""
+            import dev.karmakrafts.introspekt.trace.Trace
+            object Receiver
+            fun <R> foo(i: Int = 0, block: Receiver.() -> R): R = Receiver.block()
+            @Trace(Trace.Target.AFTER_CALL)
+            suspend fun test() {
+                println("HELLO, WORLD!")
+                foo { println("HELLO, WORLD!") }
+            }
+        """.trimIndent())
+        // @formatter:on
+        compiler shouldNotReport { error() }
+        result irMatches {
+            containsChild<IrCall> { call ->
+                call.target.name.asString() == "afterCall"
+            }
+        }
+    }
+
+    @Test
+    fun `Inject call callback`() = runCompilerTest {
+        introspektTransformerPipeline()
+        // @formatter:off
+        source("""
+            import dev.karmakrafts.introspekt.trace.Trace
+            object Receiver
+            fun <R> foo(i: Int = 0, block: Receiver.() -> R): R = Receiver.block()
+            @Trace(Trace.Target.AFTER_CALL)
+            fun test() {
+                println("HELLO, WORLD!")
+                foo { println("HELLO, WORLD!") }
+            }
+        """.trimIndent())
+        // @formatter:on
+        compiler shouldNotReport { error() }
+        result irMatches {
+            containsChild<IrCall> { call ->
+                call.target.name.asString() == "afterCall"
+            }
+        }
+    }
+
+    @Test
+    fun `Inject all callbacks`() = runCompilerTest {
+        introspektTransformerPipeline()
+        // @formatter:off
+        source("""
+            import dev.karmakrafts.introspekt.trace.Trace
+            object Receiver
+            fun <R> foo(i: Int = 0, block: Receiver.() -> R): R = Receiver.block()
+            @Trace
+            fun test() {
+                println("HELLO, WORLD!")
+                foo { println("HELLO, WORLD!") }
+            }
+        """.trimIndent())
+        // @formatter:on
+        compiler shouldNotReport { error() }
+        result irMatches {
+            containsChild<IrCall> { it.target.name.asString() == "afterCall" }
+            containsChild<IrCall> { it.target.name.asString() == "beforeCall" }
+        }
+    }
+
+    @Test
+    fun `Inject multiple call callbacks into suspend function`() = runCompilerTest {
+        introspektTransformerPipeline()
+        // @formatter:off
+        source("""
+            import dev.karmakrafts.introspekt.trace.Trace
+            @Trace(Trace.Target.AFTER_CALL)
+            suspend fun test() {
+                println("HELLO")
+                println("WORLD")
+                println("THIS")
+                println("IS")
+                println("🦊")
+            }
+        """.trimIndent())
+        // @formatter:on
+        compiler shouldNotReport { error() }
+        result irMatches {
+            getChild<IrFunction> { it.name.asString() == "test" } matches {
+                val body = element.body
+                body shouldNotBe null
+                body!!::class shouldBe IrBlockBodyImpl::class
+                val blockBody = body as IrBlockBodyImpl
+                blockBody.findChildren<IrCall> { it.target.name.asString() == "afterCall" }.size shouldBe 5
             }
         }
     }
@@ -52,7 +189,7 @@ class TraceInjectionTransformerTest {
         // @formatter:off
         source("""
             import dev.karmakrafts.introspekt.trace.Trace
-            @Trace(Trace.Target.CALL)
+            @Trace(Trace.Target.AFTER_CALL)
             fun test() {
                 println("HELLO")
                 println("WORLD")
@@ -69,7 +206,7 @@ class TraceInjectionTransformerTest {
                 body shouldNotBe null
                 body!!::class shouldBe IrBlockBodyImpl::class
                 val blockBody = body as IrBlockBodyImpl
-                blockBody.findChildren<IrCall> { it.target.name.asString() == "call" }.size shouldBe 5
+                blockBody.findChildren<IrCall> { it.target.name.asString() == "afterCall" }.size shouldBe 5
             }
         }
     }

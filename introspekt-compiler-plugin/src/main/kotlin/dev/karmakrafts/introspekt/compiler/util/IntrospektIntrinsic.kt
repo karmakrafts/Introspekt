@@ -32,10 +32,10 @@ internal enum class IntrinsicResultType( // @formatter:off
     private val typeProvider: (IntrospektPluginContext) -> IrType
 ) { // @formatter:on
     // @formatter:off
-    SOURCE_LOCATION ({ it.sourceLocationType.defaultType }),
-    FUNCTION_INFO   ({ it.functionInfoType.defaultType }),
-    CLASS_INFO      ({ it.classInfoType.defaultType }),
-    TYPE_INFO       ({ it.typeInfoType.defaultType }),
+    SOURCE_LOCATION ({ it.introspektSymbols.sourceLocationType.defaultType }),
+    FUNCTION_INFO   ({ it.introspektSymbols.functionInfoType.defaultType }),
+    CLASS_INFO      ({ it.introspektSymbols.classInfoType.defaultType }),
+    TYPE_INFO       ({ it.introspektSymbols.typeInfoType.defaultType }),
     INT             ({ it.irBuiltIns.intType });
     // @formatter:on
 

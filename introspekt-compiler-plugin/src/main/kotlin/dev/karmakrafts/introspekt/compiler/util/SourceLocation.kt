@@ -47,6 +47,7 @@ internal data class SourceLocation( // @formatter:off
         const val FAKE_OVERRIDE_OFFSET = -1
         const val SYNTHETIC_OFFSET = -2
         const val UNDEFINED_OFFSET = -3
+        val undefined: SourceLocation = SourceLocation("<unknown>", "<unknown>", UNDEFINED_OFFSET, UNDEFINED_OFFSET)
         private val cache: Int2ObjectOpenHashMap<SourceLocation> = Int2ObjectOpenHashMap()
 
         private fun getCacheKey(
@@ -71,8 +72,8 @@ internal data class SourceLocation( // @formatter:off
         IrCallImplWithShape(
             startOffset = KOTLIN_SYNTHETIC_OFFSET,
             endOffset = KOTLIN_SYNTHETIC_OFFSET,
-            type = sourceLocationType.defaultType,
-            symbol = sourceLocationGetOrCreate,
+            type = introspektSymbols.sourceLocationType.defaultType,
+            symbol = introspektSymbols.sourceLocationGetOrCreate,
             typeArgumentsCount = 0,
             valueArgumentsCount = 4,
             contextParameterCount = 0,
@@ -87,7 +88,7 @@ internal data class SourceLocation( // @formatter:off
             arguments[function.parameters.first { it.name.asString() == "line" }] = line.toIrConst(irBuiltIns.intType)
             arguments[function.parameters.first { it.name.asString() == "column" }] =
                 column.toIrConst(irBuiltIns.intType)
-            dispatchReceiver = sourcLocationCompanionType.getObjectInstance()
+            dispatchReceiver = introspektSymbols.sourceLocationCompanionType.getObjectInstance()
         }
     }
 

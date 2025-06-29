@@ -45,7 +45,7 @@ internal class InlineDefaultCalleeTransformer(
                 inlineModes += InlineDefaultMode.None
                 continue
             }
-            // If the parameter has a default that is not an intrinsic, the mode is DEFAULT
+            // If the parameter has a default that is not an intrinsic, the mode is also NONE
             val intrinsicType = (defaultValue as? IrCall)?.target?.getIntrinsicType()
             if (intrinsicType == null) {
                 inlineModes += InlineDefaultMode.None
@@ -56,9 +56,7 @@ internal class InlineDefaultCalleeTransformer(
             parameter.defaultValue = null // Remove intrinsic from declaration
         }
         // Make sure we have at least one intrinsic default value
-        if (!inlineModes.any { it is InlineDefaultMode.Intrinsic }) {
-            return
-        }
+        if (!inlineModes.any { it is InlineDefaultMode.Intrinsic }) return
         // Inject the annotation with all inline modes for every parameter
         val annotation = pluginContext.createInlineDefaults(inlineModes)
         pluginContext.metadataDeclarationRegistrar.addMetadataVisibleAnnotationsToElement(declaration, annotation)

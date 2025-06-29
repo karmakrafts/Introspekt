@@ -33,10 +33,10 @@ internal sealed interface InlineDefaultMode {
 
 internal fun IrFunction.getInlineDefaultModes(): List<InlineDefaultMode> {
     if (!hasAnnotation(IntrospektNames.InlineDefaults.id)) return emptyList()
-    return getAnnotationValues<String>(IntrospektNames.InlineDefaults.fqName, "modes").map { modeName ->
+    return getAnnotationValues<String>(IntrospektNames.InlineDefaults.fqName, "modes")?.map { modeName ->
         when (modeName) {
             null, "NONE" -> InlineDefaultMode.None
             else -> InlineDefaultMode.Intrinsic(IntrospektIntrinsic.valueOf(modeName))
         }
-    }
+    } ?: emptyList()
 }

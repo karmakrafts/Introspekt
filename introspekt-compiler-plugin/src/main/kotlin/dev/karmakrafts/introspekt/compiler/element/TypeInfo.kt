@@ -29,7 +29,9 @@ import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.classFqName
 import org.jetbrains.kotlin.ir.types.defaultType
+import org.jetbrains.kotlin.ir.types.starProjectedType
 import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
+import org.jetbrains.kotlin.ir.util.isTypeParameter
 import org.jetbrains.kotlin.ir.util.toIrConst
 
 internal data class TypeInfo( // @formatter:off
@@ -62,8 +64,8 @@ internal data class TypeInfo( // @formatter:off
         IrCallImplWithShape(
             startOffset = SYNTHETIC_OFFSET,
             endOffset = SYNTHETIC_OFFSET,
-            type = context.typeInfoType.defaultType,
-            symbol = context.typeInfoGetOrCreate,
+            type = introspektSymbols.typeInfoType.defaultType,
+            symbol = introspektSymbols.typeInfoGetOrCreate,
             typeArgumentsCount = 0,
             contextParameterCount = 0,
             valueArgumentsCount = 4,
@@ -73,14 +75,21 @@ internal data class TypeInfo( // @formatter:off
             val function = symbol.owner
             arguments[function.parameters.first { it.name.asString() == "location" }] =
                 location.instantiateCached(context)
-            arguments[function.parameters.first { it.name.asString() == "reflectType" }] =
-                this@TypeInfo.type.toClassReference(context)
+            // Workaround to handle type parameters; TODO: implement a type parameter API in the runtime
+            if(this@TypeInfo.type.isTypeParameter()) {
+                arguments[function.parameters.first { it.name.asString() == "reflectType" }] =
+                    null.toIrConst(irBuiltIns.kClassClass.starProjectedType)
+            }
+            else {
+                arguments[function.parameters.first { it.name.asString() == "reflectType" }] =
+                    this@TypeInfo.type.toClassReference(context)
+            }
             arguments[function.parameters.first { it.name.asString() == "qualifiedName" }] =
                 (this@TypeInfo.type.classFqName?.asString() ?: "<undefined>").toIrConst(irBuiltIns.stringType)
             arguments[function.parameters.first { it.name.asString() == "name" }] =
                 (this@TypeInfo.type.classFqName?.shortNameOrSpecial()?.asString()
                     ?: "<undefined>").toIrConst(irBuiltIns.stringType)
-            dispatchReceiver = context.typeInfoCompanionType.getObjectInstance()
+            dispatchReceiver = introspektSymbols.typeInfoCompanionType.getObjectInstance()
         }
     }
 
@@ -96,9 +105,11 @@ internal fun IrType.getTypeInfo( // @formatter:off
     module: IrModuleFragment,
     file: IrFile,
     source: List<String>
-): TypeInfo = TypeInfo.getOrCreate(
-    type = type,
-    module = module,
-    file = file,
-    source = source
-) // @formatter:on
+): TypeInfo { // @formatter:on
+    return TypeInfo.getOrCreate(
+        type = type,
+        module = module,
+        file = file,
+        source = source
+    )
+}

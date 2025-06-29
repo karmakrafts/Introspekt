@@ -53,8 +53,8 @@ internal class LocalInfo(
         IrCallImplWithShape(
             startOffset = SYNTHETIC_OFFSET,
             endOffset = SYNTHETIC_OFFSET,
-            type = localInfoType.defaultType,
-            symbol = localInfoGetOrCreate,
+            type = introspektSymbols.localInfoType.defaultType,
+            symbol = introspektSymbols.localInfoGetOrCreate,
             typeArgumentsCount = 0,
             valueArgumentsCount = 6,
             contextParameterCount = 0,
@@ -74,7 +74,7 @@ internal class LocalInfo(
                 isMutable.toIrConst(irBuiltIns.booleanType)
             arguments[function.parameters.first { it.name.asString() == "annotations" }] =
                 instantiateAnnotations(module, file, source, context)
-            dispatchReceiver = localInfoCompanionType.getObjectInstance()
+            dispatchReceiver = introspektSymbols.localInfoCompanionType.getObjectInstance()
         }
     }
 }

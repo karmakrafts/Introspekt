@@ -32,7 +32,7 @@ import kotlin.reflect.KClass
  */
 sealed interface TypeInfo : ElementInfo {
     companion object {
-        private val cache: ConcurrentMutableMap<KClass<*>, SimpleTypeInfo> = ConcurrentMutableMap()
+        private val cache: ConcurrentMutableMap<String, SimpleTypeInfo> = ConcurrentMutableMap()
 
         /**
          * Creates a [TypeInfo] instance for the specified type.
@@ -49,10 +49,10 @@ sealed interface TypeInfo : ElementInfo {
         @IntrospektCompilerApi
         internal fun getOrCreate( // @formatter:off
             location: SourceLocation,
-            reflectType: KClass<*>,
+            reflectType: KClass<*>?,
             qualifiedName: String,
             name: String
-        ): TypeInfo = cache.getOrPut(reflectType) { // @formatter:on
+        ): TypeInfo = cache.getOrPut(qualifiedName) { // @formatter:on
             SimpleTypeInfo(location, reflectType, qualifiedName, name)
         }
     }
@@ -62,19 +62,19 @@ sealed interface TypeInfo : ElementInfo {
      *
      * This property provides access to the runtime reflection capabilities for this type.
      */
-    val reflectType: KClass<*>
+    val reflectType: KClass<*>?
 }
 
 private data class SimpleTypeInfo(
     override val location: SourceLocation,
-    override val reflectType: KClass<*>,
+    override val reflectType: KClass<*>?,
     override val qualifiedName: String,
     override val name: String
 ) : TypeInfo {
     override fun equals(other: Any?): Boolean {
         return if (other !is TypeInfo) false
-        else reflectType == other.reflectType
+        else qualifiedName == other.qualifiedName
     }
 
-    override fun hashCode(): Int = reflectType.hashCode()
+    override fun hashCode(): Int = qualifiedName.hashCode()
 }

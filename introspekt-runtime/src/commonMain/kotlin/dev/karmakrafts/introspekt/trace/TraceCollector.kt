@@ -96,13 +96,30 @@ interface TraceCollector {
             InlineDefaults.Mode.FI_CURRENT,
             InlineDefaults.Mode.SL_HERE
         ) // @formatter:on
-        internal fun call(
+        internal fun beforeCall(
             callee: FunctionInfo,
             caller: FunctionInfo = FunctionInfo.current(),
             location: SourceLocation = SourceLocation.here()
         ) {
             for (collector in collectors) {
-                collector.call(callee, caller, location)
+                collector.beforeCall(callee, caller, location)
+            }
+        }
+
+        @IntrospektCompilerApi
+        @OptIn(GeneratedIntrospektApi::class)
+        @InlineDefaults( // @formatter:off
+            InlineDefaults.Mode.NONE,
+            InlineDefaults.Mode.FI_CURRENT,
+            InlineDefaults.Mode.SL_HERE
+        ) // @formatter:on
+        internal fun afterCall(
+            callee: FunctionInfo,
+            caller: FunctionInfo = FunctionInfo.current(),
+            location: SourceLocation = SourceLocation.here()
+        ) {
+            for (collector in collectors) {
+                collector.afterCall(callee, caller, location)
             }
         }
     }
@@ -137,13 +154,22 @@ interface TraceCollector {
     fun leaveFunction(function: FunctionInfo)
 
     /**
-     * Called when a function calls another function.
+     * Called before a function calls another function.
      *
      * @param callee Information about the function being called.
      * @param caller Information about the function making the call.
      * @param location The source location where the call occurs.
      */
-    fun call(callee: FunctionInfo, caller: FunctionInfo, location: SourceLocation)
+    fun beforeCall(callee: FunctionInfo, caller: FunctionInfo, location: SourceLocation)
+
+    /**
+     * Called after a function calls another function.
+     *
+     * @param callee Information about the function being called.
+     * @param caller Information about the function making the call.
+     * @param location The source location where the call occurs.
+     */
+    fun afterCall(callee: FunctionInfo, caller: FunctionInfo, location: SourceLocation)
 
     /**
      * Called when a trace event occurs.
