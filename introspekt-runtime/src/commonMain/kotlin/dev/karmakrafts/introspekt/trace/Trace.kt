@@ -80,6 +80,7 @@ annotation class Trace( // @formatter:off
         FUNCTION_LEAVE,
         BEFORE_CALL,
         AFTER_CALL,
+        SUSPENSION_POINT,
         EVENT;
         // @formatter:on
     }

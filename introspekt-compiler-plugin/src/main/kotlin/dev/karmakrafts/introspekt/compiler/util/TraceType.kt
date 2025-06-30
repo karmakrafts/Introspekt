@@ -46,6 +46,7 @@ internal enum class TraceType( // @formatter:off
     FUNCTION_LEAVE  (1, IntrospektNames.TraceCollector.Companion.id,   IntrospektNames.Functions.leaveFunction),
     BEFORE_CALL     (3, IntrospektNames.TraceCollector.Companion.id,   IntrospektNames.Functions.beforeCall),
     AFTER_CALL      (3, IntrospektNames.TraceCollector.Companion.id,   IntrospektNames.Functions.afterCall),
+    SUSPENSION_POINT(2, IntrospektNames.TraceCollector.Companion.id,   IntrospektNames.Functions.onSuspensionPoint),
     EVENT           (4, IntrospektNames.Trace.Companion.id,            IntrospektNames.Functions.event);
     // @formatter:on
 
