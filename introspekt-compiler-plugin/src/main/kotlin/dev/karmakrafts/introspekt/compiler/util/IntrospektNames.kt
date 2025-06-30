@@ -49,6 +49,7 @@ object IntrospektNames {
         val leave: Name = Name.identifier("leave")
 
         val event: Name = Name.identifier("event")
+        val onSuspensionPoint: Name = Name.identifier("onSuspensionPoint")
 
         val beforeCall: Name = Name.identifier("beforeCall")
         val afterCall: Name = Name.identifier("afterCall")

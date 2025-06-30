@@ -33,18 +33,13 @@ internal class TraceContext(
     val functionStack: Stack<IrFunction> = Stack()
     val classStack: Stack<IrClass> = Stack()
     val returnTargetStack: Stack<IrReturnTargetSymbol> = Stack()
+    var isFunctionReference: Boolean = false
 
     inline val returnTargetOrNull: IrReturnTargetSymbol?
         get() = returnTargetStack.lastOrNull()
 
     inline val traceType: List<TraceType>?
-        get() {
-            for (type in traceTypeStack.reversed()) {
-                if (type.isEmpty()) continue
-                return type
-            }
-            return null
-        }
+        get() = traceTypeStack.lastOrNull()
 
     inline val classOrNull: IrClass?
         get() = classStack.lastOrNull()

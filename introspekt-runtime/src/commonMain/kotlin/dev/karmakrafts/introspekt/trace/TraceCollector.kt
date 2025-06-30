@@ -122,6 +122,21 @@ interface TraceCollector {
                 collector.afterCall(callee, caller, location)
             }
         }
+
+        @IntrospektCompilerApi
+        @OptIn(GeneratedIntrospektApi::class)
+        @InlineDefaults( // @formatter:off
+            InlineDefaults.Mode.FI_CURRENT,
+            InlineDefaults.Mode.SL_HERE
+        ) // @formatter:on
+        internal fun onSuspensionPoint(
+            function: FunctionInfo = FunctionInfo.current(),
+            location: SourceLocation = SourceLocation.here()
+        ) {
+            for (collector in collectors) {
+                collector.onSuspensionPoint(function, location)
+            }
+        }
     }
 
     /**
@@ -170,6 +185,9 @@ interface TraceCollector {
      * @param location The source location where the call occurs.
      */
     fun afterCall(callee: FunctionInfo, caller: FunctionInfo, location: SourceLocation)
+
+    // TODO: document this
+    fun onSuspensionPoint(function: FunctionInfo, location: SourceLocation)
 
     /**
      * Called when a trace event occurs.

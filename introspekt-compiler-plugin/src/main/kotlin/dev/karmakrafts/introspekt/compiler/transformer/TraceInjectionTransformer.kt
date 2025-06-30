@@ -33,6 +33,7 @@ import org.jetbrains.kotlin.ir.expressions.IrExpressionBody
 import org.jetbrains.kotlin.ir.expressions.IrFunctionAccessExpression
 import org.jetbrains.kotlin.ir.expressions.IrReturn
 import org.jetbrains.kotlin.ir.expressions.IrReturnableBlock
+import org.jetbrains.kotlin.ir.expressions.IrSuspensionPoint
 import org.jetbrains.kotlin.ir.expressions.impl.IrBlockImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrCompositeImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrGetValueImpl
@@ -46,6 +47,7 @@ import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
 import org.jetbrains.kotlin.ir.util.isAnonymousObject
 import org.jetbrains.kotlin.ir.util.parentClassOrNull
 import org.jetbrains.kotlin.ir.util.patchDeclarationParents
+import org.jetbrains.kotlin.ir.util.setDeclarationsParent
 import org.jetbrains.kotlin.ir.util.target
 import org.jetbrains.kotlin.ir.visitors.IrTransformer
 import org.jetbrains.kotlin.name.Name
@@ -109,6 +111,7 @@ internal class TraceInjectionTransformer : TraceTransformer() {
             isLateinit = false
         ).apply {
             initializer = call
+            setDeclarationsParent(parent)
         }
         return IrBlockImpl( // @formatter:off
             startOffset = SYNTHETIC_OFFSET,
@@ -123,14 +126,13 @@ internal class TraceInjectionTransformer : TraceTransformer() {
                 endOffset = SYNTHETIC_OFFSET,
                 symbol = result.symbol
             ) // @formatter:on
-            patchDeclarationParents(parent)
         }
     }
 
     override fun visitFunctionAccess(expression: IrFunctionAccessExpression, data: TraceContext): IrElement {
-        if (expression is IrConstructorCall && expression.target.parentClassOrNull?.isAnonymousObject == true) return expression
+        if ((expression is IrConstructorCall && expression.target.parentClassOrNull?.isAnonymousObject == true)) return expression
         val transformedCall = super.visitFunctionAccess(expression, data)
-        if (transformedCall is IrFunctionAccessExpression) {
+        if (transformedCall is IrCall) {
             val allowedTraceTypes = data.traceType?.intersect(callTypes) ?: return transformedCall
             if (allowedTraceTypes.isEmpty()) return transformedCall
             val parent = data.declParentOrNull ?: return transformedCall
@@ -216,28 +218,67 @@ internal class TraceInjectionTransformer : TraceTransformer() {
         return transformedBlock
     }
 
+    override fun visitSuspensionPoint(expression: IrSuspensionPoint, data: TraceContext): IrExpression {
+        val transformedPoint = super.visitSuspensionPoint(expression, data)
+        if (transformedPoint is IrSuspensionPoint) {
+            return IrCompositeImpl(
+                startOffset = SYNTHETIC_OFFSET, endOffset = SYNTHETIC_OFFSET, type = expression.type
+            ).apply {
+                statements += TraceType.SUSPENSION_POINT.createCall(data.pluginContext)
+                statements += expression
+            }
+        }
+        return transformedPoint
+    }
+
     override fun visitTraceableFunction(declaration: IrFunction, data: TraceContext) {
-        val allowedTraceTyped = data.traceType?.intersect(functionTypes) ?: return
-        if (allowedTraceTyped.isEmpty()) return // If we don't have any allowed tracing in the current scope, return
+        val allowedTraceTypes = data.traceType?.intersect(functionTypes) ?: return
+        if (allowedTraceTypes.isEmpty()) return // If we don't have any allowed tracing in the current scope, return
         when (val body = declaration.body) {
             // When we have an expression body, we need to turn it into a block-body to house multiple statements
             is IrExpressionBody -> {
-                val newBody = data.pluginContext.irFactory.createBlockBody( // @formatter:off
-                    startOffset = SYNTHETIC_OFFSET,
-                    endOffset = SYNTHETIC_OFFSET
-                ).apply { // @formatter:on
-                    statements.addAll(
-                        transformFunctionStatements(
-                            declaration, listOf(body.expression), allowedTraceTyped, data
-                        )
+                val originalExpression = body.expression
+                body.expression = IrBlockImpl(
+                    startOffset = SYNTHETIC_OFFSET, endOffset = SYNTHETIC_OFFSET, type = originalExpression.type
+                ).apply {
+                    // If we don't have anything to return, we don't need to create a temporary
+                    if (type.isUnit()) {
+                        statements += TraceType.FUNCTION_ENTER.createCall(data.pluginContext)
+                        statements += originalExpression
+                        statements += TraceType.FUNCTION_LEAVE.createCall(data.pluginContext)
+                        return@apply
+                    }
+                    // Otherwise we need to create a new variable to hold the result until the end of the composite
+                    if (TraceType.FUNCTION_ENTER in allowedTraceTypes) {
+                        statements += TraceType.FUNCTION_ENTER.createCall(data.pluginContext)
+                    }
+                    val result = IrVariableImpl(
+                        startOffset = SYNTHETIC_OFFSET,
+                        endOffset = SYNTHETIC_OFFSET,
+                        origin = declOrigin,
+                        symbol = IrVariableSymbolImpl(),
+                        name = Name.identifier("__result_${originalExpression.hashCode()}__"),
+                        type = originalExpression.type,
+                        isVar = false,
+                        isConst = false,
+                        isLateinit = false
+                    ).apply {
+                        initializer = originalExpression
+                    }
+                    statements += result
+                    if (TraceType.FUNCTION_LEAVE in allowedTraceTypes) {
+                        statements += TraceType.FUNCTION_LEAVE.createCall(data.pluginContext)
+                    }
+                    statements += IrGetValueImpl(
+                        startOffset = SYNTHETIC_OFFSET, endOffset = SYNTHETIC_OFFSET, symbol = result.symbol
                     )
+                    patchDeclarationParents(declaration)
                 }
-                declaration.body = newBody // Swap out function bodies
             }
             // When we have a block body in place already, we can just clear its statement list and re-add everything
             is IrBlockBody -> {
                 val transformedStatements = transformFunctionStatements(
-                    declaration, body.statements, allowedTraceTyped, data
+                    declaration, body.statements, allowedTraceTypes, data
                 )
                 body.statements.clear()
                 body.statements.addAll(transformedStatements)
