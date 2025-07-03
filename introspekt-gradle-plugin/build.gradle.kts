@@ -15,6 +15,7 @@
  */
 
 import dev.karmakrafts.conventions.configureJava
+import dev.karmakrafts.conventions.setProjectInfo
 import kotlin.io.path.createDirectories
 import kotlin.io.path.deleteIfExists
 import kotlin.io.path.div
@@ -78,4 +79,8 @@ gradlePlugin {
             tags.addAll("kotlin", "native", "interop", "codegen")
         }
     }
+}
+
+publishing {
+    setProjectInfo("Introspekt Gradle Plugin", "Positional code and compile time introspection API for Kotlin/Multiplatform")
 }

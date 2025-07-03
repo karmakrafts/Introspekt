@@ -15,6 +15,7 @@
  */
 
 import dev.karmakrafts.conventions.configureJava
+import dev.karmakrafts.conventions.setProjectInfo
 
 plugins {
     alias(libs.plugins.kotlin.jvm)
@@ -48,6 +49,7 @@ tasks {
 }
 
 publishing {
+    setProjectInfo("Introspekt Compiler Plugin", "Positional code and compile time introspection API for Kotlin/Multiplatform")
     publications {
         create<MavenPublication>("compilerPlugin") {
             from(components["java"])

@@ -15,6 +15,7 @@
  */
 
 import dev.karmakrafts.conventions.configureJava
+import dev.karmakrafts.conventions.setProjectInfo
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import java.time.ZonedDateTime
 
@@ -123,6 +124,7 @@ tasks {
 }
 
 publishing {
+    setProjectInfo("Introspekt Runtime", "Positional code and compile time introspection API for Kotlin/Multiplatform")
     publications.withType<MavenPublication> {
         artifact(dokkaJar)
     }

@@ -18,9 +18,9 @@ import dev.karmakrafts.conventions.GitLabCI
 import dev.karmakrafts.conventions.apache2License
 import dev.karmakrafts.conventions.authenticatedSonatype
 import dev.karmakrafts.conventions.defaultDependencyLocking
-import dev.karmakrafts.conventions.setProjectInfo
 import dev.karmakrafts.conventions.setRepository
 import dev.karmakrafts.conventions.signPublications
+import java.time.Duration
 import kotlin.io.encoding.ExperimentalEncodingApi
 
 plugins {
@@ -38,8 +38,7 @@ plugins {
 group = "dev.karmakrafts.introspekt"
 version = GitLabCI.getDefaultVersion(libs.versions.introspekt)
 
-@OptIn(ExperimentalEncodingApi::class)
-subprojects {
+@OptIn(ExperimentalEncodingApi::class) subprojects {
     apply<MavenPublishPlugin>()
     apply<SigningPlugin>()
 
@@ -48,7 +47,6 @@ subprojects {
     if (GitLabCI.isCI) defaultDependencyLocking()
 
     publishing {
-        setProjectInfo(rootProject.name, "Positional code and compile time introspection API for Kotlin/Multiplatform")
         apache2License()
         setRepository("github.com", "karmakrafts/Introspekt")
         with(GitLabCI) { karmaKraftsDefaults() }
@@ -61,4 +59,6 @@ subprojects {
 
 nexusPublishing {
     authenticatedSonatype()
+    connectTimeout = Duration.ofSeconds(30)
+    clientTimeout = Duration.ofMinutes(45)
 }
