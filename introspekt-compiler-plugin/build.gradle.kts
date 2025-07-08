@@ -49,7 +49,11 @@ tasks {
 }
 
 publishing {
-    setProjectInfo("Introspekt Compiler Plugin", "Positional code and compile time introspection API for Kotlin/Multiplatform")
+    setProjectInfo(
+        name = "Introspekt Compiler Plugin",
+        description = "Positional code and compile time introspection API for Kotlin/Multiplatform",
+        url = "https://git.karmakrafts.dev/kk/introspekt"
+    )
     publications {
         create<MavenPublication>("compilerPlugin") {
             from(components["java"])

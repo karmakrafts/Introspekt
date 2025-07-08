@@ -124,7 +124,11 @@ tasks {
 }
 
 publishing {
-    setProjectInfo("Introspekt Runtime", "Positional code and compile time introspection API for Kotlin/Multiplatform")
+    setProjectInfo(
+        name = "Introspekt Runtime",
+        description = "Positional code and compile time introspection API for Kotlin/Multiplatform",
+        url = "https://git.karmakrafts.dev/kk/introspekt"
+    )
     publications.withType<MavenPublication> {
         artifact(dokkaJar)
     }
