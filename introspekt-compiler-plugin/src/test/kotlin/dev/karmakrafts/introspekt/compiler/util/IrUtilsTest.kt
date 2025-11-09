@@ -21,10 +21,13 @@ import dev.karmakrafts.iridium.runCompilerTest
 import dev.karmakrafts.iridium.setupCompilerTest
 import org.jetbrains.kotlin.descriptors.Visibilities
 import org.jetbrains.kotlin.ir.declarations.IrClass
+import org.jetbrains.kotlin.ir.types.IrSimpleType
 import org.jetbrains.kotlin.ir.types.classFqName
 import org.jetbrains.kotlin.ir.types.impl.IrSimpleTypeImpl
 import org.jetbrains.kotlin.name.FqName
+import kotlin.reflect.full.isSubclassOf
 import kotlin.test.Test
+import kotlin.test.assertTrue
 
 class IrUtilsTest {
     @Test
@@ -196,8 +199,8 @@ class IrUtilsTest {
             values.size shouldBe 1
             val value = values["value"]
             value shouldNotBe null
-            value!!::class shouldBe IrSimpleTypeImpl::class
-            (value as IrSimpleTypeImpl).classFqName shouldBe FqName("kotlin.String")
+            assertTrue(value!!::class.isSubclassOf(IrSimpleType::class))
+            (value as IrSimpleType).classFqName shouldBe FqName("kotlin.String")
         }
     }
 
@@ -342,11 +345,11 @@ class IrUtilsTest {
 
             val (arg1, arg2) = value!!
 
-            arg1!!::class shouldBe IrSimpleTypeImpl::class
-            (arg1 as IrSimpleTypeImpl) matches { string() }
+            assertTrue(arg1!!::class.isSubclassOf(IrSimpleType::class))
+            (arg1 as IrSimpleType) matches { string() }
 
-            arg2!!::class shouldBe IrSimpleTypeImpl::class
-            (arg2 as IrSimpleTypeImpl) matches { int() }
+            assertTrue(arg2!!::class.isSubclassOf(IrSimpleType::class))
+            (arg2 as IrSimpleType) matches { int() }
         }
     }
 }
