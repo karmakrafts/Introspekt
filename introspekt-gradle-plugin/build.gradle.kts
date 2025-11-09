@@ -18,7 +18,6 @@ import dev.karmakrafts.conventions.configureJava
 import dev.karmakrafts.conventions.setProjectInfo
 import kotlin.io.path.createDirectories
 import kotlin.io.path.deleteIfExists
-import kotlin.io.path.div
 import kotlin.io.path.writeText
 
 plugins {
@@ -52,14 +51,16 @@ tasks {
     val sourcesJar by getting {
         dependsOn(compileJava)
     }
+    val version = rootProject.version.toString()
     val createVersionFile by registering {
+        outputs.upToDateWhen { false } // Always re-generate this file
+        outputs.files("build/generated/introspekt.version")
         doFirst {
-            val path = (layout.buildDirectory.asFile.get().toPath() / "generated" / "introspekt.version")
+            val path = outputs.files.first().toPath()
             path.deleteIfExists()
             path.parent.createDirectories()
-            path.writeText(rootProject.version.toString())
+            path.writeText(version)
         }
-        outputs.upToDateWhen { false } // Always re-generate this file
     }
     processResources { dependsOn(createVersionFile) }
     compileKotlin { dependsOn(processResources) }
