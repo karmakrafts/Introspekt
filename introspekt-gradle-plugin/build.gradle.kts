@@ -50,6 +50,7 @@ kotlin {
 tasks {
     val sourcesJar by getting {
         dependsOn(compileJava)
+        dependsOn(compileTestJava)
     }
     val version = rootProject.version.toString()
     val createVersionFile by registering {
