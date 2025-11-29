@@ -24,6 +24,7 @@ import org.jetbrains.kotlin.ir.expressions.impl.IrCallImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrCallImplWithShape
 import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
 import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
+import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
 import org.jetbrains.kotlin.ir.util.classId
 import org.jetbrains.kotlin.ir.util.hasAnnotation
@@ -55,6 +56,7 @@ internal enum class TraceType( // @formatter:off
         private val classSymbolCache: EnumMap<TraceType, IrClassSymbol> = EnumMap(TraceType::class.java)
     }
 
+    @OptIn(UnsafeDuringIrConstructionAPI::class)
     fun createCall(context: IntrospektPluginContext): IrCallImpl = with(context) {
         val symbol = functionSymbolCache.getOrPut(this@TraceType) {
             referenceFunctions(CallableId(classId, functionName)).first()

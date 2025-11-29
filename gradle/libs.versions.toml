@@ -6,11 +6,11 @@ androidGradle = "8.12.0" # https://developer.android.com/reference/tools/gradle-
 androidCompileSDK = "35"
 androidMinimalSDK = "28"
 
-introspekt = "1.5.0"
+introspekt = "1.5.1"
 kotlin = "2.2.21" # https://github.com/JetBrains/kotlin/releases
 dokka = "2.1.0" # https://github.com/Kotlin/dokka/releases
-karmaConventions = "1.8.0" # https://github.com/karmakrafts/karma-conventions/tags
-iridium = "1.9.0" # https://github.com/karmakrafts/Iridium/tags
+karmaConventions = "1.8.1" # https://github.com/karmakrafts/karma-conventions/tags
+iridium = "1.9.1" # https://github.com/karmakrafts/Iridium/tags
 autoService = "1.1.1" # https://github.com/google/auto/releases
 gradleNexus = "2.0.0" # https://github.com/gradle-nexus/publish-plugin/releases
 stately = "2.1.0" # https://github.com/touchlab/Stately/releases
