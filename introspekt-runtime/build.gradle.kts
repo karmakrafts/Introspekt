@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import com.android.build.api.dsl.KotlinMultiplatformAndroidCompilation
 import com.android.build.api.dsl.androidLibrary
 import dev.karmakrafts.conventions.configureJava
 import dev.karmakrafts.conventions.setProjectInfo
@@ -82,7 +83,8 @@ kotlin {
         common {
             group("jvmAndAndroid") {
                 withJvm()
-                withAndroidTarget()
+                // withAndroidTarget() does not work with androidLibrary {} DSL..
+                withCompilations { it is KotlinMultiplatformAndroidCompilation }
             }
         }
     }
