@@ -25,6 +25,8 @@ import org.jetbrains.kotlin.config.CompilerConfiguration
 @OptIn(ExperimentalCompilerApi::class)
 @AutoService(CompilerPluginRegistrar::class)
 class IntrospektCompilerPluginRegistrar : CompilerPluginRegistrar() {
+    override val pluginId: String = "dev.karmakrafts.introspekt.introspekt-compiler-plugin"
+
     override fun ExtensionStorage.registerExtensions(
         configuration: CompilerConfiguration
     ) {
