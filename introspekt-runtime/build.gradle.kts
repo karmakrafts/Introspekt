@@ -20,7 +20,6 @@ import dev.karmakrafts.conventions.configureJava
 import dev.karmakrafts.conventions.setProjectInfo
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
-import java.time.ZonedDateTime
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
@@ -32,8 +31,8 @@ plugins {
 
 configureJava(libs.versions.java)
 
-@Suppress("UnstableApiUsage")
-@OptIn(ExperimentalWasmDsl::class, ExperimentalKotlinGradlePluginApi::class)
+@Suppress("UnstableApiUsage") //
+@OptIn(ExperimentalWasmDsl::class, ExperimentalKotlinGradlePluginApi::class) //
 kotlin {
     withSourcesJar(true)
     compilerOptions {
@@ -104,39 +103,10 @@ kotlin {
     }
 }
 
-dokka {
-    moduleName = project.name
-    pluginsConfiguration {
-        html {
-            footerMessage = "&copy; ${ZonedDateTime.now().year} Karma Krafts & associates"
-        }
-    }
-}
-
-val dokkaJar by tasks.registering(Jar::class) {
-    group = "dokka"
-    from(tasks.dokkaGeneratePublicationHtml.flatMap { it.outputDirectory })
-    archiveClassifier.set("javadoc")
-}
-
-tasks {
-    System.getProperty("publishDocs.root")?.let { docsDir ->
-        register("publishDocs", Copy::class) {
-            dependsOn(dokkaJar)
-            mustRunAfter(dokkaJar)
-            from(zipTree(dokkaJar.get().outputs.files.first()))
-            into(docsDir)
-        }
-    }
-}
-
 publishing {
     setProjectInfo(
         name = "Introspekt Runtime",
         description = "Positional code and compile time introspection API for Kotlin/Multiplatform",
         url = "https://git.karmakrafts.dev/kk/introspekt"
     )
-    publications.withType<MavenPublication> {
-        artifact(dokkaJar)
-    }
 }

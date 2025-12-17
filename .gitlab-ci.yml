@@ -102,6 +102,6 @@ publish-documentation:
   rules:
     - *if-release
   script:
-    - ./gradlew -DpublishDocs.root=/var/www/docs/introspekt publishDocs
+    - ./gradlew -DpublishDocs.root=/var/www/docs publishDocs
   tags:
     - docs
