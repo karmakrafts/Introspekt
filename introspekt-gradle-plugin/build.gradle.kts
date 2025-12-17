@@ -48,6 +48,7 @@ kotlin {
 }
 
 tasks {
+    @Suppress("UNUSED")
     val sourcesJar by getting {
         dependsOn(compileJava)
         dependsOn(compileTestJava)

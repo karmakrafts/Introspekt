@@ -2,15 +2,15 @@
 
 java = "17"
 
-androidGradle = "8.12.0" # https://developer.android.com/reference/tools/gradle-api
-androidCompileSDK = "35"
+androidGradle = "8.12.3" # https://developer.android.com/reference/tools/gradle-api
+androidCompileSDK = "36"
 androidMinimalSDK = "28"
 
-introspekt = "1.5.1"
-kotlin = "2.2.21" # https://github.com/JetBrains/kotlin/releases
+introspekt = "1.6.0"
+kotlin = "2.3.0" # https://github.com/JetBrains/kotlin/releases
 dokka = "2.1.0" # https://github.com/Kotlin/dokka/releases
-karmaConventions = "1.8.1" # https://github.com/karmakrafts/karma-conventions/tags
-iridium = "1.9.1" # https://github.com/karmakrafts/Iridium/tags
+karmaConventions = "1.9.0" # https://github.com/karmakrafts/karma-conventions/tags
+iridium = "1.10.0" # https://github.com/karmakrafts/Iridium/tags
 autoService = "1.1.1" # https://github.com/google/auto/releases
 gradleNexus = "2.0.0" # https://github.com/gradle-nexus/publish-plugin/releases
 stately = "2.1.0" # https://github.com/touchlab/Stately/releases
@@ -27,7 +27,7 @@ iridium = { module = "dev.karmakrafts.iridium:iridium", version.ref = "iridium" 
 
 [plugins]
 
-android-library = { id = "com.android.library", version.ref = "androidGradle" }
+android-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "androidGradle" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" }
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }

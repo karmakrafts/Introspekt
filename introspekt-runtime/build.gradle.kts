@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
+import com.android.build.api.dsl.androidLibrary
 import dev.karmakrafts.conventions.configureJava
 import dev.karmakrafts.conventions.setProjectInfo
+import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import java.time.ZonedDateTime
 
@@ -29,7 +31,8 @@ plugins {
 
 configureJava(libs.versions.java)
 
-@OptIn(ExperimentalWasmDsl::class)
+@Suppress("UnstableApiUsage")
+@OptIn(ExperimentalWasmDsl::class, ExperimentalKotlinGradlePluginApi::class)
 kotlin {
     withSourcesJar(true)
     compilerOptions {
@@ -40,8 +43,10 @@ kotlin {
     linuxArm64()
     macosX64()
     macosArm64()
-    androidTarget {
-        publishLibraryVariants("release")
+    androidLibrary {
+        namespace = "$group.${rootProject.name}"
+        compileSdk = libs.versions.androidCompileSDK.get().toInt()
+        minSdk = libs.versions.androidMinimalSDK.get().toInt()
     }
     androidNativeArm32()
     androidNativeArm64()
@@ -58,42 +63,41 @@ kotlin {
     watchosSimulatorArm64()
     jvm()
     js {
-        browser()
-        nodejs()
+        browser {
+            useEsModules()
+        }
+        nodejs {
+            useEsModules()
+        }
     }
     wasmJs {
-        browser()
-        nodejs()
+        browser {
+            useEsModules()
+        }
+        nodejs {
+            useEsModules()
+        }
     }
-    applyDefaultHierarchyTemplate()
-    sourceSets {
-        commonTest {
-            dependencies {
-                implementation(libs.kotlin.test)
+    applyDefaultHierarchyTemplate {
+        common {
+            group("jvmAndAndroid") {
+                withJvm()
+                withAndroidTarget()
             }
         }
-        val commonMain by getting {
+    }
+    sourceSets {
+        commonMain {
             dependencies {
                 api(libs.stately.common)
                 api(libs.stately.concurrent.collections)
             }
         }
-
-        val jvmAndAndroidMain by creating { dependsOn(commonMain) }
-        val jvmMain by getting { dependsOn(jvmAndAndroidMain) }
-        val androidMain by getting { dependsOn(jvmAndAndroidMain) }
-
-        val jsAndWasmMain by creating { dependsOn(commonMain) }
-        val jsMain by getting { dependsOn(jsAndWasmMain) }
-        val wasmJsMain by getting { dependsOn(jsAndWasmMain) }
-    }
-}
-
-android {
-    namespace = "$group.${rootProject.name}"
-    compileSdk = libs.versions.androidCompileSDK.get().toInt()
-    defaultConfig {
-        minSdk = libs.versions.androidMinimalSDK.get().toInt()
+        commonTest {
+            dependencies {
+                implementation(libs.kotlin.test)
+            }
+        }
     }
 }
 
@@ -101,7 +105,7 @@ dokka {
     moduleName = project.name
     pluginsConfiguration {
         html {
-            footerMessage = "(c) ${ZonedDateTime.now().year} Karma Krafts & associates"
+            footerMessage = "&copy; ${ZonedDateTime.now().year} Karma Krafts & associates"
         }
     }
 }
