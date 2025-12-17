@@ -22,10 +22,7 @@ import kotlin.io.path.writeText
 
 plugins {
     alias(libs.plugins.kotlin.jvm)
-    alias(libs.plugins.dokka)
     `java-gradle-plugin`
-    signing
-    `maven-publish`
 }
 
 configureJava(libs.versions.java)

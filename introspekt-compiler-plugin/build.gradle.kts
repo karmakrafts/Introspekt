@@ -20,9 +20,6 @@ import dev.karmakrafts.conventions.setProjectInfo
 plugins {
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.kotlin.kapt)
-    alias(libs.plugins.dokka)
-    signing
-    `maven-publish`
 }
 
 configureJava(libs.versions.java)
